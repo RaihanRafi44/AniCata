@@ -1,6 +1,6 @@
 package com.raihan.anicata.data.source.network.service
 
-import com.raihan.anicata.BuildConfig
+import  com.raihan.anicata.BuildConfig
 import com.raihan.anicata.data.source.network.model.anime.full.AnimeDetailFullResponse
 import com.raihan.anicata.data.source.network.model.anime.genres.GenreAnimeResponse
 import com.raihan.anicata.data.source.network.model.anime.search.SearchAnimeResponse

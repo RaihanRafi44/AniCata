@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ktlint)
     id("kotlin-parcelize")
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -104,6 +105,18 @@ dependencies {
     implementation(libs.paging.runtime)
     implementation(libs.groupie)
     implementation(libs.coil)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.ui.unit)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.play.services.auth)
+    implementation(libs.androidx.animation)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.3")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

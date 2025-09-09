@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "305189943469",
+    "project_id": "anicata-5c955",
+    "storage_bucket": "anicata-5c955.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:305189943469:android:7527a7c7886752f2766e24",
+        "android_client_info": {
+          "package_name": "com.raihan.anicata"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "305189943469-d54jpdl21bf8u1024d5ftb1pb3umlg1j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.raihan.anicata",
+            "certificate_hash": "168542dc97bc6d2a976e1aa05bae52aa42f71201"
+          }
+        },
+        {
+          "client_id": "305189943469-4gibeqjk5bnqr2j34unrvf3p4dsjgiih.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTaXDJvLK4LbmfetIKvnwovuENDvl-Odk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "305189943469-4gibeqjk5bnqr2j34unrvf3p4dsjgiih.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
