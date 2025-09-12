@@ -175,14 +175,6 @@ fun SignInScreen(
     var index by remember { mutableIntStateOf(0) }
     var displayedText by remember { mutableStateOf("") }
 
-    /*// Loop otomatis ganti teks
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(2000) // durasi tampil tiap teks
-            index = (index + 1) % texts.size
-        }
-    }*/
-
     // Efek typewriter
     LaunchedEffect(index) {
         displayedText = ""
@@ -198,8 +190,6 @@ fun SignInScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            /*.background(Color(0xFF1565C0)) // Biru
-            .padding(16.dp),*/
     ) {
         // Gambar background
         Image(
@@ -229,23 +219,6 @@ fun SignInScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            /*// Animasi teks
-            AnimatedContent(
-                targetState = index,
-                transitionSpec = {
-                    slideInVertically { it } + fadeIn() with
-                            slideOutVertically { -it } + fadeOut()
-                },
-                label = "AnimatedWelcomeText"
-            ) { targetIndex ->
-                Text(
-                    text = texts[targetIndex],
-                    color = Color.White,
-                    fontSize = 40.sp,
-                    textAlign = TextAlign.Center
-                )
-            }*/
 
             // Teks dengan efek typewriter
             Text(

@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -31,20 +32,19 @@ import com.raihan.anicata.ui.login.LoginViewModel
 import com.raihan.anicata.ui.login.SignInScreen
 import com.raihan.anicata.ui.theme.AniCataTheme
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
+import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
 
-    private val googleAuthUiClient by lazy {
-        GoogleAuthUiClient(
-            context = applicationContext,
-            oneTapClient = Identity.getSignInClient(applicationContext)
-        )
-    }
+    private val googleAuthUiClient: GoogleAuthUiClient by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // ✅ Konten bisa menggambar sampai status bar
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        //enableEdgeToEdge()
         setContent {
             Surface(
                 modifier = Modifier.fillMaxSize(),
@@ -53,7 +53,8 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "login"){
                     composable("login") {
-                        val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<LoginViewModel>()
+
+                        val viewModel: LoginViewModel = koinViewModel()
                         val state by viewModel.state.collectAsStateWithLifecycle()
 
                         LaunchedEffect(key1 = Unit) {
@@ -128,35 +129,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        /*setContent {
-            MainScreen()
-        }*/
-        /*setContent {
-            AniCataTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }*/
     }
 }
-
-/*
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AniCataTheme {
-        Greeting("Android")
-    }
-}*/
