@@ -1,5 +1,6 @@
 package com.raihan.anicata.di
 
+import com.google.android.gms.auth.api.identity.Identity
 import com.raihan.anicata.data.datasource.anime.AnimeDetailFullApiDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeDetailFullDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeGenreApiDataSource
@@ -25,7 +26,11 @@ import com.raihan.anicata.data.datasource.manga.SearchMangaDataSource
 import com.raihan.anicata.data.datasource.manga.TopMangaApiDataSource
 import com.raihan.anicata.data.datasource.manga.TopMangaDataSource
 import com.raihan.anicata.data.source.network.service.AniCataApiService
+import com.raihan.anicata.ui.login.GoogleAuthUiClient
+import com.raihan.anicata.ui.login.LoginViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 object AppModules {
@@ -37,6 +42,11 @@ object AppModules {
 
     private val firebaseModule =
         module{}
+
+    private val authModule = module {
+        single { Identity.getSignInClient(androidContext()) }
+        single { GoogleAuthUiClient(androidContext(), get()) }
+    }
 
     private val dataSource =
         module{
@@ -58,11 +68,15 @@ object AppModules {
         module{}
 
     private val viewModel =
-        module{}
+        module{
+            viewModelOf(::LoginViewModel)
+        }
 
     val modules =
         listOf<Module>(
             networkModule,
-            dataSource
+            dataSource,
+            authModule,
+            viewModel
         )
 }
