@@ -26,95 +26,10 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.raihan.anicata.ui.main.TopNavBar
 import kotlinx.coroutines.launch
 
-/*
 @Composable
-fun HomeScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Ini Halaman Home")
-    }
-}*/
-
-/*@Composable
-fun HomeScreen() {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    // 🎨 warna background TopNavBar (harus sama biar nyambung)
-    val topBarColor = Color(0xFFE0F2F1)
-    val systemUiController = rememberSystemUiController()
-
-    SideEffect {
-        systemUiController.setStatusBarColor(
-            color = topBarColor,
-            darkIcons = true // pakai ikon gelap karena warna background terang
-        )
-    }
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text("Menu 1", modifier = Modifier.padding(16.dp))
-                Text("Menu 2", modifier = Modifier.padding(16.dp))
-            }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopNavBar(
-                    onMenuClick = { scope.launch { drawerState.open() } },
-                    onSearchClick = { *//* Aksi untuk search *//* },
-                    onSettingsClick = { *//* Aksi untuk settings *//* }
-                )
-            }
-        ) { innerPadding ->
-            // Konten utama HomeScreen
-            // 1. Buat state untuk mengingat posisi scroll
-            val scrollState = rememberScrollState()
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(scrollState)
-            ) {
-                // 🔥 Banner slider tampil di bagian atas
-                BannerSlider()
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 🌟 Section "Recently Viewed" dari file RecentlyViewed.kt
-                RecentlyViewedSection()
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // 🌟 Section "Now Airing" dari file SeasonalAnimeNowAiring.kt
-                NowAiringSection()
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                UpcomingSection()
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                TopRatedSection()
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                NewsUpdateScreen()
-
-                Spacer(modifier = Modifier.height(120.dp))
-
-            }
-        }
-    }
-}*/
-
-@Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onBannerClick: () -> Unit // <-- TAMBAHKAN PARAMETER INI
+) {
     // HomeScreen sekarang hanya berisi konten spesifiknya.
     // Tidak perlu lagi Scaffold, TopBar, atau Drawer.
     val scrollState = rememberScrollState()
@@ -125,7 +40,8 @@ fun HomeScreen() {
             .verticalScroll(scrollState)
     ) {
         // 🔥 Banner slider tampil di bagian atas
-        BannerSlider()
+        //BannerSlider()
+        BannerSlider(onBannerClick = onBannerClick)
 
         Spacer(modifier = Modifier.height(12.dp))
 

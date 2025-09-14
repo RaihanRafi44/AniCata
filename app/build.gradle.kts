@@ -121,6 +121,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.8")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.2")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

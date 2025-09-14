@@ -67,13 +67,7 @@ fun NewsUpdateScreen() {
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-
-        // List News
-        /*LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(newsList) { news ->
-                NewsItemView(news)
-            }
-        }*/
+        
         // List News pakai Column
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
