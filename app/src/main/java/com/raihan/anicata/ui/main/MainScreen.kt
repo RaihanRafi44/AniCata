@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -37,13 +38,14 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.raihan.anicata.data.model.UserData
 import com.raihan.anicata.ui.archive.ArchiveScreen
+import com.raihan.anicata.ui.detail.DetailScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.profile.ProfileScreen
 import kotlinx.coroutines.launch
 import okhttp3.internal.platform.PlatformRegistry.applicationContext
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+/*@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     userData: UserData?,
@@ -66,12 +68,12 @@ fun MainScreen(
     val systemUiController = rememberSystemUiController()
 
     // Efek untuk mengubah warna status bar
-    /*SideEffect {
+    *//*SideEffect {
         systemUiController.setStatusBarColor(
             color = topBarColor,
             darkIcons = true
         )
-    }*/
+    }*//*
 
     // Gunakan LaunchedEffect agar kode ini hanya berjalan sekali saat komponen dibuat
     LaunchedEffect(Unit) {
@@ -91,103 +93,15 @@ fun MainScreen(
         }
     }
 
-    /*Scaffold(
-        bottomBar = {
-            FloatingBottomNavBar(
-                selectedItem = selectedItem,
-                onItemSelected = { index ->
-                    // 3. Tetap update state secara manual untuk UI yang responsif saat diklik
-                    selectedItem = index
-                    val route = when (index) {
-                        0 -> "home"
-                        1 -> "archive"
-                        2 -> "profile"
-                        else -> "home"
-                    }
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = "home",
-            modifier = Modifier.padding(padding)
-        ) {
-            composable("home") { HomeScreen() }
-            composable("archive") { ArchiveScreen() }
-            composable("profile") {
-                ProfileScreen(
-                    userData = userData,
-                    onSignOut = onSignOut
-                )
-            }
-        }
-    }*/
-
-    /*Scaffold { padding ->
-        // Gunakan Box untuk menampung konten dan navigation bar
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            val topPadding = padding.calculateTopPadding()
-
-            NavHost(
-                navController = navController,
-                startDestination = "home",
-                //modifier = Modifier.padding(padding)
-                modifier = Modifier.padding(top = topPadding)
-            ) {
-                composable("home") { HomeScreen() }
-                composable("archive") { ArchiveScreen() }
-                composable("profile") {
-                    ProfileScreen(
-                        userData = userData,
-                        onSignOut = onSignOut
-                    )
-                }
-            }
-
-            // Panggil FloatingBottomNavBar di sini, di atas NavHost
-            FloatingBottomNavBar(
-                // Modifier ini akan memposisikan nav bar di tengah bawah
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 54.dp),
-                selectedItem = selectedItem,
-                onItemSelected = { index ->
-                    selectedItem = index
-                    val route = when (index) {
-                        0 -> "home"
-                        1 -> "archive"
-                        2 -> "profile"
-                        else -> "home"
-                    }
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
-        }
-    }*/
     // --- ModalNavigationDrawer membungkus semua konten ---
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            /*ModalDrawerSheet {
+            *//*ModalDrawerSheet {
                 // TODO: Isi konten drawer di sini
                 Text("Menu 1", modifier = Modifier.padding(16.dp))
                 Text("Menu 2", modifier = Modifier.padding(16.dp))
-            }*/
+            }*//*
             ModalDrawerSheet(
                 // ✅ 1. BATASI LEBAR DRAWER MAKSIMAL 50% DARI LAYAR
                 modifier = Modifier.fillMaxWidth(0.6f),
@@ -220,8 +134,8 @@ fun MainScreen(
                             }
                         }
                     },
-                    onSearchClick = { /* TODO: Aksi untuk search */ },
-                    onSettingsClick = { /* TODO: Aksi untuk settings */ },
+                    onSearchClick = { *//* TODO: Aksi untuk search *//* },
+                    onSettingsClick = { *//* TODO: Aksi untuk settings *//* },
                     scrollBehavior = scrollBehavior // <-- Kirim scrollBehavior
                 )
             },
@@ -241,13 +155,24 @@ fun MainScreen(
                     // Modifier NavHost tidak perlu padding lagi karena Box sudah menanganinya
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    composable("home") { HomeScreen() }
+                    //composable("home") { HomeScreen() }
+                    composable("home") {
+                        HomeScreen(
+                            onBannerClick = {
+                                navController.navigate("detail")
+                            }
+                        )
+                    }
                     composable("archive") { ArchiveScreen() }
                     composable("profile") {
                         ProfileScreen(
                             userData = userData,
                             onSignOut = onSignOut
                         )
+                    }
+                    // ✅ TAMBAHKAN RUTE BARU UNTUK DETAILSCREEN
+                    composable("detail") {
+                        DetailScreen()
                     }
                 }
 
@@ -286,6 +211,136 @@ fun MainScreen(
 @Composable
 fun MainScreenPreview() {
     MainScreen(
+        userData = UserData("123", "Raihan", "url_gambar_profil.com"),
+        onSignOut = {}
+    )
+}*/
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(
+    navController: NavController, // Ini NavController dari MainActivity untuk navigasi level atas
+    userData: UserData?,
+    onSignOut: () -> Unit
+) {
+    // NavController ini HANYA untuk navigasi internal (Home, Archive, Profile)
+    val internalNavController = rememberNavController()
+    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
+    val navBackStackEntry by internalNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val topBarColor = Color(0xFFE0F2F1)
+    val systemUiController = rememberSystemUiController()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    LaunchedEffect(Unit) {
+        systemUiController.setStatusBarColor(
+            color = topBarColor,
+            darkIcons = true
+        )
+    }
+
+    LaunchedEffect(currentRoute) {
+        when (currentRoute) {
+            "home" -> selectedItem = 0
+            "archive" -> selectedItem = 1
+            "profile" -> selectedItem = 2
+        }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                modifier = Modifier.fillMaxWidth(0.6f),
+                drawerContainerColor = Color(0xFFE0F2F1)
+            ) {
+                AppDrawerContent(
+                    userData = userData,
+                    navController = internalNavController, // Gunakan internalNavController untuk drawer
+                    scope = scope,
+                    closeDrawer = { scope.launch { drawerState.close() } },
+                    onSignOut = onSignOut
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TopNavBar(
+                    onMenuClick = {
+                        scope.launch {
+                            if (drawerState.isClosed) drawerState.open() else drawerState.close()
+                        }
+                    },
+                    onSearchClick = { /* TODO */ },
+                    onSettingsClick = { /* TODO */ },
+                    scrollBehavior = scrollBehavior
+                )
+            },
+        ) { innerPadding ->
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+            ) {
+                NavHost(
+                    navController = internalNavController, // NavHost ini pakai controller internal
+                    startDestination = "home",
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    composable("home") {
+                        HomeScreen(
+                            onBannerClick = {
+                                // Saat banner diklik, gunakan controller utama untuk navigasi
+                                navController.navigate("detail")
+                            }
+                        )
+                    }
+                    composable("archive") { ArchiveScreen() }
+                    composable("profile") {
+                        ProfileScreen(
+                            userData = userData,
+                            onSignOut = onSignOut
+                        )
+                    }
+                }
+
+                FloatingBottomNavBar(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp),
+                    selectedItem = selectedItem,
+                    onItemSelected = { index ->
+                        selectedItem = index
+                        val route = when (index) {
+                            0 -> "home"
+                            1 -> "archive"
+                            2 -> "profile"
+                            else -> "home"
+                        }
+                        internalNavController.navigate(route) {
+                            popUpTo(internalNavController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenPreview() {
+    // Perbaiki preview agar tidak error
+    MainScreen(
+        navController = rememberNavController(), // Beri NavController palsu
         userData = UserData("123", "Raihan", "url_gambar_profil.com"),
         onSignOut = {}
     )

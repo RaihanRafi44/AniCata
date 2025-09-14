@@ -42,20 +42,6 @@ import com.raihan.anicata.data.model.UserData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-// 1. Definisikan item-item menu navigasi
-/*
-val menuItems = listOf(
-    "Seasonal Anime",
-    "Top Lists",
-    "Anime",
-    "Manga",
-    "Novel",
-    "All Lists",
-    "About Us",
-    "Settings"
-)
-*/
-
 // ✅ Definisikan item utama dan sub-item secara terpisah
 val mainItems = listOf("Seasonal Anime", "Top Lists", "All Lists", "About Us", "Settings")
 val topListsSubItems = listOf("Anime", "Manga", "Novel")
@@ -156,37 +142,6 @@ private fun DrawerBody(
 
     LazyColumn(modifier = Modifier.padding(horizontal = 12.dp)) {
         items(mainItems) { item ->
-            // Untuk "Top Lists" kita tambahkan ikon panah
-            /*val isTopLists = item == "Top Lists"
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        // TODO: Implement navigation logic for each item
-                        scope.launch {
-                            closeDrawer()
-                        }
-                    }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = item,
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    modifier = Modifier.weight(1f) // Text mengambil sisa ruang
-                )
-                if (isTopLists) {
-                    Icon(
-                        imageVector = Icons.Default.ExpandMore,
-                        contentDescription = "Expand Top Lists",
-                        tint = Color.Gray
-                    )
-                }
-            }*/
             if (item == "Top Lists") {
                 // --- Item yang bisa di-expand ---
                 Row(
