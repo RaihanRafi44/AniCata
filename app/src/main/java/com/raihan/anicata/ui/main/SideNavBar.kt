@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import coil.compose.AsyncImage
 import com.raihan.anicata.data.model.UserData
 import kotlinx.coroutines.CoroutineScope
@@ -174,7 +175,22 @@ private fun DrawerBody(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        // TODO: Navigasi untuk sub-item
+                                        // ✅ Navigasi untuk sub-item
+                                        val route = when (subItem) {
+                                            "Anime" -> "top_anime"
+                                            "Manga" -> "top_manga"
+                                            "Novel" -> "top_novel"
+                                            else -> ""
+                                        }
+                                        if (route.isNotEmpty()) {
+                                            navController.navigate(route) {
+                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
                                         scope.launch { closeDrawer() }
                                     }
                                     .padding(horizontal = 16.dp, vertical = 10.dp)
@@ -189,7 +205,36 @@ private fun DrawerBody(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            // TODO: Implement navigation logic
+                            // ✅ 2. Implementasi logika navigasi
+                            when (item) {
+                                "Seasonal Anime" -> {
+                                    navController.navigate("seasonal") {
+                                        // Pop up to the start destination of the graph to
+                                        // avoid building up a large stack of destinations
+                                        // on the back stack as users select items
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        // Avoid multiple copies of the same destination when
+                                        // reselecting the same item
+                                        launchSingleTop = true
+                                        // Restore state when reselecting a previously selected item
+                                        restoreState = true
+                                    }
+                                }
+                                "All Lists" -> {
+                                    navController.navigate("all_lists") {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                                // Tambahkan case lain jika diperlukan
+                                // "About Us" -> navController.navigate("about")
+                                // "Settings" -> navController.navigate("settings")
+                            }
                             scope.launch { closeDrawer() }
                         }
                         .padding(horizontal = 16.dp, vertical = 12.dp),
