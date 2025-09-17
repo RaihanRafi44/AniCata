@@ -37,10 +37,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.raihan.anicata.data.model.UserData
+import com.raihan.anicata.ui.alllists.AllListsScreen
 import com.raihan.anicata.ui.archive.ArchiveScreen
 import com.raihan.anicata.ui.detail.DetailScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.profile.ProfileScreen
+import com.raihan.anicata.ui.seasonalanime.SeasonalScreen
+import com.raihan.anicata.ui.top.anime.TopAnimeScreen
+import com.raihan.anicata.ui.top.manga.TopMangaScreen
+import com.raihan.anicata.ui.top.novel.TopNovelScreen
 import kotlinx.coroutines.launch
 import okhttp3.internal.platform.PlatformRegistry.applicationContext
 
@@ -305,6 +310,24 @@ fun MainScreen(
                             userData = userData,
                             onSignOut = onSignOut
                         )
+                    }
+                    // ✅ 2. Tambahkan rute baru untuk SeasonalScreen
+                    composable("seasonal") {
+                        SeasonalScreen()
+                    }
+
+                    composable("top_anime") {
+                        TopAnimeScreen()
+                    }
+                    composable("top_manga") {
+                        TopMangaScreen()
+                    }
+                    composable("top_novel") {
+                        TopNovelScreen()
+                    }
+
+                    composable("all_lists") {
+                        AllListsScreen()
                     }
                 }
 
