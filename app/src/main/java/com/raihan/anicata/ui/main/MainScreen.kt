@@ -1,10 +1,14 @@
 package com.raihan.anicata.ui.main
 
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalDrawerSheet
@@ -42,6 +46,7 @@ import com.raihan.anicata.ui.archive.ArchiveScreen
 import com.raihan.anicata.ui.detail.DetailScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.profile.ProfileScreen
+import com.raihan.anicata.ui.search.SearchScreenLayout
 import com.raihan.anicata.ui.seasonalanime.SeasonalScreen
 import com.raihan.anicata.ui.top.anime.TopAnimeScreen
 import com.raihan.anicata.ui.top.manga.TopMangaScreen
@@ -240,6 +245,9 @@ fun MainScreen(
     val systemUiController = rememberSystemUiController()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
+    // State untuk mengontrol visibilitas search screen
+    var isSearchVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         systemUiController.setStatusBarColor(
             color = topBarColor,
@@ -281,7 +289,7 @@ fun MainScreen(
                             if (drawerState.isClosed) drawerState.open() else drawerState.close()
                         }
                     },
-                    onSearchClick = { /* TODO */ },
+                    onSearchClick = { isSearchVisible = true },
                     onSettingsClick = { /* TODO */ },
                     scrollBehavior = scrollBehavior
                 )
@@ -352,6 +360,33 @@ fun MainScreen(
                             restoreState = true
                         }
                     }
+                )
+            }
+        }
+
+        // Tampilkan overlay jika isSearchVisible adalah true
+        if (isSearchVisible) {
+            // Latar belakang gelap semi-transparan
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 1.2f))
+                    // Klik di luar area pencarian akan menutup overlay
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null // Menghilangkan efek ripple
+                    ) {
+                        isSearchVisible = false
+                    }
+            )
+
+            // Konten Search Screen di atas latar belakang gelap
+            Box(
+                // Memberi padding agar tidak tertimpa status bar
+                modifier = Modifier.statusBarsPadding()
+            ) {
+                SearchScreenLayout(
+                    onClose = { isSearchVisible = false } // Tombol close akan menutup overlay
                 )
             }
         }
