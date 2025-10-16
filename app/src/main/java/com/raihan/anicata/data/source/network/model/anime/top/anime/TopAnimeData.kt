@@ -1,11 +1,11 @@
-package com.raihan.anicata.data.source.network.model.anime.full
+package com.raihan.anicata.data.source.network.model.anime.top.anime
 
 
 import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
 
 @Keep
-data class Data(
+data class TopAnimeData(
     @SerializedName("aired")
     var aired: Aired?,
     @SerializedName("airing")
@@ -24,8 +24,6 @@ data class Data(
     var episodes: Int?,
     @SerializedName("explicit_genres")
     var explicitGenres: List<ExplicitGenre>?,
-    @SerializedName("external")
-    var `external`: List<External>?,
     @SerializedName("favorites")
     var favorites: Int?,
     @SerializedName("genres")
@@ -46,10 +44,8 @@ data class Data(
     var rank: Int?,
     @SerializedName("rating")
     var rating: String?,
-    @SerializedName("relations")
-    var relations: List<Relation>?,
     @SerializedName("score")
-    var score: Int?,
+    var score: Double?,
     @SerializedName("scored_by")
     var scoredBy: Int?,
     @SerializedName("season")
@@ -58,16 +54,12 @@ data class Data(
     var source: String?,
     @SerializedName("status")
     var status: String?,
-    @SerializedName("streaming")
-    var streaming: List<Streaming>?,
     @SerializedName("studios")
     var studios: List<Studio>?,
     @SerializedName("synopsis")
     var synopsis: String?,
-    @SerializedName("theme")
-    var theme: Theme?,
     @SerializedName("themes")
-    var themes: List<ThemeX>?,
+    var themes: List<Theme>?,
     @SerializedName("title")
     var title: String?,
     @SerializedName("title_english")
@@ -76,8 +68,6 @@ data class Data(
     var titleJapanese: String?,
     @SerializedName("title_synonyms")
     var titleSynonyms: List<String>?,
-    @SerializedName("titles")
-    var titles: List<Title>?,
     @SerializedName("trailer")
     var trailer: Trailer?,
     @SerializedName("type")

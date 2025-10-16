@@ -5,23 +5,23 @@ import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
 
 @Keep
-data class Data(
+data class TopMangaData(
     @SerializedName("approved")
     var approved: Boolean?,
     @SerializedName("authors")
-    var authors: List<Author?>?,
+    var authors: List<Author>?,
     @SerializedName("background")
     var background: String?,
     @SerializedName("chapters")
     var chapters: Int?,
     @SerializedName("demographics")
-    var demographics: List<Demographic?>?,
+    var demographics: List<Demographic>?,
     @SerializedName("explicit_genres")
-    var explicitGenres: List<ExplicitGenre?>?,
+    var explicitGenres: List<ExplicitGenre>?,
     @SerializedName("favorites")
     var favorites: Int?,
     @SerializedName("genres")
-    var genres: List<Genre?>?,
+    var genres: List<Genre>?,
     @SerializedName("images")
     var images: Images?,
     @SerializedName("mal_id")
@@ -37,25 +37,23 @@ data class Data(
     @SerializedName("rank")
     var rank: Int?,
     @SerializedName("score")
-    var score: Int?,
+    var score: Double?,
     @SerializedName("scored_by")
     var scoredBy: Int?,
     @SerializedName("serializations")
-    var serializations: List<Serialization?>?,
+    var serializations: List<Serialization>?,
     @SerializedName("status")
     var status: String?,
     @SerializedName("synopsis")
     var synopsis: String?,
     @SerializedName("themes")
-    var themes: List<Theme?>?,
+    var themes: List<Theme>?,
     @SerializedName("title")
     var title: String?,
     @SerializedName("title_english")
     var titleEnglish: String?,
     @SerializedName("title_japanese")
     var titleJapanese: String?,
-    @SerializedName("titles")
-    var titles: List<Title?>?,
     @SerializedName("type")
     var type: String?,
     @SerializedName("url")

@@ -5,9 +5,9 @@ import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
 
 @Keep
-data class Data(
+data class SeasonListsData(
     @SerializedName("seasons")
-    var seasons: List<String?>?,
+    var seasons: List<String>?,
     @SerializedName("year")
     var year: Int?
 )

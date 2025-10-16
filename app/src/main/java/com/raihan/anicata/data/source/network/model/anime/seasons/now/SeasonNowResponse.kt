@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
 @Keep
 data class SeasonNowResponse(
     @SerializedName("data")
-    var `data`: List<Data?>?,
+    var data: List<SeasonNowData>?,
     @SerializedName("pagination")
     var pagination: Pagination?
 )

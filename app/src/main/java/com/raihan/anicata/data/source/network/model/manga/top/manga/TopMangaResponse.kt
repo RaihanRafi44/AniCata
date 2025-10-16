@@ -7,7 +7,7 @@ import androidx.annotation.Keep
 @Keep
 data class TopMangaResponse(
     @SerializedName("data")
-    var `data`: List<Data?>?,
+    var data: List<TopMangaData>?,
     @SerializedName("pagination")
     var pagination: Pagination?
 )
