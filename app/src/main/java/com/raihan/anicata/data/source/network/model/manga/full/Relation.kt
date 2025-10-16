@@ -7,7 +7,7 @@ import androidx.annotation.Keep
 @Keep
 data class Relation(
     @SerializedName("entry")
-    var entry: List<Entry?>?,
+    var entry: List<Entry>?,
     @SerializedName("relation")
     var relation: String?
 )

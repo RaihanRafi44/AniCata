@@ -1,11 +1,11 @@
-package com.raihan.anicata.data.source.network.model.anime.seasons.upcoming
+package com.raihan.anicata.data.source.network.model.anime.full
 
 
 import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
 
 @Keep
-data class Data(
+data class AnimeDetailFullData(
     @SerializedName("aired")
     var aired: Aired?,
     @SerializedName("airing")
@@ -17,21 +17,23 @@ data class Data(
     @SerializedName("broadcast")
     var broadcast: Broadcast?,
     @SerializedName("demographics")
-    var demographics: List<Demographic?>?,
+    var demographics: List<Demographic>?,
     @SerializedName("duration")
     var duration: String?,
     @SerializedName("episodes")
     var episodes: Int?,
     @SerializedName("explicit_genres")
-    var explicitGenres: List<ExplicitGenre?>?,
+    var explicitGenres: List<ExplicitGenre>?,
+    @SerializedName("external")
+    var external: List<External>?,
     @SerializedName("favorites")
     var favorites: Int?,
     @SerializedName("genres")
-    var genres: List<Genre?>?,
+    var genres: List<Genre>?,
     @SerializedName("images")
     var images: Images?,
     @SerializedName("licensors")
-    var licensors: List<Licensor?>?,
+    var licensors: List<Licensor>?,
     @SerializedName("mal_id")
     var malId: Int?,
     @SerializedName("members")
@@ -39,13 +41,15 @@ data class Data(
     @SerializedName("popularity")
     var popularity: Int?,
     @SerializedName("producers")
-    var producers: List<Producer?>?,
+    var producers: List<Producer>?,
     @SerializedName("rank")
     var rank: Int?,
     @SerializedName("rating")
     var rating: String?,
+    @SerializedName("relations")
+    var relations: List<Relation>?,
     @SerializedName("score")
-    var score: Int?,
+    var score: Double?,
     @SerializedName("scored_by")
     var scoredBy: Int?,
     @SerializedName("season")
@@ -54,12 +58,16 @@ data class Data(
     var source: String?,
     @SerializedName("status")
     var status: String?,
+    @SerializedName("streaming")
+    var streaming: List<Streaming>?,
     @SerializedName("studios")
-    var studios: List<Studio?>?,
+    var studios: List<Studio>?,
     @SerializedName("synopsis")
     var synopsis: String?,
+    @SerializedName("theme")
+    var theme: Theme?,
     @SerializedName("themes")
-    var themes: List<Theme?>?,
+    var themes: List<ThemeX>?,
     @SerializedName("title")
     var title: String?,
     @SerializedName("title_english")
@@ -67,9 +75,7 @@ data class Data(
     @SerializedName("title_japanese")
     var titleJapanese: String?,
     @SerializedName("title_synonyms")
-    var titleSynonyms: List<String?>?,
-    @SerializedName("titles")
-    var titles: List<Title?>?,
+    var titleSynonyms: List<String>?,
     @SerializedName("trailer")
     var trailer: Trailer?,
     @SerializedName("type")

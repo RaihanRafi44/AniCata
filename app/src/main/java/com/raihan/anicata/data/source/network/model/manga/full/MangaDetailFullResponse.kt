@@ -7,5 +7,5 @@ import androidx.annotation.Keep
 @Keep
 data class MangaDetailFullResponse(
     @SerializedName("data")
-    var `data`: Data?
+    var data: MangaDetailFullData?
 )

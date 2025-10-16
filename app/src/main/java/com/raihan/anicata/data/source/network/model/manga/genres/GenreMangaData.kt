@@ -1,11 +1,11 @@
-package com.raihan.anicata.data.source.network.model.anime.genres
+package com.raihan.anicata.data.source.network.model.manga.genres
 
 
 import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
 
 @Keep
-data class Data(
+data class GenreMangaData(
     @SerializedName("count")
     var count: Int?,
     @SerializedName("mal_id")

@@ -7,5 +7,5 @@ import androidx.annotation.Keep
 @Keep
 data class GenreAnimeResponse(
     @SerializedName("data")
-    var `data`: List<Data?>?
+    var data: List<GenreAnimeData?>?
 )
