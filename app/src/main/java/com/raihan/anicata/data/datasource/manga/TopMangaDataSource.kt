@@ -20,10 +20,10 @@ class TopMangaApiDataSource(private val service: AniCataApiService): TopMangaDat
         limit: Int
     ): TopMangaResponse {
         return service.getTopManga(
-            type,
-            filter,
-            page,
-            limit
+            type = type,
+            filter = filter,
+            page = page,
+            limit = limit
         )
     }
 }

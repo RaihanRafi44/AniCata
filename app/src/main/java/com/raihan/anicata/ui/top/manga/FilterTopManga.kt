@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,15 +17,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.raihan.anicata.ui.top.StyledDropdownFromFilter
 
-/**
- * Layout utama yang menampilkan judul dan dropdown untuk Top Manga.
- */
 @Composable
-fun FilterTopManga() {
+fun FilterTopManga(
+    selectedFilterApiValue: String,
+    onFilterSelected: (String) -> Unit
+){
+    val filterOptions = remember {
+        listOf(
+            "All Manga" to "",
+            "Publishing" to "publishing",
+            //"Upcoming" to "upcoming",
+            "Most Popular" to "bypopularity"
+        )
+    }
+
+    val displayOptions = remember(filterOptions) {
+        filterOptions.map { it.first }
+    }
+
+    val selectedDisplayName = filterOptions.find { it.second == selectedFilterApiValue}?.first ?: "All Manga"
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            //.background(Color(0xFFE6F5F3))
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -37,16 +52,22 @@ fun FilterTopManga() {
 
         Spacer(modifier = Modifier.height(36.dp))
 
-        // Memanggil dropdown yang sama dari file SharedComponents.kt
         StyledDropdownFromFilter(
-            options = listOf("All Manga", "Top Manhwa", "Top Manhua", "Most Popular"),
+            options = displayOptions,
+            selectedOption = selectedDisplayName,
+            onOptionSelected = { selectedDisplayName ->
+                val newApiValue = filterOptions.find { it.first == selectedDisplayName }?.second ?: ""
+                onFilterSelected(newApiValue)
+            },
             modifier = Modifier.fillMaxWidth()
         )
+
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun FilterTopMangaPreview() {
-    FilterTopManga()
+    // Beri nilai default untuk preview
+    FilterTopManga(selectedFilterApiValue = "airing", onFilterSelected = {})
 }

@@ -7,5 +7,5 @@ import androidx.annotation.Keep
 @Keep
 data class SeasonListsResponse(
     @SerializedName("data")
-    var data: List<SeasonListsData?>?
+    var data: List<SeasonListsData>?
 )

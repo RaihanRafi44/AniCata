@@ -37,10 +37,12 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun StyledDropdownFromFilter(
     options: List<String>,
+    selectedOption: String, // <- DIUBAH: Menerima state dari parent
+    onOptionSelected: (String) -> Unit, // <- DITAMBAHKAN: Untuk memberi tahu parent
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf(options.firstOrNull() ?: "") }
+
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
@@ -55,7 +57,7 @@ fun StyledDropdownFromFilter(
         modifier = modifier
     ) {
         BasicTextField(
-            value = selectedOptionText,
+            value = selectedOption,
             onValueChange = {},
             modifier = Modifier
                 .menuAnchor()
@@ -92,7 +94,7 @@ fun StyledDropdownFromFilter(
                 DropdownMenuItem(
                     text = { Text(selectionOption, style = verySmallTextStyle) },
                     onClick = {
-                        selectedOptionText = selectionOption
+                        onOptionSelected(selectionOption)
                         expanded = false
                     },
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)

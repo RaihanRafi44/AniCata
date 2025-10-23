@@ -9,8 +9,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.raihan.anicata.R
-import com.raihan.anicata.data.model.LoginResult
-import com.raihan.anicata.data.model.UserData
+import com.raihan.anicata.data.model.auth.LoginResult
+import com.raihan.anicata.data.model.auth.UserData
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
