@@ -1,8 +1,8 @@
 package com.raihan.anicata.ui.login
 
 import androidx.lifecycle.ViewModel
-import com.raihan.anicata.data.model.LoginResult
-import com.raihan.anicata.data.model.LoginState
+import com.raihan.anicata.data.model.auth.LoginResult
+import com.raihan.anicata.data.model.auth.LoginState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

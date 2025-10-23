@@ -1,6 +1,5 @@
 package com.raihan.anicata.ui.main
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,12 +13,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,10 +37,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.raihan.anicata.data.model.UserData
+import com.raihan.anicata.data.model.auth.UserData
 import com.raihan.anicata.ui.alllists.AllListsScreen
 import com.raihan.anicata.ui.archive.ArchiveScreen
-import com.raihan.anicata.ui.detail.DetailScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.profile.ProfileScreen
 import com.raihan.anicata.ui.search.SearchScreenLayout
@@ -52,7 +48,6 @@ import com.raihan.anicata.ui.top.anime.TopAnimeScreen
 import com.raihan.anicata.ui.top.manga.TopMangaScreen
 import com.raihan.anicata.ui.top.novel.TopNovelScreen
 import kotlinx.coroutines.launch
-import okhttp3.internal.platform.PlatformRegistry.applicationContext
 
 
 /*@OptIn(ExperimentalMaterial3Api::class)

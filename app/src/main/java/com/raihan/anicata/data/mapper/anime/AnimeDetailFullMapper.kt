@@ -231,5 +231,5 @@ fun List<Entry>?.toDetailMalUrlEntryRelations(): List<MalUrlAnimeEntryRelation> 
 fun Collection<AnimeDetailFullData>?.toDetailAnime() =
     this?.map {
         it.toDetailFullAnime()
-    }
+    } ?: listOf()
 

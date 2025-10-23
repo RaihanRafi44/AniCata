@@ -7,7 +7,7 @@ import androidx.annotation.Keep
 @Keep
 data class SeasonYearResponse(
     @SerializedName("data")
-    var data: List<SeasonYearData?>?,
+    var data: List<SeasonYearData>?,
     @SerializedName("pagination")
     var pagination: Pagination?
 )

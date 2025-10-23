@@ -29,59 +29,52 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.raihan.anicata.data.model.manga.top.TopManga
+import com.raihan.anicata.data.model.manga.top.TopMangaPublished
 import java.text.NumberFormat
 import java.util.Locale
+import kotlin.collections.forEach
 
-// --- Data Class untuk menampung informasi Anime ---
-data class NovelItem(
-    val id: Int,
-    val title: String,
-    val airDate: String,
-    val members: Int,
-    val episodes: Int,
-    val score: Float,
-    val imageUrl: String // Biasanya diisi URL, di sini kita kosongkan untuk placeholder
-)
+private fun formatAiredDate(aired: TopMangaPublished?): String {
+    val from = aired?.prop?.from
+    val to = aired?.prop?.to
 
-// --- Fungsi untuk membuat data contoh ---
-fun getDummyNovelList(): List<NovelItem> {
-    return List(20) { i ->
-        if (i % 2 == 0) {
-            NovelItem(
-                id = i,
-                title = "Sousou no Frieren: Beyond Journey's End",
-                airDate = "Sep 2023 - Mar 2024",
-                members = 1199236,
-                episodes = 28,
-                score = 9.30f,
-                imageUrl = ""
-            )
-        } else {
-            NovelItem(
-                id = i,
-                title = "Fullmetal Alchemist: Brotherhood",
-                airDate = "Apr 2009 - Jul 2010",
-                members = 3205881,
-                episodes = 64,
-                score = 9.10f,
-                imageUrl = ""
-            )
-        }
+    // Tambahkan pemeriksaan apakah bulan valid (antara 1 dan 12)
+    val isFromDateValid = from?.year != null && from.month != null && from.month in 1..12
+
+    if (!isFromDateValid) {
+        return aired?.prop?.string ?: "N/A"
     }
+
+    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des")
+
+    // Kode ini sekarang aman karena kita sudah memeriksa nilai bulan di atas
+    val fromMonth = monthNames[from.month - 1]
+    val fromString = "$fromMonth ${from.year}"
+
+    val isToDateValid = to?.year != null && to.month != null && to.month in 1..12
+    val toString = if (isToDateValid) {
+        val toMonth = monthNames[to.month - 1]
+        " - $toMonth ${to.year}"
+    } else {
+        ""
+    }
+
+    return fromString + toString
 }
 
-
-// --- Composable untuk satu item dalam daftar ---
 @Composable
-fun NovelCard(item: NovelItem) {
-    //val cardBackgroundColor = Color(0xFFE6F5E9)
+fun NovelCard(item: TopManga) {
     val tvTagColor = Color(0xFFF4842D)
-    val epsTagColor = Color(0xFF4CAF50)
     val starColor = Color(0xFFFFC107)
 
     Surface(
@@ -89,33 +82,39 @@ fun NovelCard(item: NovelItem) {
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(8.dp),
-        //color = cardBackgroundColor,
-        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
+        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f)),
     ) {
-        // Struktur kembali ke Row utama, tanpa Box untuk overlay
         Row(
             modifier = Modifier
                 .padding(8.dp)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min), // Untuk tinggi gambar adaptif
+                .height(IntrinsicSize.Min),
         ) {
-            // Bagian Kiri: Placeholder Gambar
-            Box(
+            // Gambar (sama persis)
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(item.images.jpg.largeImageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = item.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .width(80.dp)
-                    .fillMaxHeight() // Tinggi gambar mengikuti tinggi Column di sebelahnya
+                    .fillMaxHeight()
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color.LightGray.copy(alpha = 0.8f))
                     .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Bagian Kanan: Informasi Teks
+            // Kolom Info Utama (Layout dari kotak merah + spacing dari Anda)
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                // Kotak 1: Judul
                 Text(
                     text = item.title,
                     fontWeight = FontWeight.SemiBold,
@@ -125,12 +124,20 @@ fun NovelCard(item: NovelItem) {
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 20.sp,
                 )
+
+                // Kotak 2: Tanggal Tayang
                 Text(
-                    text = item.airDate,
+                    text = formatAiredDate(item.published), // Asumsi fungsi ini ada
                     fontSize = 12.sp,
                     color = Color.DarkGray
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                // Kotak 3: Members dan Rank (Layout dari kotak merah)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Bagian kiri (Members)
                     Icon(
                         imageVector = Icons.Default.People,
                         contentDescription = "Members",
@@ -144,22 +151,32 @@ fun NovelCard(item: NovelItem) {
                         fontSize = 12.sp,
                         color = Color.DarkGray
                     )
+
+                    // Spacer untuk mendorong Rank ke kanan
+                    Spacer(Modifier.weight(1f))
+
+                    // Bagian kanan (Rank)
+                    Text(
+                        text = "Rank ${item.rank?.toString() ?: "?"}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.Black
+                    )
                 }
-                // --- PERUBAHAN DI SINI ---
-                // Row ini sekarang berisi Tag di kiri dan Rating di kanan
+
+                // Kotak 4: Tags dan Score (Layout dari kotak merah)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Bagian Tag
-                    Tag(text = "TV", backgroundColor = tvTagColor)
+                    // Bagian kiri (Tags)
+                    item.type?.let { Tag(text = it, backgroundColor = tvTagColor) }
                     Spacer(modifier = Modifier.width(6.dp))
-                    Tag(text = "${item.episodes} eps", backgroundColor = epsTagColor)
 
-                    // Spacer dengan weight mendorong elemen berikutnya ke ujung kanan
+                    // Spacer untuk mendorong Score ke kanan
                     Spacer(Modifier.weight(1f))
 
-                    // Bagian Rating
+                    // Bagian kanan (Score)
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "Score",
@@ -179,7 +196,6 @@ fun NovelCard(item: NovelItem) {
     }
 }
 
-// --- Composable kecil untuk membuat Tag (TV, eps) ---
 @Composable
 fun Tag(text: String, backgroundColor: Color) {
     Box(
@@ -196,29 +212,26 @@ fun Tag(text: String, backgroundColor: Color) {
     }
 }
 
-// --- Composable Utama untuk menampilkan daftar ---
 @Composable
-fun NovelListTopLayout() {
-    val novelList = getDummyNovelList()
+fun NovelListTopLayout(
+    novelList: List<TopManga>,
+    currentPage: Int = 1,
+    pageSize: Int = 25,
+    modifier: Modifier
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            //.background(Color(0xFFF0F0F0))
+        modifier = modifier
+            .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp)
     ) {
-        novelList.forEach { novel ->
+
+        val offset = ((currentPage - 1).coerceAtLeast(0)) * pageSize
+        val displayRanked: List<TopManga> = novelList.mapIndexed { index, novel ->
+            novel.copy(rank = offset + index + 1)
+        }
+
+        displayRanked.forEach { novel ->
             NovelCard(item = novel)
         }
-    }
-}
-
-
-// --- Preview untuk melihat hasil di Android Studio ---
-@Preview(showBackground = true)
-@Composable
-fun MangaListLayoutPreview() {
-    MaterialTheme {
-        NovelListTopLayout()
     }
 }

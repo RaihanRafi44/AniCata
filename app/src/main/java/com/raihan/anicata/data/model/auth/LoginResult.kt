@@ -1,4 +1,4 @@
-package com.raihan.anicata.data.model
+package com.raihan.anicata.data.model.auth
 
 data class LoginResult(
     val data: UserData?,
