@@ -203,9 +203,6 @@ fun MangaListTopLayout(
     pageSize: Int = 25,
     modifier: Modifier
 ) {
-    // BARU: Definisikan tipe yang akan dikecualikan di sini
-    //val excludedTypes = setOf("novel", "lightnovel", "light novel")
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -213,18 +210,7 @@ fun MangaListTopLayout(
     ) {
 
         val offset = ((currentPage - 1).coerceAtLeast(0)) * pageSize
-        /*val allRanked: List<TopManga> = mangaList.mapIndexed { index, manga ->
-            manga.copy(rank = offset + index + 1)
-        }
-        // 2. FILTER item SETELAH diberi rank
-        val displayRankedAndFiltered = allRanked.filter { manga ->
-            !excludedTypes.contains(manga.type?.lowercase(Locale.ROOT))
-        }
 
-        // 3. Tampilkan list yang SUDAH di-filter dan di-rank
-        displayRankedAndFiltered.forEach { manga ->
-            MangaCard(item = manga)
-        }*/
         val displayRanked: List<TopManga> = mangaList.mapIndexed { index, manga ->
             manga.copy(rank = offset + index + 1)
         }

@@ -16,86 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-/*
-class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel(){
-    // State untuk daftar anime
-    private val _topManga = MutableStateFlow<List<TopManga>>(emptyList())
-    val topManga: StateFlow<List<TopManga>> = _topManga.asStateFlow()
-
-    // State untuk total halaman
-    private val _totalPages = MutableStateFlow(1)
-    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
-
-    // State untuk loading
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    // State untuk pesan error
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
-
-    // MODIFIKASI: Tambahkan "light novel" (dengan spasi) ke daftar pengecualian
-    private val excludedTypes = setOf("novel", "lightnovel", "light novel")
-
-    fun getTopMangaData(
-        page: Int,
-        type: String = "",
-        filter: String = "",
-        limit: Int = 25
-    ) {
-        viewModelScope.launch {
-            repository.getTopMangaList(type, filter, page, limit).collectLatest { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
-                        _isLoading.value = true
-                        _error.value = null
-                    }
-                    is ResultWrapper.Success -> {
-                        _isLoading.value = false
-
-                        _topManga.value = result.payload?.first ?: emptyList()
-                        result.payload?.second?.let {
-                            _totalPages.value = it
-                        }
-                        // MODIFIKASI: Filter daftarnya di sini (client-side)
-                        val fullList = result.payload?.first ?: emptyList()
-                        val filteredList = fullList.filter { manga ->
-                            // Cek apakah 'manga.type' (contoh: "Manga", "Novel")
-                            // ada di dalam daftar 'excludedTypes' setelah di-lowercase.
-                            // Jika TIDAK ADA (!), maka itemnya lolos filter.
-                            !excludedTypes.contains(manga.type?.lowercase(Locale.ROOT))
-                        }
-
-                        // Kirim list yang sudah difilter ke UI
-                        _topManga.value = filteredList
-
-                        result.payload?.second?.let {
-                            _totalPages.value = it
-                        }
-                        */
-/*_isLoading.value = false
-                        _topManga.value = result.payload?.first ?: emptyList()
-                        result.payload?.second?.let {
-                            _totalPages.value = it
-                        }*//*
-
-                    }
-                    is ResultWrapper.Error -> {
-                        _isLoading.value = false
-                        _error.value = result.exception?.message ?: "An unknown error occurred"
-                    }
-                    is ResultWrapper.Empty -> {
-                        _isLoading.value = false
-                        _topManga.value = emptyList()
-                    }
-
-                    else -> {}
-                }
-            }
-        }
-    }
-}*/
-
 class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel() {
 
     // Ukuran halaman yang diinginkan UI
@@ -125,17 +45,12 @@ class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    // Ini adalah StateFlow final yang akan diobservasi oleh UI
     // Ia akan mengambil data dari cache berdasarkan halaman UI saat ini
     val topManga: StateFlow<List<TopManga>> = _currentUiPage
         .combine(pageCache) { uiPage, cache ->
             cache[uiPage] ?: emptyList() // Ambil list dari cache, atau list kosong
         }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Lazily, emptyList())
 
-
-    /**
-     * Dipanggil oleh UI saat ingin memuat data untuk halaman tertentu.
-     */
     fun getMangaForUiPage(uiPage: Int, filter: String = currentFilter) {
         viewModelScope.launch {
             // Jika filter berubah, reset semuanya
@@ -217,91 +132,30 @@ class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel(
                 delay(1000L)
             }
 
-            // --- PERBAIKAN LOGIKA SORTING ---
-            // Blok ini sekarang menggunakan 'when' untuk menentukan cara sorting
-            // berdasarkan filter yang aktif.
-
             val itemsToProcess: List<TopManga>
 
             when (currentFilter) {
-                // "All Manga" (kosong) dan "Publishing":
-                // Urutkan berdasarkan Skor (tertinggi), lalu Member (terbanyak)
                 "", "publishing", "upcoming" -> {
                     val comparator = compareByDescending<TopManga> { it.score ?: 0.0 }
                         .thenByDescending { it.members ?: 0 }
                     itemsToProcess = itemsForThisPage.sortedWith(comparator)
                 }
 
-                // "Most Popular":
-                // Urutkan murni berdasarkan Member (terbanyak)
                 "bypopularity" -> {
                     val comparator = compareByDescending<TopManga> { it.members ?: 0 }
                     itemsToProcess = itemsForThisPage.sortedWith(comparator)
                 }
 
-                // "Upcoming" (dan filter lain):
-                // Percaya urutan asli dari API (yang sudah berurutan berdasarkan tanggal)
-                // Kita tidak melakukan sort agar urutan dari buffer + fetch baru tetap terjaga.
                 else -> {
                     itemsToProcess = itemsForThisPage
                 }
             }
-            // --- AKHIR PERBAIKAN ---
             // Item yang akan ditampilkan di halaman ini (ambil dari list yang sudah diurutkan)
             val itemsToShow = itemsToProcess.take(uiPageSize)
 
             // Sisanya, simpan di buffer untuk halaman berikutnya (juga dari list yang sudah diurutkan)
             itemBuffer.clear() // Hapus sisa buffer lama
             itemBuffer.addAll(itemsToProcess.drop(uiPageSize)) // Tambahkan buffer baru
-
-            /*// --- PERBAIKAN LOGIKA SORTING ---
-
-            val itemsToProcess: List<TopManga>
-
-            // HANYA jika filter "All Novel" (kosong), kita urutkan manual
-            // berdasarkan score, lalu members.
-            if (currentFilter == "") {
-                val comparator = compareByDescending<TopManga> { it.score ?: 0.0 }
-                    .thenByDescending { it.members ?: 0 }
-                itemsToProcess = itemsForThisPage.sortedWith(comparator)
-            } else {
-                // Untuk filter "bypopularity", "upcoming", "publishing",
-                // kita percaya urutan asli dari API (karena itemsForThisPage
-                // diisi secara berurutan dari API).
-                itemsToProcess = itemsForThisPage
-            }
-            // --- AKHIR PERBAIKAN ---
-
-            // Item yang akan ditampilkan di halaman ini (ambil dari list yang sudah diurutkan)
-            val itemsToShow = itemsToProcess.take(uiPageSize)
-
-            // Sisanya, simpan di buffer untuk halaman berikutnya (juga dari list yang sudah diurutkan)
-            itemBuffer.clear() // Hapus sisa buffer lama
-            itemBuffer.addAll(itemsToProcess.drop(uiPageSize)) // Tambahkan buffer baru*/
-
-            /*// --- PERUBAHAN BARU DI SINI ---
-            // Buat comparator untuk mengurutkan:
-            // 1. Berdasarkan score (tertinggi ke terendah)
-            // 2. Jika score sama, berdasarkan members (terbanyak ke tersedikit)
-            val comparator = compareByDescending<TopManga> { it.score ?: 0.0 }
-                .thenByDescending { it.members ?: 0 }
-
-            // Urutkan list yang sudah dikumpulkan sebelum dipisah
-            val sortedItems = itemsForThisPage.sortedWith(comparator)
-            // --- AKHIR DARI PERUBAHAN BARU ---
-            // Item yang akan ditampilkan di halaman ini (ambil dari list yang sudah diurutkan)
-            val itemsToShow = sortedItems.take(uiPageSize)
-
-            // Sisanya, simpan di buffer untuk halaman berikutnya (juga dari list yang sudah diurutkan)
-            itemBuffer.addAll(sortedItems.drop(uiPageSize))*/
-
-            /*// 3. Pisahkan data: 25 untuk UI, sisanya untuk buffer
-
-            // Item yang akan ditampilkan di halaman ini
-            val itemsToShow = itemsForThisPage.take(uiPageSize)
-
-            // Sisanya, simpan di buffer untuk halaman berikutnya
-            itemBuffer.addAll(itemsForThisPage.drop(uiPageSize))*/
 
             // 4. Simpan hasil ke cache
             if (itemsToShow.isNotEmpty()) {
@@ -315,9 +169,6 @@ class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel(
         }
     }
 
-    /**
-     * Helper function untuk mereset state saat filter diubah.
-     */
     private fun resetData(newFilter: String) {
         currentFilter = newFilter
         currentApiPage = 1

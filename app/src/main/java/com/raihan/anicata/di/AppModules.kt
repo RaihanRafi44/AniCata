@@ -50,6 +50,7 @@ import com.raihan.anicata.data.repository.manga.MangaSearchRepositoryImpl
 import com.raihan.anicata.data.repository.manga.MangaTopRepository
 import com.raihan.anicata.data.repository.manga.MangaTopRepositoryImpl
 import com.raihan.anicata.data.source.network.service.AniCataApiService
+import com.raihan.anicata.ui.alllists.AllListsViewModel
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
 import com.raihan.anicata.ui.login.LoginViewModel
 import com.raihan.anicata.ui.top.anime.TopAnimeViewModel
@@ -113,6 +114,7 @@ object AppModules {
             viewModelOf(::TopAnimeViewModel)
             viewModelOf(::TopMangaViewModel)
             viewModelOf(::TopNovelViewModel)
+            viewModelOf(::AllListsViewModel)
         }
 
     val modules =

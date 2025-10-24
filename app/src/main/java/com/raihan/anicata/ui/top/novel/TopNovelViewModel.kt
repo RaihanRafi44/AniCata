@@ -15,60 +15,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-/*
-class TopNovelViewModel(private val repository: MangaTopRepository) : ViewModel() {
-    // State untuk daftar anime
-    private val _topManga = MutableStateFlow<List<TopManga>>(emptyList())
-    val topNovel: StateFlow<List<TopManga>> = _topManga.asStateFlow()
-
-    // State untuk total halaman
-    private val _totalPages = MutableStateFlow(1)
-    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
-
-    // State untuk loading
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    // State untuk pesan error
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
-
-    fun getTopNovelData(
-        page: Int,
-        type: String = "",
-        filter: String = "",
-        limit: Int = 25
-    ) {
-        viewModelScope.launch {
-            repository.getTopMangaList(type, filter, page, limit).collectLatest { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
-                        _isLoading.value = true
-                        _error.value = null
-                    }
-                    is ResultWrapper.Success -> {
-                        _isLoading.value = false
-                        _topManga.value = result.payload?.first ?: emptyList()
-                        result.payload?.second?.let {
-                            _totalPages.value = it
-                        }
-                    }
-                    is ResultWrapper.Error -> {
-                        _isLoading.value = false
-                        _error.value = result.exception?.message ?: "An unknown error occurred"
-                    }
-                    is ResultWrapper.Empty -> {
-                        _isLoading.value = false
-                        _topManga.value = emptyList()
-                    }
-
-                    else -> {}
-                }
-            }
-        }
-    }
-}*/
-
 class TopNovelViewModel(private val repository: MangaTopRepository) : ViewModel() {
 
     // Ukuran halaman yang diinginkan UI
@@ -105,11 +51,6 @@ class TopNovelViewModel(private val repository: MangaTopRepository) : ViewModel(
             cache[uiPage] ?: emptyList() // Ambil list dari cache, atau list kosong
         }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Lazily, emptyList())
 
-
-    /**
-     * Dipanggil oleh UI saat ingin memuat data untuk halaman tertentu.
-     * Nama fungsi diubah dari getTopNovelData -> getNovelForUiPage
-     */
     fun getNovelForUiPage(uiPage: Int, filter: String = currentFilter) {
         viewModelScope.launch {
             // Jika filter berubah, reset semuanya
@@ -230,56 +171,6 @@ class TopNovelViewModel(private val repository: MangaTopRepository) : ViewModel(
             itemBuffer.clear() // Hapus sisa buffer lama
             itemBuffer.addAll(itemsToProcess.drop(uiPageSize)) // Tambahkan buffer baru
 
-            /*// --- PERBAIKAN LOGIKA SORTING ---
-
-            val itemsToProcess: List<TopManga>
-
-            // HANYA jika filter "All Novel" (kosong), kita urutkan manual
-            // berdasarkan score, lalu members.
-            if (currentFilter == "") {
-                val comparator = compareByDescending<TopManga> { it.score ?: 0.0 }
-                    .thenByDescending { it.members ?: 0 }
-                itemsToProcess = itemsForThisPage.sortedWith(comparator)
-            } else {
-                // Untuk filter "bypopularity", "upcoming", "publishing",
-                // kita percaya urutan asli dari API (karena itemsForThisPage
-                // diisi secara berurutan dari API).
-                itemsToProcess = itemsForThisPage
-            }
-            // --- AKHIR PERBAIKAN ---
-
-            // Item yang akan ditampilkan di halaman ini (ambil dari list yang sudah diurutkan)
-            val itemsToShow = itemsToProcess.take(uiPageSize)
-
-            // Sisanya, simpan di buffer untuk halaman berikutnya (juga dari list yang sudah diurutkan)
-            itemBuffer.clear() // Hapus sisa buffer lama
-            itemBuffer.addAll(itemsToProcess.drop(uiPageSize)) // Tambahkan buffer baru*/
-
-            /*// --- PERUBAHAN BARU DI SINI ---
-            // Buat comparator untuk mengurutkan:
-            // 1. Berdasarkan score (tertinggi ke terendah)
-            // 2. Jika score sama, berdasarkan members (terbanyak ke tersedikit)
-            val comparator = compareByDescending<TopManga> { it.score ?: 0.0 }
-                .thenByDescending { it.members ?: 0 }
-
-            // Urutkan list yang sudah dikumpulkan sebelum dipisah
-            val sortedItems = itemsForThisPage.sortedWith(comparator)
-            // --- AKHIR DARI PERUBAHAN BARU ---
-            // Item yang akan ditampilkan di halaman ini (ambil dari list yang sudah diurutkan)
-            val itemsToShow = sortedItems.take(uiPageSize)
-
-            // Sisanya, simpan di buffer untuk halaman berikutnya (juga dari list yang sudah diurutkan)
-            itemBuffer.addAll(sortedItems.drop(uiPageSize))*/
-            /*// 3. Pisahkan data: 25 untuk UI, sisanya untuk buffer
-
-            // Item yang akan ditampilkan di halaman ini
-            val itemsToShow = itemsForThisPage.take(uiPageSize)
-
-            // Sisanya, simpan di buffer untuk halaman berikutnya
-            itemBuffer.addAll(itemsForThisPage.drop(uiPageSize))*/
-
-
-
             // 4. Simpan hasil ke cache
             if (itemsToShow.isNotEmpty()) {
                 val newCache = pageCache.value.toMutableMap()
@@ -292,9 +183,6 @@ class TopNovelViewModel(private val repository: MangaTopRepository) : ViewModel(
         }
     }
 
-    /**
-     * Helper function untuk mereset state saat filter diubah.
-     */
     private fun resetData(newFilter: String) {
         currentFilter = newFilter
         currentApiPage = 1

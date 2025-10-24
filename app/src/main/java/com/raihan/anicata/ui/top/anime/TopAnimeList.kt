@@ -205,7 +205,7 @@ fun AnimeListTopLayout(
     currentPage: Int = 1,   // halaman sekarang, 1-based
     pageSize: Int = 25,     // jumlah item per halaman
     // isLoading dan error DIHAPUS dari parameter
-    modifier: Modifier = Modifier // Ubah jadi modifier biasa
+    modifier: Modifier // Ubah jadi modifier biasa
 ) {
     Column(
         modifier = modifier
