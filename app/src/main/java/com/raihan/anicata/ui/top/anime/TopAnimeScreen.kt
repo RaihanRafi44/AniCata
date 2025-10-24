@@ -38,9 +38,6 @@ fun TopAnimeScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // == STATE UNTUK FILTER ==
-    // State untuk filter yang dipilih (menggunakan nilai API)
-    // "" = "All Anime"
     var selectedFilter by rememberSaveable { mutableStateOf("") }
 
     val paginationState = rememberPaginationState(
@@ -59,8 +56,6 @@ fun TopAnimeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // 2. KONTEN (YANG BISA DI-SCROLL)
-        // Kolom ini berisi semua kontenmu
         Column(
             modifier = Modifier
                 .fillMaxSize()

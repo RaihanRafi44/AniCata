@@ -84,14 +84,14 @@ interface AniCataApiService {
 
     @GET("anime")
     suspend fun getSearchAnime(
-        @Query("q") q: String,
-        @Query("page") page: Int,
-        @Query("limit") limit: Int,
-        @Query("type") type: String,
-        @Query("score") score: Int,
-        @Query("genres") genres: String,
-        @Query("order_by") orderBy: String,
-        @Query("sort") sort: String
+        @Query("q") q: String?,
+        @Query("page") page: Int?,
+        @Query("limit") limit: Int?,
+        @Query("type") type: String?,
+        @Query("score") score: Double?,
+        @Query("genres") genres: String?,
+        @Query("order_by") orderBy: String?,
+        @Query("sort") sort: String?
     ): SearchAnimeResponse
 
     @GET("manga")

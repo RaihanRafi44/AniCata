@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,102 +17,109 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.raihan.anicata.data.model.anime.search.AiredSearchAnime
+import com.raihan.anicata.data.model.anime.search.SearchAnime
+import com.raihan.anicata.data.model.anime.top.AiredTopAnime
+import com.raihan.anicata.ui.paging.PaginationControls
+import com.raihan.anicata.utils.PaginationState
 import java.text.NumberFormat
 import java.util.Locale
 
-// --- Data Class untuk menampung informasi Anime ---
-data class AnimeItem(
-    val id: Int,
-    val title: String,
-    val airDate: String,
-    val members: Int,
-    val episodes: Int,
-    val score: Float,
-    val imageUrl: String // Biasanya diisi URL, di sini kita kosongkan untuk placeholder
-)
+private fun formatAiredDate(aired: AiredSearchAnime?): String {
+    val from = aired?.prop?.from
+    val to = aired?.prop?.to
 
-// --- Fungsi untuk membuat data contoh ---
-fun getDummyAnimeList(): List<AnimeItem> {
-    return List(20) { i ->
-        if (i % 2 == 0) {
-            AnimeItem(
-                id = i,
-                title = "Sousou no Frieren: Beyond Journey's End",
-                airDate = "Sep 2023 - Mar 2024",
-                members = 1199236,
-                episodes = 28,
-                score = 9.30f,
-                imageUrl = ""
-            )
-        } else {
-            AnimeItem(
-                id = i,
-                title = "Fullmetal Alchemist: Brotherhood",
-                airDate = "Apr 2009 - Jul 2010",
-                members = 3205881,
-                episodes = 64,
-                score = 9.10f,
-                imageUrl = ""
-            )
-        }
+    // Tambahkan pemeriksaan apakah bulan valid (antara 1 dan 12)
+    val isFromDateValid = from?.year != null && from.month != null && from.month in 1..12
+
+    if (!isFromDateValid) {
+        return aired?.prop?.string ?: "N/A"
     }
+
+    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des")
+
+    // Kode ini sekarang aman karena kita sudah memeriksa nilai bulan di atas
+    val fromMonth = monthNames[from.month - 1]
+    val fromString = "$fromMonth ${from.year}"
+
+    val isToDateValid = to?.year != null && to.month != null && to.month in 1..12
+    val toString = if (isToDateValid) {
+        val toMonth = monthNames[to.month - 1]
+        " - $toMonth ${to.year}"
+    } else {
+        ""
+    }
+
+    return fromString + toString
 }
 
-
-// --- Composable untuk satu item dalam daftar ---
 @Composable
-fun AnimeAllCard(item: AnimeItem) {
-    //val cardBackgroundColor = Color(0xFFE6F5E9)
+fun AnimeAllCard(item: SearchAnime) {
     val tvTagColor = Color(0xFFF4842D)
     val epsTagColor = Color(0xFF4CAF50)
     val starColor = Color(0xFFFFC107)
 
     Surface(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        //color = cardBackgroundColor,
         border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
     ) {
-        // Struktur kembali ke Row utama, tanpa Box untuk overlay
         Row(
             modifier = Modifier
                 .padding(8.dp)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min), // Untuk tinggi gambar adaptif
+                .height(IntrinsicSize.Min),
         ) {
-            // Bagian Kiri: Placeholder Gambar
-            Box(
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(item.images.jpg.largeImageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = item.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .width(80.dp)
-                    .fillMaxHeight() // Tinggi gambar mengikuti tinggi Column di sebelahnya
+                    .fillMaxHeight()
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color.LightGray.copy(alpha = 0.8f))
                     .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Bagian Kanan: Informasi Teks
+            // Info Teks
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -126,7 +134,7 @@ fun AnimeAllCard(item: AnimeItem) {
                     lineHeight = 20.sp,
                 )
                 Text(
-                    text = item.airDate,
+                    text = formatAiredDate(item.aired), // Asumsi fungsi ini ada
                     fontSize = 12.sp,
                     color = Color.DarkGray
                 )
@@ -140,26 +148,22 @@ fun AnimeAllCard(item: AnimeItem) {
                     Spacer(modifier = Modifier.width(4.dp))
                     val formatter = NumberFormat.getInstance(Locale.US)
                     Text(
-                        text = formatter.format(item.members),
+                        text = formatter.format(item.members ?: 0),
                         fontSize = 12.sp,
                         color = Color.DarkGray
                     )
                 }
-                // --- PERUBAHAN DI SINI ---
-                // Row ini sekarang berisi Tag di kiri dan Rating di kanan
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Bagian Tag
-                    Tag(text = "TV", backgroundColor = tvTagColor)
+                    Tag(text = item.type ?: "TV", backgroundColor = tvTagColor)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Tag(text = "${item.episodes} eps", backgroundColor = epsTagColor)
-
-                    // Spacer dengan weight mendorong elemen berikutnya ke ujung kanan
+                    Tag(
+                        text = "${item.episodes ?: '?'} eps",
+                        backgroundColor = epsTagColor
+                    )
                     Spacer(Modifier.weight(1f))
-
-                    // Bagian Rating
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "Score",
@@ -168,7 +172,7 @@ fun AnimeAllCard(item: AnimeItem) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = String.format(Locale.US, "%.2f", item.score),
+                        text = String.format(Locale.US, "%.2f", (item.score ?: 0.0).toFloat()),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = Color.Black
@@ -179,7 +183,6 @@ fun AnimeAllCard(item: AnimeItem) {
     }
 }
 
-// --- Composable kecil untuk membuat Tag (TV, eps) ---
 @Composable
 fun Tag(text: String, backgroundColor: Color) {
     Box(
@@ -196,29 +199,124 @@ fun Tag(text: String, backgroundColor: Color) {
     }
 }
 
-// --- Composable Utama untuk menampilkan daftar ---
-@Composable
-fun AnimeListLayout() {
-    val animeList = getDummyAnimeList()
+/*@Composable
+fun AnimeListLayout(
+    animeList: List<SearchAnime>,
+    isLoading: Boolean,
+    isError: Boolean,
+    errorMessage: String,
+    paginationState: PaginationState
+    // 2. 'onPageChange' dihapus dari parameter
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF0F0F0))
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp)
+            //.background(Color(0xFFF0F0F0))
     ) {
+        // Box untuk list, loading, atau error
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (isError) {
+                // 2. TAMPILKAN PESAN ERROR YANG LEBIH BAIK
+                Column(
+                    modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Gagal memuat data",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = errorMessage, // <-- Tampilkan pesan error dari ViewModel
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        items = animeList,
+                        key = { it.id }
+                    ) { anime ->
+                        AnimeAllCard(item = anime)
+                    }
+                }
+            }
+        }
+
+        // 3. Panggil PagingControls dari file 'PagingControls.kt'
+        if (!isLoading && !isError && paginationState.totalPages > 1) {
+            PaginationControls(
+                currentPage = paginationState.currentPage,
+                startPage = paginationState.startPage,
+                totalPages = paginationState.totalPages,
+                onPageChange = { newPage ->
+                    // Panggil fungsi 'onPageChange' dari PaginationState
+                    paginationState.onPageChange(newPage)
+                },
+                visiblePages = paginationState.visiblePages
+            )
+        }
+    }
+}*/
+@Composable
+fun AnimeListLayout(
+    // 1. HAPUS SEMUA PARAMETER KECUALI animeList
+    animeList: List<SearchAnime>
+) {
+    // 2. GANTI root menjadi Column (BUKAN LazyColumn)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            // 3. Pindahkan padding dari LazyColumn ke sini
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        // 4. Pindahkan verticalArrangement dari LazyColumn ke sini
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // 5. GANTI 'items' menjadi 'forEach'
         animeList.forEach { anime ->
             AnimeAllCard(item = anime)
         }
     }
 }
 
-
-// --- Preview untuk melihat hasil di Android Studio ---
-@Preview(showBackground = true)
 @Composable
-fun AnimeListLayoutPreview() {
-    MaterialTheme {
-        AnimeListLayout()
+fun ErrorStateContent(errorMessage: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Gagal memuat data",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = errorMessage,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+        }
     }
 }
