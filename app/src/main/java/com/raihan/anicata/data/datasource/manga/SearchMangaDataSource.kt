@@ -5,27 +5,27 @@ import com.raihan.anicata.data.source.network.service.AniCataApiService
 
 interface SearchMangaDataSource {
     suspend fun getSearchMangaList(
-        query: String,
-        page: Int,
-        limit: Int,
-        type: String,
-        score: Int,
-        genres: String,
-        orderBy: String,
-        sort: String
+        query: String?,
+        page: Int?,
+        limit: Int?,
+        type: String?,
+        score: Int?,
+        genres: String?,
+        orderBy: String?,
+        sort: String?
     ): SearchMangaResponse
 }
 
 class SearchMangaApiDataSource(private val service: AniCataApiService): SearchMangaDataSource{
     override suspend fun getSearchMangaList(
-        query: String,
-        page: Int,
-        limit: Int,
-        type: String,
-        score: Int,
-        genres: String,
-        orderBy: String,
-        sort: String
+        query: String?,
+        page: Int?,
+        limit: Int?,
+        type: String?,
+        score: Int?,
+        genres: String?,
+        orderBy: String?,
+        sort: String?
     ): SearchMangaResponse {
         return service.getSearchManga(
             q = query,

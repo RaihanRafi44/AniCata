@@ -10,27 +10,27 @@ import kotlinx.coroutines.flow.Flow
 
 interface MangaSearchRepository {
     fun getSearchMangaList(
-        query: String,
-        page: Int,
-        limit: Int,
-        type: String,
-        score: Int,
-        genres: String,
-        orderBy: String,
-        sort: String
+        query: String?,
+        page: Int?,
+        limit: Int?,
+        type: String?,
+        score: Int?,
+        genres: String?,
+        orderBy: String?,
+        sort: String?
     ) : Flow<ResultWrapper<Pair<List<SearchManga>, Int?>>>
 }
 
 class MangaSearchRepositoryImpl(private val dataSource: SearchMangaDataSource) : MangaSearchRepository {
     override fun getSearchMangaList(
-        query: String,
-        page: Int,
-        limit: Int,
-        type: String,
-        score: Int,
-        genres: String,
-        orderBy: String,
-        sort: String
+        query: String?,
+        page: Int?,
+        limit: Int?,
+        type: String?,
+        score: Int?,
+        genres: String?,
+        orderBy: String?,
+        sort: String?
     ): Flow<ResultWrapper<Pair<List<SearchManga>, Int?>>> {
         return proceedFlow {
             val response =
