@@ -50,6 +50,8 @@ import com.raihan.anicata.data.repository.manga.MangaSearchRepositoryImpl
 import com.raihan.anicata.data.repository.manga.MangaTopRepository
 import com.raihan.anicata.data.repository.manga.MangaTopRepositoryImpl
 import com.raihan.anicata.data.source.network.service.AniCataApiService
+import com.raihan.anicata.data.usecase.GetGenreListUseCase
+import com.raihan.anicata.data.usecase.GetMediaListUseCase
 import com.raihan.anicata.ui.alllists.AllListsViewModel
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
 import com.raihan.anicata.ui.login.LoginViewModel
@@ -108,6 +110,12 @@ object AppModules {
             single<MangaTopRepository> { MangaTopRepositoryImpl(get()) }
         }
 
+    private val useCase =
+        module{
+            single{ GetGenreListUseCase(get(),get())}
+            single{ GetMediaListUseCase(get(), get()) }
+        }
+
     private val viewModel =
         module{
             viewModelOf(::LoginViewModel)
@@ -123,6 +131,7 @@ object AppModules {
             dataSource,
             repository,
             authModule,
+            useCase,
             viewModel
         )
 }

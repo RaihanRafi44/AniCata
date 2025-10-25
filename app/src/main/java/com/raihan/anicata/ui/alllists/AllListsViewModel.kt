@@ -2,376 +2,384 @@ package com.raihan.anicata.ui.alllists
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.raihan.anicata.data.model.anime.search.SearchAnime
-import com.raihan.anicata.data.repository.anime.AnimeSearchRepository
+import com.raihan.anicata.data.model.media.MediaGenre
+import com.raihan.anicata.data.model.media.MediaItem
+import com.raihan.anicata.data.usecase.GetGenreListUseCase
+import com.raihan.anicata.data.usecase.GetMediaListUseCase
 import com.raihan.anicata.utils.ResultWrapper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/*
-// Data class untuk menampung seluruh state UI
-data class AllListsUiState(
-    val animeList: List<SearchAnime> = emptyList(),
-    val isLoading: Boolean = false,
-    val isError: Boolean = false,
-    val errorMessage: String = "",
-    val totalPages: Int = 1,
-    val currentPage: Int = 1
+// --- Definisikan opsi filter "Type" secara terpisah ---
+private val animeTypeOptions = listOf(
+    "All", "TV", "Movie", "OVA", "Special", "ONA",
+    "Music", "CM", "PV", "TV Special"
 )
 
-class AllListsViewModel(private val repository: AnimeSearchRepository) : ViewModel() {
+private val mangaTypeOptions = listOf(
+    "All", "Manga", "Novel", "Light Novel", "One-shot",
+    "Doujin", "Manhwa", "Manhua"
+)
 
-    private val _uiState = MutableStateFlow(AllListsUiState())
-    val uiState: StateFlow<AllListsUiState> = _uiState.asStateFlow()
+// Opsi "All" default untuk dropdown genre
+private val allGenreOption = MediaGenre(id = 0, name = "All")
 
-    private val limit = 25 // Sesuai permintaan Anda
-
-    init {
-        // Muat halaman pertama saat ViewModel dibuat
-        fetchAnimePage(1)
-    }
-
-    fun fetchAnimePage(page: Int) {
-        // Jangan fetch jika sedang loading
-        if (_uiState.value.isLoading) return
-
-        viewModelScope.launch {
-            repository.getSearchAnimeList(
-                query = null,
-                page = page, // Gunakan halaman yang diminta
-                limit = limit,
-                type = null,
-                score = null,
-                genres = null,
-                orderBy = "score",
-                sort = "desc"
-            ).onEach { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
-                        _uiState.update { it.copy(isLoading = true) }
-                    }
-
-                    is ResultWrapper.Success -> {
-                        // Ambil data list dan total halaman dari repository
-                        val newAnimeList = result.payload?.first ?: emptyList()
-                        val totalPages = result.payload?.second ?: 1 // Default 1 jika null
-
-                        val sortedList = newAnimeList.sortedWith(
-                            compareByDescending<SearchAnime> { it.score ?: 0.0 } // Urutan utama: Score
-                                .thenByDescending { it.members ?: 0 } // Urutan kedua: Members
-                        )
-
-                        _uiState.update { currentState ->
-                            currentState.copy(
-                                isLoading = false,
-                                animeList = sortedList, // <-- MENGGANTI list lama
-                                totalPages = totalPages,
-                                currentPage = page,
-                                isError = false,
-                                errorMessage = ""
-                            )
-                        }
-                    }
-
-                    is ResultWrapper.Error -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                isError = true,
-                                errorMessage = result.exception?.message ?: "Terjadi kesalahan tidak diketahui",
-                                currentPage = page // Tetap update halaman meski error
-                            )
-                        }
-                    }
-                    else -> {}
-                }
-            }.launchIn(viewModelScope)
-        }
-    }
-}*/
-
-/*// Data class untuk menampung seluruh state UI
+// Data class untuk menampung seluruh state UI
 data class AllListsUiState(
-    val animeList: List<SearchAnime> = emptyList(),
-    val isLoading: Boolean = false,
+    val mediaList: List<MediaItem> = emptyList(),
+    val isLoading: Boolean = false, // Default false
     val isError: Boolean = false,
     val errorMessage: String = "",
     val totalPages: Int = 1,
     val currentPage: Int = 1,
 
-    // --- State Baru Untuk Filter ---
-    // Menyimpan pilihan user di dropdown (sebelum ditekan "Update")
-    val selectedSort: String = "Score",
-    // Menyimpan filter yang benar-benar dikirim ke API
-    val appliedOrderBy: String = "score",
-    val appliedSort: String = "desc"
-)
-
-class AllListsViewModel(private val repository: AnimeSearchRepository) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(AllListsUiState())
-    val uiState: StateFlow<AllListsUiState> = _uiState.asStateFlow()
-
-    private val limit = 25 // Sesuai permintaan Anda
-
-    init {
-        // Muat halaman pertama saat ViewModel dibuat (menggunakan filter default)
-        fetchAnimePage(1)
-    }
-
-    *//**
-     * Memperbarui state pilihan di UI dropdown.
-     * Tidak memicu fetch data.
-     *//*
-    fun updateSortFilter(newSort: String) {
-        _uiState.update { it.copy(selectedSort = newSort) }
-    }
-
-    *//**
-     * Menerapkan filter yang dipilih dan memuat ulang data dari halaman 1.
-     *//*
-    fun applyFilters() {
-        val (newOrderBy, newSort) = when (_uiState.value.selectedSort) {
-            "A - Z" -> "title" to "asc"
-            "Z - A" -> "title" to "desc"
-            "Popularity" -> "popularity" to "asc"
-            "Score" -> "score" to "desc"
-            else -> "score" to "desc" // Default case
-        }
-
-        // Set filter YANG DITERAPKAN
-        _uiState.update {
-            it.copy(
-                appliedOrderBy = newOrderBy,
-                appliedSort = newSort,
-                currentPage = 1 // Reset ke halaman 1 setiap ganti filter
-            )
-        }
-
-        // Fetch halaman pertama dengan filter baru
-        fetchAnimePage(1)
-    }
-
-    fun fetchAnimePage(page: Int) {
-        // Jangan fetch jika sedang loading
-        if (_uiState.value.isLoading) return
-
-        // Ambil filter yang SUDAH DITERAPKAN dari state
-        val currentState = _uiState.value
-        val currentOrderBy = currentState.appliedOrderBy
-        val currentSort = currentState.appliedSort
-
-        viewModelScope.launch {
-            repository.getSearchAnimeList(
-                query = null,
-                page = page, // Gunakan halaman yang diminta
-                limit = limit,
-                type = null,
-                score = null,
-                genres = null,
-                orderBy = currentOrderBy, // <-- Gunakan state
-                sort = currentSort      // <-- Gunakan state
-            ).onEach { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
-                        _uiState.update { it.copy(isLoading = true) }
-                    }
-
-                    is ResultWrapper.Success -> {
-                        // Ambil data list dan total halaman dari repository
-                        val newAnimeList = result.payload?.first ?: emptyList()
-                        val totalPages = result.payload?.second ?: 1 // Default 1 jika null
-
-                        // --- MODIFIKASI DISINI ---
-                        // Terapkan sorting sekunder HANYA jika filter utama adalah "score"
-                        val finalList = if (currentOrderBy == "score") {
-                            newAnimeList.sortedWith(
-                                compareByDescending<SearchAnime> { it.score ?: 0.0 } // Urutan utama: Score
-                                    .thenByDescending { it.members ?: 0 } // Urutan kedua: Members
-                            )
-                        } else {
-                            // Jika bukan "score" (spt "popularity" atau "title"),
-                            // percaya urutan dari API
-                            newAnimeList
-                        }
-
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                animeList = finalList, // <-- Gunakan list asli dari API
-                                totalPages = totalPages,
-                                currentPage = page,
-                                isError = false,
-                                errorMessage = ""
-                            )
-                        }
-                    }
-
-                    is ResultWrapper.Error -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                isError = true,
-                                errorMessage = result.exception?.message ?: "Terjadi kesalahan tidak diketahui",
-                                currentPage = page // Tetap update halaman meski error
-                            )
-                        }
-                    }
-                    else -> {}
-                }
-            }.launchIn(viewModelScope)
-        }
-    }
-}*/
-
-// Data class untuk menampung seluruh state UI
-data class AllListsUiState(
-    val animeList: List<SearchAnime> = emptyList(),
-    val isLoading: Boolean = false,
-    val isError: Boolean = false,
-    val errorMessage: String = "",
-    val totalPages: Int = 1,
-    val currentPage: Int = 1,
+    // --- State KATEGORI ---
+    val selectedCategory: String = "Anime",
+    val categoryOptions: List<String> = listOf("Anime", "Manga", "Novel"),
 
     // --- State Filter Sort ---
     val selectedSort: String = "Score",
     val appliedOrderBy: String = "score",
     val appliedSort: String = "desc",
+    val sortOptions: List<String> = listOf("Score", "Popularity", "A - Z", "Z - A"),
 
-    // --- State Baru Untuk Filter Tipe ---
-    val selectedType: String = "All", // Nilai default di UI
-    val appliedType: String? = null // Nilai yang dikirim ke API (null jika "All")
+    // --- State Filter Tipe ---
+    val selectedType: String = "All",
+    val appliedType: String? = null,
+    val typeOptions: List<String> = animeTypeOptions, // Default Anime
+
+    // --- State Filter (Genre, Tema, Target/Demographics) ---
+    val genreList: List<MediaGenre> = listOf(allGenreOption),
+    val themeList: List<MediaGenre> = listOf(allGenreOption),
+    val demographicList: List<MediaGenre> = listOf(allGenreOption),
+
+    val selectedGenre: String = "All",
+    val selectedTheme: String = "All",
+    val selectedTarget: String = "All",
+
+    val appliedGenreId: Int? = null,
+    val appliedThemeId: Int? = null,
+    val appliedTargetId: Int? = null
 )
 
-class AllListsViewModel(private val repository: AnimeSearchRepository) : ViewModel() {
+class AllListsViewModel(
+    private val getMediaListUseCase: GetMediaListUseCase,
+    private val getGenreListUseCase: GetGenreListUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AllListsUiState())
     val uiState: StateFlow<AllListsUiState> = _uiState.asStateFlow()
 
     private val limit = 25
 
+    private data class FilterCache(
+        val genres: List<MediaGenre>,
+        val themes: List<MediaGenre>,
+        val demographics: List<MediaGenre>
+    )
+
+    private var animeFilterCache: FilterCache? = null
+    private var mangaFilterCache: FilterCache? = null
+
+
     init {
-        // Muat halaman pertama saat ViewModel dibuat (menggunakan filter default)
-        fetchAnimePage(1)
+        applyFilters()
     }
 
     /**
-     * Memperbarui state pilihan di UI dropdown Sort.
+     * Mengambil filter DENGAN CACHE dan DELAY.
      */
-    fun updateSortFilter(newSort: String) {
-        _uiState.update { it.copy(selectedSort = newSort) }
+    private suspend fun fetchFiltersSequentially(category: String): Boolean {
+        val categoryLower = category.lowercase()
+
+        // 1. Cek Cache
+        val existingCache = if (categoryLower == "anime") animeFilterCache else mangaFilterCache
+
+        if (existingCache != null) {
+            // Cache hit!
+            _uiState.update {
+                it.copy(
+                    // FIX: Gunakan listOf(item) + list
+                    genreList = listOf(allGenreOption) + existingCache.genres,
+                    themeList = listOf(allGenreOption) + existingCache.themes,
+                    demographicList = listOf(allGenreOption) + existingCache.demographics,
+                    isError = false,
+                    errorMessage = ""
+                )
+            }
+            return true // Sukses dari cache
+        }
+
+        // 2. Cache miss. Reset list filter di UI sebelum fetch baru
+        _uiState.update {
+            it.copy(
+                genreList = listOf(allGenreOption),
+                themeList = listOf(allGenreOption),
+                demographicList = listOf(allGenreOption)
+            )
+        }
+
+        var success = true
+        var fetchedGenres: List<MediaGenre>? = null
+        var fetchedThemes: List<MediaGenre>? = null
+        var fetchedDemographics: List<MediaGenre>? = null
+
+        // 1. Ambil Genres
+        getGenreListUseCase.execute(category, "genres").collect { result ->
+            when (result) {
+                is ResultWrapper.Success -> {
+                    fetchedGenres = result.payload ?: emptyList()
+                    // FIX: Gunakan listOf(item) + list
+                    _uiState.update { it.copy(genreList = listOf(allGenreOption) + fetchedGenres) }
+                }
+                is ResultWrapper.Error -> {
+                    success = false
+                    _uiState.update { it.copy(isError = true, errorMessage = result.exception?.message ?: "Gagal memuat genre") }
+                }
+                else -> {}
+            }
+        }
+        if (!success) return false
+
+        delay(350)
+
+        // 2. Ambil Themes
+        getGenreListUseCase.execute(category, "themes").collect { result ->
+            when (result) {
+                is ResultWrapper.Success -> {
+                    fetchedThemes = result.payload ?: emptyList()
+                    // FIX: Gunakan listOf(item) + list
+                    _uiState.update { it.copy(themeList = listOf(allGenreOption) + fetchedThemes) }
+                }
+                is ResultWrapper.Error -> {
+                    success = false
+                    _uiState.update { it.copy(isError = true, errorMessage = result.exception?.message ?: "Gagal memuat tema") }
+                }
+                else -> {}
+            }
+        }
+        if (!success) return false
+
+        delay(350)
+
+        // 3. Ambil Demographics
+        getGenreListUseCase.execute(category, "demographics").collect { result ->
+            when (result) {
+                is ResultWrapper.Success -> {
+                    fetchedDemographics = result.payload ?: emptyList()
+                    // FIX: Gunakan listOf(item) + list
+                    _uiState.update { it.copy(demographicList = listOf(allGenreOption) + fetchedDemographics!!) }
+                }
+                is ResultWrapper.Error -> {
+                    success = false
+                    _uiState.update { it.copy(isError = true, errorMessage = result.exception?.message ?: "Gagal memuat demografi") }
+                }
+                else -> {}
+            }
+        }
+
+        // 4. Jika semua berhasil, simpan ke cache
+        if (success) {
+            val newCache = FilterCache(
+                genres = fetchedGenres!!,
+                themes = fetchedThemes!!,
+                demographics = fetchedDemographics!!
+            )
+            if (categoryLower == "anime") {
+                animeFilterCache = newCache
+            } else {
+                mangaFilterCache = newCache
+            }
+        }
+
+        return success
     }
 
     /**
-     * Memperbarui state pilihan di UI dropdown Tipe.
+     * Memperbarui kategori SAJA.
      */
-    fun updateTypeFilter(newType: String) {
-        _uiState.update { it.copy(selectedType = newType) }
+    fun updateCategory(newCategory: String) {
+        if (_uiState.value.selectedCategory == newCategory) return
+
+        val newTypeOptions = when (newCategory.lowercase()) {
+            "anime" -> animeTypeOptions
+            "manga", "novel" -> mangaTypeOptions
+            else -> animeTypeOptions
+        }
+
+        _uiState.update {
+            it.copy(
+                selectedCategory = newCategory,
+                typeOptions = newTypeOptions,
+                selectedType = "All",
+                selectedGenre = "All",
+                selectedTheme = "All",
+                selectedTarget = "All",
+                selectedSort = "Score",
+                isError = false, errorMessage = ""
+            )
+        }
+
+        viewModelScope.launch {
+            fetchFiltersSequentially(newCategory)
+        }
     }
 
+    // --- Fungsi update filter individu (tidak berubah) ---
+    fun updateSortFilter(newSort: String) { _uiState.update { it.copy(selectedSort = newSort) } }
+    fun updateTypeFilter(newType: String) { _uiState.update { it.copy(selectedType = newType) } }
+    fun updateGenreFilter(newGenre: String) { _uiState.update { it.copy(selectedGenre = newGenre) } }
+    fun updateThemeFilter(newTheme: String) { _uiState.update { it.copy(selectedTheme = newTheme) } }
+    fun updateTargetFilter(newTarget: String) { _uiState.update { it.copy(selectedTarget = newTarget) } }
+    // ---
+
     /**
-     * Menerapkan filter yang dipilih dan memuat ulang data dari halaman 1.
+     * Fungsi publik untuk menerapkan filter (Tombol "Update Filter").
      */
     fun applyFilters() {
-        // Logika untuk Sort
-        val (newOrderBy, newSort) = when (_uiState.value.selectedSort) {
+        _uiState.update { it.copy(isLoading = true, isError = false, errorMessage = "") }
+
+        viewModelScope.launch {
+            val filterSuccess = fetchFiltersSequentially(_uiState.value.selectedCategory)
+
+            if (filterSuccess) {
+                applyFiltersInternal()
+                fetchMediaPageInternal(1)
+            } else {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    /**
+     * Versi internal untuk menerapkan filter.
+     */
+    private fun applyFiltersInternal() {
+        val currentState = _uiState.value
+        val (newOrderBy, newSort) = when (currentState.selectedSort) {
             "A - Z" -> "title" to "asc"
             "Z - A" -> "title" to "desc"
-            "Popularity" -> "popularity" to "asc"
+            "Popularity" -> "members" to "desc"
             "Score" -> "score" to "desc"
-            else -> "score" to "desc" // Default case
+            else -> "score" to "desc"
         }
-
-        // --- Logika Baru untuk Tipe ---
-        val newAppliedType = when (val selected = _uiState.value.selectedType) {
-            "All" -> null // Kirim null jika "All"
-            "TV Special" -> "tv_special" // Mapping nama khusus
-            else -> selected.lowercase() // "TV" -> "tv", "Movie" -> "movie", dst.
+        val newAppliedType = when (val selected = currentState.selectedType) {
+            "All" -> null
+            "TV Special" -> "tv_special"
+            "Light Novel" -> "lightnovel"
+            "One-shot" -> "oneshot"
+            else -> selected.lowercase()
         }
+        val newGenreId = currentState.genreList.find { it.name == currentState.selectedGenre }?.id
+        val newThemeId = currentState.themeList.find { it.name == currentState.selectedTheme }?.id
+        val newTargetId = currentState.demographicList.find { it.name == currentState.selectedTarget }?.id
 
-        // Set filter YANG DITERAPKAN
         _uiState.update {
             it.copy(
                 appliedOrderBy = newOrderBy,
                 appliedSort = newSort,
-                appliedType = newAppliedType, // <-- Terapkan filter tipe
-                currentPage = 1 // Reset ke halaman 1 setiap ganti filter
+                appliedType = newAppliedType,
+                appliedGenreId = if (newGenreId == 0) null else newGenreId,
+                appliedThemeId = if (newThemeId == 0) null else newThemeId,
+                appliedTargetId = if (newTargetId == 0) null else newTargetId,
+                currentPage = 1,
+                mediaList = emptyList()
             )
         }
-
-        // Fetch halaman pertama dengan filter baru
-        fetchAnimePage(1)
     }
 
-    fun fetchAnimePage(page: Int) {
-        // Jangan fetch jika sedang loading
-        if (_uiState.value.isLoading) return
-
-        // Ambil filter yang SUDAH DITERAPKAN dari state
-        val currentState = _uiState.value
-        val currentOrderBy = currentState.appliedOrderBy
-        val currentSort = currentState.appliedSort
-        val currentType = currentState.appliedType // <-- Ambil state tipe
+    /**
+     * Fungsi publik untuk mengambil halaman media (Paging).
+     */
+    fun fetchMediaPage(page: Int) {
+        if (_uiState.value.isLoading && _uiState.value.currentPage == page && page != 1) return
 
         viewModelScope.launch {
-            repository.getSearchAnimeList(
-                query = null,
-                page = page, // Gunakan halaman yang diminta
-                limit = limit,
-                type = currentType, // <-- Gunakan state tipe
-                score = null,
-                genres = null,
-                orderBy = currentOrderBy, // <-- Gunakan state
-                sort = currentSort      // <-- Gunakan state
-            ).onEach { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
+            _uiState.update { it.copy(isLoading = true, isError = false, errorMessage = "") }
+            fetchMediaPageInternal(page)
+        }
+    }
+
+
+    /**
+     * Mengambil data media untuk halaman yang diberikan.
+     */
+    private suspend fun fetchMediaPageInternal(page: Int) {
+        val currentState = _uiState.value
+        val category = currentState.selectedCategory
+        val currentOrderBy = currentState.appliedOrderBy
+        val currentSort = currentState.appliedSort
+        val currentType = currentState.appliedType
+        val allAppliedIds = listOfNotNull(
+            currentState.appliedGenreId,
+            currentState.appliedThemeId,
+            currentState.appliedTargetId
+        )
+        val combinedGenresParam = if (allAppliedIds.isEmpty()) null else allAppliedIds.joinToString(",")
+
+        getMediaListUseCase.execute(
+            category = category,
+            page = page,
+            limit = limit,
+            type = currentType,
+            genres = combinedGenresParam,
+            orderBy = currentOrderBy,
+            sort = currentSort
+        ).collect { result ->
+            when (result) {
+                is ResultWrapper.Loading -> {
+                    if (!_uiState.value.isLoading) {
                         _uiState.update { it.copy(isLoading = true) }
                     }
-
-                    is ResultWrapper.Success -> {
-                        // Ambil data list dan total halaman dari repository
-                        val newAnimeList = result.payload?.first ?: emptyList()
-                        val totalPages = result.payload?.second ?: 1 // Default 1 jika null
-
-                        // --- PERBAIKAN BUG SORTING ---
-                        // Logika sorting di sisi client DIHAPUS.
-                        // Alasan: API Jikan tidak mendukung sorting sekunder.
-                        // Melakukan sorting di client pada data yang sudah dipaginasi
-                        // menyebabkan bug kontinuitas antar halaman (seperti yg Anda laporkan).
-                        // Sekarang kita 100% percaya urutan dari API.
-                        val finalList = newAnimeList
-
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                animeList = finalList, // <-- Gunakan list asli dari API
-                                totalPages = totalPages,
-                                currentPage = page,
-                                isError = false,
-                                errorMessage = ""
-                            )
-                        }
-                    }
-
-                    is ResultWrapper.Error -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                isError = true,
-                                errorMessage = result.exception?.message ?: "Terjadi kesalahan tidak diketahui",
-                                currentPage = page // Tetap update halaman meski error
-                            )
-                        }
-                    }
-                    else -> {}
                 }
-            }.launchIn(viewModelScope)
+                is ResultWrapper.Success -> {
+                    val payload = result.payload
+                    val newMediaList = payload?.first ?: emptyList()
+                    val totalPages = payload?.second ?: 1
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            mediaList = newMediaList,
+                            totalPages = totalPages,
+                            currentPage = page,
+                            isError = false, errorMessage = ""
+                        )
+                    }
+                }
+                is ResultWrapper.Error -> _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isError = true,
+                        errorMessage = result.exception?.message ?: "Gagal mengambil data",
+                        currentPage = page,
+                        mediaList = emptyList()
+                    )
+                }
+                is ResultWrapper.Empty -> {
+                    val payload = result.payload
+                    val currentList = payload?.first ?: emptyList()
+                    val currentPages = payload?.second ?: 1
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            mediaList = currentList,
+                            totalPages = currentPages,
+                            currentPage = 1,
+                            isError = false, errorMessage = ""
+                        )
+                    }
+                }
+                is ResultWrapper.Idle -> {
+                    if (_uiState.value.isLoading) {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                }
+            }
         }
     }
 }
