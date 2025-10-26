@@ -20,20 +20,196 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Sebuah Composable yang menampilkan grup filter untuk anime.
- */
+ * Grup filter yang telah di-refaktor untuk menerima state dari luar (state-hoisted).
+ * Filter Season, Sort by, dan Genres telah dihapus.
+ *//*
+
 @Composable
-fun AnimeFilterGroup() {
-    val backgroundColor = Color(0xFFE6F5F3)
+fun AnimeFilterGroup(
+    selectedType: String,
+    onTypeChange: (String) -> Unit,
+    typeOptions: List<String>,
+    onUpdateClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val buttonColor = Color(0xFF00BFFF)
     val dividerColor = Color.Gray.copy(alpha = 0.5f)
 
-    // Column luar untuk padding dari tepi layar
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = modifier.padding(horizontal = 16.dp)) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-                //.background(backgroundColor, shape = RoundedCornerShape(16.dp)), // Padding di dalam container
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Seasonal Anime",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Baris filter (hanya Type)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                FilterDropdownMenu(
+                    label = "Type",
+                    options = typeOptions,
+                    selectedOption = selectedType, // Menerima state
+                    onOptionSelected = onTypeChange, // Meneruskan event
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tombol Update Filter
+            Button(
+                onClick = onUpdateClick, // Meneruskan event
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Update Filter",
+                    color = Color.White,
+                )
+            }
+
+            Divider(
+                color = dividerColor,
+                thickness = 2.dp,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
+    }
+}
+
+*/
+/**
+ * Composable dropdown menu yang telah di-refaktor menjadi stateless.
+ *//*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterDropdownMenu(
+    label: String,
+    options: List<String>,
+    selectedOption: String, // Mengganti state internal
+    onOptionSelected: (String) -> Unit, // Mengganti logika onClick
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    // `selectedOptionText` dihapus, diganti dengan parameter `selectedOption`
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val verySmallTextStyle = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Normal
+    )
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        BasicTextField(
+            value = "$label : $selectedOption", // Menggunakan parameter
+            onValueChange = {},
+            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            readOnly = true,
+            textStyle = verySmallTextStyle.copy(color = MaterialTheme.colorScheme.onSurface),
+            interactionSource = interactionSource,
+            decorationBox = { innerTextField ->
+                Row(
+                    modifier = Modifier
+                        .border(
+                            width = 1.dp,
+                            color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Black.copy(
+                                alpha = 0.6f
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        innerTextField()
+                    }
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                }
+            }
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { selectionOption ->
+                DropdownMenuItem(
+                    text = { Text(selectionOption, style = verySmallTextStyle) },
+                    onClick = {
+                        onOptionSelected(selectionOption) // Memanggil lambda
+                        expanded = false
+                    },
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AnimeFilterGroupFinalPreview() {
+    // Preview sekarang membutuhkan state dummy
+    AnimeFilterGroup(
+        selectedType = "TV (New)",
+        onTypeChange = {},
+        typeOptions = listOf("TV (New)", "TV (Continuing)", "Movie"),
+        onUpdateClick = {}
+    )
+}*/
+
+/**
+ * Grup filter yang telah di-refaktor untuk menerima semua state dari luar.
+ * "Sort by" diganti dengan "Status" untuk mengontrol flag `continuing`.
+ */
+@Composable
+fun AnimeFilterGroup(
+    // State untuk Season (saat ini diabaikan oleh logic)
+    selectedSeason: String,
+    onSeasonChange: (String) -> Unit,
+    seasonOptions: List<String>,
+
+    // State untuk Tipe (filter)
+    selectedType: String,
+    onTypeChange: (String) -> Unit,
+    typeOptions: List<String>,
+
+    // State untuk Status (continuing)
+    selectedStatus: String,
+    onStatusChange: (String) -> Unit,
+    statusOptions: List<String>,
+
+    // State untuk Genres (saat ini diabaikan oleh logic)
+    selectedGenre: String,
+    onGenreChange: (String) -> Unit,
+    genreOptions: List<String>,
+
+    // Event handler
+    onUpdateClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val buttonColor = Color(0xFF00BFFF)
+    val dividerColor = Color.Gray.copy(alpha = 0.5f)
+
+    Column(modifier = modifier.padding(horizontal = 16.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -52,12 +228,16 @@ fun AnimeFilterGroup() {
             ) {
                 FilterDropdownMenu(
                     label = "Season",
-                    options = listOf("Summer 2025", "Fall 2025", "Winter 2026"),
+                    options = seasonOptions,
+                    selectedOption = selectedSeason,
+                    onOptionSelected = onSeasonChange,
                     modifier = Modifier.weight(1f)
                 )
                 FilterDropdownMenu(
                     label = "Type",
-                    options = listOf("TV", "Movie", "OVA"),
+                    options = typeOptions,
+                    selectedOption = selectedType,
+                    onOptionSelected = onTypeChange,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -70,13 +250,17 @@ fun AnimeFilterGroup() {
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 FilterDropdownMenu(
-                    label = "Sort by",
-                    options = listOf("A - Z", "Popularity", "Score"),
+                    label = "Status", // Menggantikan "Sort by"
+                    options = statusOptions,
+                    selectedOption = selectedStatus,
+                    onOptionSelected = onStatusChange,
                     modifier = Modifier.weight(1f)
                 )
                 FilterDropdownMenu(
                     label = "Genres",
-                    options = listOf("Action", "Comedy", "Fantasy", "Sci-Fi", "Drama", "Mystery", "Romance", "Horror", "Adventure", "Thriller", "Supernatural", "Superhero", "Historical", "Shounen", "Shoujo"),
+                    options = genreOptions,
+                    selectedOption = selectedGenre,
+                    onOptionSelected = onGenreChange,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -85,7 +269,7 @@ fun AnimeFilterGroup() {
 
             // Tombol Update Filter
             Button(
-                onClick = { /* TODO: Logika update filter */ },
+                onClick = onUpdateClick,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                 shape = RoundedCornerShape(12.dp)
@@ -93,7 +277,6 @@ fun AnimeFilterGroup() {
                 Text(
                     text = "Update Filter",
                     color = Color.White,
-                    //modifier = Modifier.padding(vertical = 2.dp)
                 )
             }
 
@@ -107,20 +290,19 @@ fun AnimeFilterGroup() {
 }
 
 /**
- * Composable dropdown menu yang telah diperbaiki.
+ * Composable dropdown menu yang stateless (tidak berubah dari implementasi saya sebelumnya)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterDropdownMenu(
     label: String,
     options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf(options.firstOrNull() ?: "") }
     val interactionSource = remember { MutableInteractionSource() }
-
-    // Mengecek apakah text field sedang dalam kondisi fokus (diklik)
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     val verySmallTextStyle = TextStyle(
@@ -133,40 +315,30 @@ fun FilterDropdownMenu(
         onExpandedChange = { expanded = !expanded },
         modifier = modifier
     ) {
-        // Kita tetap menggunakan BasicTextField untuk kustomisasi penuh
         BasicTextField(
-            value = "$label : $selectedOptionText",
+            value = "$label : $selectedOption",
             onValueChange = {},
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth(),
+            modifier = Modifier.menuAnchor().fillMaxWidth(),
             readOnly = true,
             textStyle = verySmallTextStyle.copy(color = MaterialTheme.colorScheme.onSurface),
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->
-                // ======================================================================
-                // PENDEKATAN BARU YANG BENAR
-                // Kita membangun "bingkai" secara manual menggunakan Row, Box, dan Modifier.border
-                // ======================================================================
                 Row(
                     modifier = Modifier
-                        // 1. Membuat border secara manual
                         .border(
                             width = 1.dp,
-                            // Warna border berubah saat di-klik (fokus)
-                            color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.6f),
+                            color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Black.copy(
+                                alpha = 0.6f
+                            ),
                             shape = RoundedCornerShape(10.dp)
                         )
-                        // 2. Di sini kita mengontrol padding internal secara penuh
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Box untuk menampung teks agar bisa memenuhi ruang
                     Box(modifier = Modifier.weight(1f)) {
                         innerTextField()
                     }
-                    // Menampilkan ikon panah di ujung
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 }
             }
@@ -179,7 +351,7 @@ fun FilterDropdownMenu(
                 DropdownMenuItem(
                     text = { Text(selectionOption, style = verySmallTextStyle) },
                     onClick = {
-                        selectedOptionText = selectionOption
+                        onOptionSelected(selectionOption)
                         expanded = false
                     },
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
@@ -192,5 +364,19 @@ fun FilterDropdownMenu(
 @Preview(showBackground = true)
 @Composable
 fun AnimeFilterGroupFinalPreview() {
-    AnimeFilterGroup()
+    AnimeFilterGroup(
+        selectedSeason = "Fall 2025",
+        onSeasonChange = {},
+        seasonOptions = listOf("Fall 2025"),
+        selectedType = "tv",
+        onTypeChange = {},
+        typeOptions = listOf("tv", "movie", "ova"),
+        selectedStatus = "New",
+        onStatusChange = {},
+        statusOptions = listOf("New", "Continuing"),
+        selectedGenre = "Action",
+        onGenreChange = {},
+        genreOptions = listOf("Action", "Comedy"),
+        onUpdateClick = {}
+    )
 }
