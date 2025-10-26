@@ -55,6 +55,7 @@ import com.raihan.anicata.data.usecase.GetMediaListUseCase
 import com.raihan.anicata.ui.alllists.AllListsViewModel
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
 import com.raihan.anicata.ui.login.LoginViewModel
+import com.raihan.anicata.ui.seasonalanime.SeasonalViewModel
 import com.raihan.anicata.ui.top.anime.TopAnimeViewModel
 import com.raihan.anicata.ui.top.manga.TopMangaViewModel
 import com.raihan.anicata.ui.top.novel.TopNovelViewModel
@@ -123,6 +124,7 @@ object AppModules {
             viewModelOf(::TopMangaViewModel)
             viewModelOf(::TopNovelViewModel)
             viewModelOf(::AllListsViewModel)
+            viewModelOf(::SeasonalViewModel)
         }
 
     val modules =
