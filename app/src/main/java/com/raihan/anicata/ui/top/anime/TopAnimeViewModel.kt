@@ -101,7 +101,7 @@ class TopAnimeViewModel(private val repository: AnimeTopRepository) : ViewModel(
                         totalPagesCache[filter] = 1 // Asumsi halaman 1 jika kosong
                     }
 
-                    else -> {}
+                    is ResultWrapper.Idle -> {}
                 }
             }
         }
