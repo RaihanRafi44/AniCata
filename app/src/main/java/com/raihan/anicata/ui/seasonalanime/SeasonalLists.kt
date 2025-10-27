@@ -26,17 +26,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.raihan.anicata.data.model.anime.season.now.AiredSeasonAnimeNow
-import com.raihan.anicata.data.model.anime.season.now.ImageFormatJpg
-import com.raihan.anicata.data.model.anime.season.now.ImageFormatWebp
-import com.raihan.anicata.data.model.anime.season.now.ImagesSeasonAnimeNow
-import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
+import com.raihan.anicata.data.model.anime.season.year.AiredSeasonAnimeYear
+import com.raihan.anicata.data.model.anime.season.year.ImageFormatJpg
+import com.raihan.anicata.data.model.anime.season.year.ImageFormatWebp
+import com.raihan.anicata.data.model.anime.season.year.ImagesSeasonAnimeYear
+import com.raihan.anicata.data.model.anime.season.year.SeasonAnimeYear
 import java.text.NumberFormat
 import java.util.*
 
 // --- Composable untuk satu item dalam daftar ---
 @Composable
-fun AnimeCard(item: SeasonAnimeNow) { // Menggunakan SeasonAnimeNow
+fun AnimeCard(item: SeasonAnimeYear) { // Menggunakan SeasonAnimeNow
     val tvTagColor = Color(0xFFF4842D)
     val epsTagColor = Color(0xFF4CAF50)
     val starColor = Color(0xFFFFC107)
@@ -183,12 +183,12 @@ fun Tag(text: String, backgroundColor: Color) {
 // --- Composable Utama untuk menampilkan daftar ---
 @Composable
 fun AnimeListLayout(
-    animeList: List<SeasonAnimeNow> // Menerima list dari data model
+    animeList: List<SeasonAnimeYear> // Menerima list dari data model
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF0F0F0))
+            //.background(Color(0xFFF0F0F0))
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp)
     ) {
@@ -200,7 +200,7 @@ fun AnimeListLayout(
     }
 }
 
-private fun formatAiredDate(aired: AiredSeasonAnimeNow?): String {
+private fun formatAiredDate(aired: AiredSeasonAnimeYear?): String {
     val from = aired?.prop?.from
     val to = aired?.prop?.to
 
@@ -235,14 +235,14 @@ fun AnimeListLayoutPreview() {
     MaterialTheme {
         // Buat data dummy HANYA untuk preview
         val dummyPreviewList = listOf(
-            SeasonAnimeNow(
+            SeasonAnimeYear(
                 id = 1,
                 title = "Sousou no Frieren: Beyond Journey's End",
-                aired = AiredSeasonAnimeNow("Sep 2023", null, null),
+                aired = AiredSeasonAnimeYear("Sep 2023", null, null),
                 members = 1199236,
                 episodes = 28,
                 score = 9.30,
-                images = ImagesSeasonAnimeNow(
+                images = ImagesSeasonAnimeYear(
                     ImageFormatJpg("", "", ""),
                     ImageFormatWebp("", "", "")
                 ),
