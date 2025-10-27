@@ -43,7 +43,8 @@ import kotlinx.coroutines.launch
 
 // ✅ Definisikan item utama dan sub-item secara terpisah
 val mainItems = listOf("Seasonal Anime", "Top Lists", "All Lists", "About Us", "Settings")
-val topListsSubItems = listOf("Anime", "Manga", "Novel")
+//val topListsSubItems = listOf("Anime", "Manga", "Novel")
+val topListsSubItems = listOf("Anime", "Manga") // Tanpa novel
 
 /**
  * Komponen utama yang membangun seluruh konten di dalam Navigation Drawer.
@@ -177,7 +178,7 @@ private fun DrawerBody(
                                         val route = when (subItem) {
                                             "Anime" -> "top_anime"
                                             "Manga" -> "top_manga"
-                                            "Novel" -> "top_novel"
+                                            //"Novel" -> "top_novel"
                                             else -> ""
                                         }
                                         if (route.isNotEmpty()) {
