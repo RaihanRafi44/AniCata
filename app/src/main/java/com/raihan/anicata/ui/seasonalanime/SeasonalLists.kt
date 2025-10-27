@@ -127,9 +127,16 @@ fun AnimeCard(item: SeasonAnimeNow) { // Menggunakan SeasonAnimeNow
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     // Tag Episode
-                    Tag(
+                    /*Tag(
                         // Dari API (nullable)
                         text = "${item.episodes ?: '?'} eps",
+                        backgroundColor = epsTagColor
+                    )*/
+
+                    // Tag Episode
+                    Tag(
+                        // Cek jika episodes adalah 0 (hasil map dari null), tampilkan '?'
+                        text = "${if (item.episodes == 0) '?' else item.episodes} eps",
                         backgroundColor = epsTagColor
                     )
 
