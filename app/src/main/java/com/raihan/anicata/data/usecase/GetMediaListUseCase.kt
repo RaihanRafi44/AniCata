@@ -24,52 +24,6 @@ class GetMediaListUseCase(
 
         val categoryLower = category.lowercase()
 
-        /*if (categoryLower == "anime") {
-            return animeSearchRepository.getSearchAnimeList(
-                query = null,
-                page = page,
-                limit = limit,
-                type = type,
-                score = null,
-                genres = genres,
-                orderBy = orderBy,
-                sort = sort
-            ).map { result ->
-                // Mapping terjadi di sini, di dalam Use Case
-                when (result) {
-                    is ResultWrapper.Success -> {
-                        val mediaList = result.payload?.first?.map { it.toMediaItem() }
-                        val totalPages = result.payload?.second
-                        ResultWrapper.Success(Pair(mediaList, totalPages))
-                    }
-                    is ResultWrapper.Error -> result
-                    is ResultWrapper.Loading -> result
-                }
-            }
-        } else {
-            // Asumsi Manga/Novel
-            return mangaSearchRepository.getSearchMangaList(
-                query = "",
-                page = page,
-                limit = limit,
-                type = type ?: "",
-                score = 0,
-                genres = genres ?: "",
-                orderBy = orderBy,
-                sort = sort
-            ).map { result ->
-                // Mapping terjadi di sini, di dalam Use Case
-                when (result) {
-                    is ResultWrapper.Success -> {
-                        val mediaList = result.payload?.first?.map { it.toMediaItem() }
-                        val totalPages = result.payload?.second
-                        ResultWrapper.Success(Pair(mediaList, totalPages))
-                    }
-                    is ResultWrapper.Error -> result
-                    is ResultWrapper.Loading -> result
-                }
-            }
-        }*/
         if (categoryLower == "anime") {
             return animeSearchRepository.getSearchAnimeList(
                 query = null,

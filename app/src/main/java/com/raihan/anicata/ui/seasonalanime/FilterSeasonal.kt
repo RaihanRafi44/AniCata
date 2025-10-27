@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -131,9 +130,6 @@ fun AnimeFilterGroup(
     }
 }
 
-/**
- * Composable dropdown menu yang stateless (tidak berubah)
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterDropdownMenu(
@@ -225,8 +221,6 @@ fun AnimeFilterGroupFinalPreview() {
         selectedStatus = "New",
         onStatusChange = {},
         statusOptions = listOf("New", "Continuing"),
-
-        // Genre dihapus
 
         onUpdateClick = {}
     )
