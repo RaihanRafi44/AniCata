@@ -21,30 +21,6 @@ class GetGenreListUseCase(
 
         val categoryLower = category.lowercase()
 
-        /*if (categoryLower == "anime") {
-            return animeGenreRepository.getGenreAnimeList(filter).map { result ->
-                when (result) {
-                    is ResultWrapper.Success -> {
-                        val mediaGenres = result.payload.map { (it as GenreAnime).toMediaGenre() }
-                        ResultWrapper.Success(mediaGenres)
-                    }
-                    is ResultWrapper.Error -> result
-                    is ResultWrapper.Loading -> result
-                }
-            }
-        } else {
-            // Asumsi Manga/Novel
-            return mangaGenreRepository.getGenreMangaList(filter).map { result ->
-                when (result) {
-                    is ResultWrapper.Success -> {
-                        val mediaGenres = result.payload.map { (it as GenreManga).toMediaGenre() }
-                        ResultWrapper.Success(mediaGenres)
-                    }
-                    is ResultWrapper.Error -> result
-                    is ResultWrapper.Loading -> result
-                }
-            }
-        }*/
         if (categoryLower == "anime") {
             return animeGenreRepository.getGenreAnimeList(filter).map { result ->
                 when (result) {
