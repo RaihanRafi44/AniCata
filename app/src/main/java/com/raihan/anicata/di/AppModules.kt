@@ -52,7 +52,7 @@ import com.raihan.anicata.data.repository.manga.MangaTopRepositoryImpl
 import com.raihan.anicata.data.source.network.service.AniCataApiService
 import com.raihan.anicata.data.usecase.GetGenreListUseCase
 import com.raihan.anicata.data.usecase.GetMediaListUseCase
-import com.raihan.anicata.data.usecase.GetSeasonalDataUseCase
+import com.raihan.anicata.data.usecase.GetSeasonalUseCase
 import com.raihan.anicata.ui.alllists.AllListsViewModel
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
 import com.raihan.anicata.ui.login.LoginViewModel
@@ -116,7 +116,7 @@ object AppModules {
         module{
             single{ GetGenreListUseCase(get(),get())}
             single{ GetMediaListUseCase(get(), get()) }
-            single{ GetSeasonalDataUseCase(get(), get()) }
+            single{ GetSeasonalUseCase(get(), get()) }
         }
 
     private val viewModel =
