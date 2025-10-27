@@ -22,7 +22,7 @@ class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel(
     private val uiPageSize = 25
 
     // Tipe yang akan kita buang
-    private val excludedTypes = setOf("novel", "lightnovel", "light novel")
+    //private val excludedTypes = setOf("novel", "lightnovel", "light novel")
 
     // --- State Internal ViewModel ---
     private var currentApiPage = 1 // Halaman API mana yang sedang kita ambil
@@ -100,12 +100,16 @@ class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel(
                             _totalPages.value = result.payload?.second ?: 1
                             totalApiPages = _totalPages.value // Simpan total halaman API
 
-                            // Filter novel/lightnovel
+                            /*// Filter novel/lightnovel
                             val validItems = apiList.filter { manga ->
                                 !excludedTypes.contains(manga.type?.lowercase(Locale.ROOT))
                             }
 
-                            itemsForThisPage.addAll(validItems) // Tambahkan ke daftar
+                            itemsForThisPage.addAll(validItems) // Tambahkan ke daftar*/
+
+                            // Hapus logika filter, langsung tambahkan semua item dari API
+                            itemsForThisPage.addAll(apiList) // Tambahkan ke daftar
+
                             currentApiPage++ // Siapkan untuk fetch halaman API berikutnya
                             fetchSuccess = true
                         }

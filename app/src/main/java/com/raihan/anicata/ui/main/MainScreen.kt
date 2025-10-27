@@ -325,9 +325,9 @@ fun MainScreen(
                     composable("top_manga") {
                         TopMangaScreen()
                     }
-                    composable("top_novel") {
+                    /*composable("top_novel") {
                         TopNovelScreen()
-                    }
+                    }*/
 
                     composable("all_lists") {
                         AllListsScreen()
