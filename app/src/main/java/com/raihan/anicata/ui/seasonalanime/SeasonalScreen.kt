@@ -103,7 +103,7 @@ fun SeasonalScreen(
     }
 }*/
 
-@Composable
+/*@Composable
 fun SeasonalScreen(
     viewModel: SeasonalViewModel = koinViewModel()
 ) {
@@ -140,6 +140,99 @@ fun SeasonalScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Kode ini juga tidak berubah
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 16.dp)
+        ) {
+            when (val apiResult = uiState.apiResult) {
+                is ResultWrapper.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 32.dp)
+                    )
+                }
+                is ResultWrapper.Success<*> -> {
+                    val animeList = apiResult.payload as? List<SeasonAnimeNow> ?: emptyList()
+                    if (animeList.isNotEmpty()) {
+                        AnimeListLayout(animeList = animeList)
+                    } else {
+                        Text(
+                            text = "No results found for this filter.",
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 32.dp)
+                        )
+                    }
+                }
+                // ... (sisa error handling tidak berubah)
+                is ResultWrapper.Error -> {
+                    val errorMessage = apiResult.message ?: apiResult.exception?.message ?: "Unknown error"
+                    Text(
+                        text = "Error: $errorMessage",
+                        color = Color.Red,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 32.dp, start = 16.dp, end = 16.dp)
+                    )
+                }
+                is ResultWrapper.Empty -> {
+                    Text(
+                        text = "No results found.",
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 32.dp)
+                    )
+                }
+                is ResultWrapper.Idle -> {}
+            }
+        }
+    }
+}*/
+
+@Composable
+fun SeasonalScreen(
+    viewModel: SeasonalViewModel = koinViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Panggilan ke AnimeFilterGroup diperbarui untuk mencocokkan parameter baru
+        AnimeFilterGroup(
+            // Baris 1
+            selectedYear = uiState.selectedYear,
+            onYearChange = viewModel::onYearChange,
+            yearOptions = uiState.yearOptions,
+            selectedSeason = uiState.selectedSeason,
+            onSeasonChange = viewModel::onSeasonChange,
+            seasonOptions = uiState.seasonOptions,
+
+            // Baris 2
+            selectedType = uiState.selectedType,
+            onTypeChange = viewModel::onTypeChange,
+            typeOptions = uiState.typeOptions,
+            selectedStatus = uiState.selectedStatus,
+            onStatusChange = viewModel::onStatusChange,
+            statusOptions = uiState.statusOptions,
+
+            // Genre dihapus
+            // selectedGenre = uiState.selectedGenre,
+            // onGenreChange = viewModel::onGenreChange,
+            // genreOptions = uiState.genreOptions,
+
+            onUpdateClick = viewModel::onUpdateFilter
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Blok 'when' untuk menampilkan hasil (tidak berubah)
         Box(
             modifier = Modifier
                 .fillMaxSize()

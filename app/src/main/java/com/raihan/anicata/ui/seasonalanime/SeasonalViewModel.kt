@@ -3,8 +3,11 @@ package com.raihan.anicata.ui.seasonalanime
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.raihan.anicata.data.model.anime.season.list.SeasonAnimeList
 import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
 import com.raihan.anicata.data.repository.anime.AnimeSeasonNowRepository
+import com.raihan.anicata.data.usecase.AnimeFilterParams
+import com.raihan.anicata.data.usecase.GetSeasonalUseCase
 import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -253,7 +256,7 @@ class SeasonalViewModel(
     }
 }*/
 
-// ... (Data class SeasonalUiState tidak berubah) ...
+/*// ... (Data class SeasonalUiState tidak berubah) ...
 data class SeasonalUiState(
     val apiResult: ResultWrapper<List<SeasonAnimeNow>> = ResultWrapper.Loading(),
 
@@ -305,9 +308,9 @@ class SeasonalViewModel(
     fun onStatusChange(newStatus: String) { _uiState.update { it.copy(selectedStatus = newStatus) } }
     fun onGenreChange(newGenre: String) { _uiState.update { it.copy(selectedGenre = newGenre) } }
 
-    /**
+    *//**
      * Logika filter dengan perbaikan di blok 'zip'
-     */
+     *//*
     fun onUpdateFilter() {
         _uiState.update { it.copy(apiResult = ResultWrapper.Loading()) }
 
@@ -393,6 +396,265 @@ class SeasonalViewModel(
             } catch (e: Exception) {
                 _uiState.update { it.copy(apiResult = ResultWrapper.Error(e)) }
             }
+        }
+    }
+}*/
+
+/*data class SeasonalUiState(
+    val apiResult: ResultWrapper<List<SeasonAnimeNow>> = ResultWrapper.Loading(),
+
+    // Baris 1: Tahun dan Season
+    val yearOptions: List<String> = emptyList(),
+    val selectedYear: String = "",
+    val seasonOptions: List<String> = emptyList(),
+    val selectedSeason: String = "",
+
+    // Baris 2: Tipe dan Status
+    val typeOptions: List<String> = emptyList(),
+    val selectedType: String = "",
+    val statusOptions: List<String> = emptyList(),
+    val selectedStatus: String = "",
+)
+
+class SeasonalViewModel(
+    private val nowRepository: AnimeSeasonNowRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(SeasonalUiState())
+    val uiState: StateFlow<SeasonalUiState> = _uiState.asStateFlow()
+
+    init {
+        // Data baru untuk filter
+        val years = listOf("2025", "2024", "2023", "2022") // Contoh data tahun
+        val seasons = listOf("Fall", "Summer", "Winter", "Spring")
+        val types = listOf("TV", "Movie", "OVA", "Special", "ONA", "Music")
+        val statuses = listOf("New", "Continuing", "All")
+        // Genre dihapus
+
+        _uiState.update {
+            it.copy(
+                // Baris 1
+                yearOptions = years,
+                selectedYear = years.first(), // Default: "2025"
+                seasonOptions = seasons,
+                selectedSeason = seasons.first(), // Default: "Fall"
+
+                // Baris 2
+                typeOptions = types,
+                selectedType = types.first(),
+                statusOptions = statuses,
+                selectedStatus = statuses.first(),
+
+                // Opsi Genre dihapus
+            )
+        }
+        onUpdateFilter()
+    }
+
+    // --- Event Handlers Diperbarui ---
+    fun onYearChange(newYear: String) { _uiState.update { it.copy(selectedYear = newYear) } }
+    fun onSeasonChange(newSeason: String) { _uiState.update { it.copy(selectedSeason = newSeason) } }
+    fun onTypeChange(newType: String) { _uiState.update { it.copy(selectedType = newType) } }
+    fun onStatusChange(newStatus: String) { _uiState.update { it.copy(selectedStatus = newStatus) } }
+    // onGenreChange dihapus
+
+    *//**
+     * Logika filter tidak berubah, karena masih bergantung pada 'Type' dan 'Status'.
+     * Filter 'Year' dan 'Season' saat ini hanya untuk UI (logic API belum mendukungnya).
+     *//*
+    fun onUpdateFilter() {
+        _uiState.update { it.copy(apiResult = ResultWrapper.Loading()) }
+
+        // Logic masih menggunakan filterType dan filterStatus
+        val filterType = _uiState.value.selectedType
+        val filterStatus = _uiState.value.selectedStatus
+
+        viewModelScope.launch {
+            try {
+                when (filterStatus) {
+                    "New" -> {
+                        // ... (blok ini tidak berubah)
+                        nowRepository.getSeasonNowAnimeList(
+                            filter = filterType,
+                            continuing = false
+                        ).collect { result ->
+                            _uiState.update { it.copy(apiResult = result) }
+                        }
+                    }
+
+                    "All" -> {
+                        // ... (blok ini tidak berubah)
+                        nowRepository.getSeasonNowAnimeList(
+                            filter = filterType,
+                            continuing = true
+                        ).collect { result ->
+                            _uiState.update { it.copy(apiResult = result) }
+                        }
+                    }
+
+                    "Continuing" -> {
+                        val allFlow = nowRepository.getSeasonNowAnimeList(
+                            filter = filterType,
+                            continuing = true
+                        )
+                        val newFlow = nowRepository.getSeasonNowAnimeList(
+                            filter = filterType,
+                            continuing = false
+                        )
+
+                        // ... (logika zip tidak berubah)
+                        allFlow.zip(newFlow) { allResult, newResult ->
+
+                            if (allResult is ResultWrapper.Loading || newResult is ResultWrapper.Loading) {
+                                ResultWrapper.Loading()
+                            } else if (allResult is ResultWrapper.Success && newResult is ResultWrapper.Success) {
+                                val allList = allResult.payload ?: emptyList()
+                                val newList = newResult.payload ?: emptyList()
+                                val newIds = newList.map { it.id }.toSet()
+                                val continuingList = allList.filter { it.id !in newIds }
+                                ResultWrapper.Success(continuingList)
+                            } else if (allResult is ResultWrapper.Error) {
+                                allResult
+                            } else if (newResult is ResultWrapper.Error) {
+                                newResult
+                            } else {
+                                ResultWrapper.Error(Exception("Failed to zip flows (Idle/Empty state)"))
+                            }
+
+                        }.collect { combinedResult ->
+                            if (combinedResult !is ResultWrapper.Loading) {
+                                _uiState.update { it.copy(apiResult = combinedResult) }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(apiResult = ResultWrapper.Error(e)) }
+            }
+        }
+    }
+}*/
+
+// ... (Data class SeasonalUiState tidak berubah) ...
+data class SeasonalUiState(
+    val apiResult: ResultWrapper<List<SeasonAnimeNow>> = ResultWrapper.Loading(),
+    val seasonListData: List<SeasonAnimeList> = emptyList(),
+    val isLoadingFilters: Boolean = true,
+    val yearOptions: List<String> = emptyList(),
+    val selectedYear: String = "",
+    val seasonOptions: List<String> = emptyList(),
+    val selectedSeason: String = "",
+    val typeOptions: List<String> = emptyList(),
+    val selectedType: String = "",
+    val statusOptions: List<String> = emptyList(),
+    val selectedStatus: String = "",
+)
+
+class SeasonalViewModel(
+    // 1. Ubah constructor! Hanya butuh SATU UseCase
+    private val getSeasonalDataUseCase: GetSeasonalUseCase
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(SeasonalUiState())
+    val uiState: StateFlow<SeasonalUiState> = _uiState.asStateFlow()
+
+    init {
+        // Data hardcoded (Tipe & Status) tetap di sini
+        val types = listOf("TV", "Movie", "OVA", "Special", "ONA", "Music")
+        val statuses = listOf("New", "Continuing", "All")
+
+        _uiState.update {
+            it.copy(
+                typeOptions = types,
+                selectedType = types.first(),
+                statusOptions = statuses,
+                selectedStatus = statuses.first(),
+            )
+        }
+
+        // Panggil fungsi load filter yang baru
+        loadSeasonFilters()
+    }
+
+    /**
+     * 2. Fungsi init (loadSeasonFilters) menjadi lebih sederhana
+     */
+    private fun loadSeasonFilters() {
+        viewModelScope.launch {
+            // Panggil UseCase, bukan repository
+            getSeasonalDataUseCase.getSeasonFilters().collect { result ->
+                when (result) {
+                    is ResultWrapper.Success -> {
+                        val filterData = result.payload!! // Kita tahu ini tidak null dari logika UseCase
+
+                        _uiState.update {
+                            it.copy(
+                                isLoadingFilters = false,
+                                seasonListData = filterData.seasonListData,
+                                yearOptions = filterData.yearOptions,
+                                selectedYear = filterData.selectedYear,
+                                seasonOptions = filterData.seasonOptions,
+                                selectedSeason = filterData.selectedSeason
+                            )
+                        }
+
+                        // Panggil onUpdateFilter HANYA setelah filter berhasil dimuat
+                        onUpdateFilter()
+                    }
+                    is ResultWrapper.Error -> {
+                        _uiState.update { it.copy(isLoadingFilters = false) }
+                    }
+                    is ResultWrapper.Loading -> {
+                        _uiState.update { it.copy(isLoadingFilters = true) }
+                    }
+                    else -> { /* Handle Empty/Idle jika perlu */ }
+                }
+            }
+        }
+    }
+
+    // --- Event Handlers ---
+    // onYearChange tidak berubah, karena ini murni logika UI-State
+    fun onYearChange(newYear: String) {
+        val newSeasons = _uiState.value.seasonListData
+            .find { it.year.toString() == newYear }
+            ?.seasons ?: emptyList()
+        val newSelectedSeason = newSeasons.firstOrNull() ?: ""
+        _uiState.update {
+            it.copy(
+                selectedYear = newYear,
+                seasonOptions = newSeasons,
+                selectedSeason = newSelectedSeason
+            )
+        }
+    }
+
+    // Handler lain tidak berubah
+    fun onSeasonChange(newSeason: String) { _uiState.update { it.copy(selectedSeason = newSeason) } }
+    fun onTypeChange(newType: String) { _uiState.update { it.copy(selectedType = newType) } }
+    fun onStatusChange(newStatus: String) { _uiState.update { it.copy(selectedStatus = newStatus) } }
+
+    /**
+     * 3. Fungsi onUpdateFilter menjadi SANGAT sederhana
+     */
+    fun onUpdateFilter() {
+        _uiState.update { it.copy(apiResult = ResultWrapper.Loading()) }
+
+        // Buat parameter untuk UseCase
+        val params = AnimeFilterParams(
+            filterType = _uiState.value.selectedType,
+            filterStatus = _uiState.value.selectedStatus
+        )
+
+        viewModelScope.launch {
+            // Panggil UseCase, bukan repository
+            getSeasonalDataUseCase.getSeasonalAnime(params)
+                .collect { result ->
+                    // Logika 'zip' dan 'when' sudah tidak ada lagi di sini!
+                    if (result !is ResultWrapper.Loading) {
+                        _uiState.update { it.copy(apiResult = result) }
+                    }
+                }
         }
     }
 }
