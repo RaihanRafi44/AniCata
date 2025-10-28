@@ -32,16 +32,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.raihan.anicata.data.model.auth.UserData
 import com.raihan.anicata.ui.alllists.AllListsScreen
 import com.raihan.anicata.ui.archive.ArchiveScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.profile.ProfileScreen
+import com.raihan.anicata.ui.search.ResultSearchScreen
 import com.raihan.anicata.ui.search.SearchScreenLayout
 import com.raihan.anicata.ui.seasonalanime.SeasonalScreen
 import com.raihan.anicata.ui.top.anime.TopAnimeScreen
@@ -250,11 +253,23 @@ fun MainScreen(
         )
     }
 
-    LaunchedEffect(currentRoute) {
+    /*LaunchedEffect(currentRoute) {
         when (currentRoute) {
             "home" -> selectedItem = 0
             "archive" -> selectedItem = 1
             "profile" -> selectedItem = 2
+        }
+    }*/
+
+    LaunchedEffect(currentRoute) {
+        // PERBAIKAN KECIL:
+        // Jika rute saat ini adalah result_search, jangan ubah selectedItem
+        if (currentRoute?.startsWith("result_search") == false) {
+            when (currentRoute) {
+                "home" -> selectedItem = 0
+                "archive" -> selectedItem = 1
+                "profile" -> selectedItem = 2
+            }
         }
     }
 
@@ -332,6 +347,17 @@ fun MainScreen(
                     composable("all_lists") {
                         AllListsScreen()
                     }
+
+                    // --- 1. TAMBAHKAN RUTE BARU DI SINI ---
+                    composable(
+                        route = "result_search/{query}",
+                        arguments = listOf(navArgument("query") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val query = backStackEntry.arguments?.getString("query") ?: ""
+                        ResultSearchScreen(searchQuery = query)
+                    }
+                    // --- BATAS AKHIR RUTE BARU ---
+
                 }
 
                 FloatingBottomNavBar(
@@ -381,7 +407,19 @@ fun MainScreen(
                 modifier = Modifier.statusBarsPadding()
             ) {
                 SearchScreenLayout(
-                    onClose = { isSearchVisible = false } // Tombol close akan menutup overlay
+                    onClose = { isSearchVisible = false }, // Tombol close akan menutup overlay
+                    // Tambahkan parameter onSearchSubmitted yang hilang
+                    onSearchSubmitted = { query ->
+                        // 1. Tutup overlay pencarian
+                        isSearchVisible = false
+
+                        // 2. Gunakan internalNavController, BUKAN navController
+                        internalNavController.navigate("result_search/$query") {
+                            // Opsi ini agar tidak menumpuk halaman pencarian
+                            launchSingleTop = true
+                        }
+                    }
+
                 )
             }
         }

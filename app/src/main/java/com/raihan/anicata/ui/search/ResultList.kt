@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,14 +30,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.raihan.anicata.data.model.media.MediaItem
+import com.raihan.anicata.utils.ResultWrapper
 import java.text.NumberFormat
 import java.util.Locale
 
+/*
 // --- Data Class disesuaikan agar sama persis dengan Seasonal List ---
 data class AnimeSearchInfo(
     val id: Int,
@@ -200,4 +207,345 @@ fun SearchResultListLayoutPreview() {
     MaterialTheme {
         SearchResultListLayout()
     }
+}*/
+
+/*@Composable
+fun SearchResultCard(item: MediaItem) {
+    // Tentukan warna tag berdasarkan itemType
+    val typeTagColor = when (item.itemType.lowercase()) {
+        //"anime" -> Color(0xFFF4842D)
+        "manga" -> Color(0xFF2DB8F4)
+        "manhwa" -> Color(0xFF2DB8F4)
+        "manhua" -> Color(0xFF2DB8F4)
+        "novel" -> Color(0xFF2DB8F4)
+        "light novel" -> Color(0xFF2DB8F4)
+        "doujin" -> Color(0xFF2DB8F4)
+        "oneshot" -> Color(0xFF2DB8F4)
+        //"movie" -> Color(0xFF8B2DF4)
+        else -> Color(0xFFF4842D)
+    }
+    val epsTagColor = Color(0xFF4CAF50)
+    val starColor = Color(0xFFFFC107)
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+        ) {
+            // TODO: Ganti Box di atas dengan:
+            AsyncImage(
+                model = item.imageUrl,
+                contentDescription = item.title,
+                modifier = Modifier
+                    .width(80.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(6.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Bagian Kanan: Informasi Teks
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = item.title,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 20.sp,
+                )
+                // --- Ubah field data dummy menjadi field MediaItem ---
+                Text(
+                    text = item.airedOrPublished, // <-- DARI airDate
+                    fontSize = 12.sp,
+                    color = Color.DarkGray
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.People,
+                        contentDescription = "Members",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    val formatter = NumberFormat.getInstance(Locale.US)
+                    Text(
+                        text = formatter.format(item.members ?: 0), // <-- DARI members
+                        fontSize = 12.sp,
+                        color = Color.DarkGray
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Tag(text = item.itemType, backgroundColor = typeTagColor) // <-- DARI itemType
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Tag(text = item.itemDetails, backgroundColor = epsTagColor) // <-- DARI itemDetails
+                    Spacer(Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Score",
+                        tint = starColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = String.format(Locale.US, "%.2f", item.score ?: 0.0), // <-- DARI score
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                }
+            }
+        }
+    }
 }
+
+// --- Composable Tag tidak berubah ---
+@Composable
+fun Tag(text: String, backgroundColor: Color) {
+    Box(
+        modifier = Modifier
+            .background(backgroundColor, RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+
+// --- Composable Utama diubah untuk menerima UiState ---
+@Composable
+fun SearchResultListLayout(
+    items: List<MediaItem>, // <-- Terima List, bukan ResultWrapper
+    uiState: ResultWrapper<List<MediaItem>> // <-- Terima state dari ViewModel
+) {
+    *//*Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.TopCenter // Pusatkan loading/error
+    ) {
+        when (uiState) {
+            is ResultWrapper.Loading -> {
+                CircularProgressIndicator()
+            }
+            is ResultWrapper.Success -> {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp) // Jarak antar item
+                ) {
+                    uiState.payload!!.forEach { item ->
+                        SearchResultCard(item = item)
+                    }
+                }
+            }
+            is ResultWrapper.Empty -> {
+                Text(
+                    text = "No results found for this query.",
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 32.dp)
+                )
+            }
+            is ResultWrapper.Error -> {
+                Text(
+                    text = uiState.exception?.message ?: "An unknown error occurred.",
+                    fontSize = 16.sp,
+                    color = Color.Red,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 32.dp)
+                )
+            }
+            is ResultWrapper.Idle -> {
+                // Tidak menampilkan apa-apa
+            }
+        }
+    }*//*
+    // Hapus Box dan when, langsung Column
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp) // Jarak antar item
+    ) {
+        items.forEach { item ->
+            SearchResultCard(item = item)
+        }
+    }
+}*/
+
+// Composable SearchResultCard tidak berubah, sudah benar
+@Composable
+fun SearchResultCard(item: MediaItem) {
+    // Tentukan warna tag berdasarkan itemType
+    val typeTagColor = when (item.itemType.lowercase()) {
+        //"anime" -> Color(0xFFF4842D)
+        "manga" -> Color(0xFF2DB8F4)
+        "manhwa" -> Color(0xFF2DB8F4)
+        "manhua" -> Color(0xFF2DB8F4)
+        "novel" -> Color(0xFF2DB8F4)
+        "light novel" -> Color(0xFF2DB8F4)
+        "doujin" -> Color(0xFF2DB8F4)
+        "oneshot" -> Color(0xFF2DB8F4)
+        //"movie" -> Color(0xFF8B2DF4)
+        else -> Color(0xFFF4842D)
+    }
+    val epsTagColor = Color(0xFF4CAF50)
+    val starColor = Color(0xFFFFC107)
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+        ) {
+            AsyncImage(
+                model = item.imageUrl,
+                contentDescription = item.title,
+                modifier = Modifier
+                    .width(80.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(6.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Bagian Kanan: Informasi Teks
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = item.title,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 20.sp,
+                )
+                Text(
+                    text = item.airedOrPublished,
+                    fontSize = 12.sp,
+                    color = Color.DarkGray
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.People,
+                        contentDescription = "Members",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    val formatter = NumberFormat.getInstance(Locale.US)
+                    Text(
+                        text = formatter.format(item.members ?: 0),
+                        fontSize = 12.sp,
+                        color = Color.DarkGray
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Tag(text = item.itemType, backgroundColor = typeTagColor)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Tag(text = item.itemDetails, backgroundColor = epsTagColor)
+                    Spacer(Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Score",
+                        tint = starColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = String.format(Locale.US, "%.2f", item.score ?: 0.0),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Composable Tag tidak berubah
+@Composable
+fun Tag(text: String, backgroundColor: Color) {
+    Box(
+        modifier = Modifier
+            .background(backgroundColor, RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+
+// --- PERUBAHAN DI SINI ---
+// Hapus parameter `uiState` yang tidak terpakai.
+// Hapus semua kode `Box` dan `when` yang sudah di-comment-out.
+@Composable
+fun SearchResultListLayout(
+    items: List<MediaItem> // <-- Terima HANYA list-nya
+) {
+    // Langsung Column untuk me-render list
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp) // Jarak antar item
+    ) {
+        items.forEach { item ->
+            SearchResultCard(item = item)
+        }
+    }
+}
+
+
+/*@Preview(showBackground = true)
+@Composable
+fun SearchResultListLayoutPreview() {
+    MaterialTheme {
+        // Preview untuk state Success (dengan data palsu)
+        val dummyItem = MediaItem(1, "Fullmetal Alchemist: Brotherhood", "https://...png", 9.10, 3205881, "TV", "64 eps", "Apr 2009 - Jul 2010")
+        val dummyState = ResultWrapper.Success(listOf(dummyItem, dummyItem))
+        SearchResultListLayout(uiState = dummyState)
+    }
+}*/
