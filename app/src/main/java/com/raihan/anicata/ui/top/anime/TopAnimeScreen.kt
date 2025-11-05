@@ -30,7 +30,8 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TopAnimeScreen(
-    viewModel: TopAnimeViewModel = koinViewModel()
+    viewModel: TopAnimeViewModel = koinViewModel(),
+    onAnimeClick: (Int) -> Unit
 ) {
     // Mengumpulkan state dari ViewModel
     val animeList by viewModel.topAnime.collectAsState()
@@ -40,6 +41,9 @@ fun TopAnimeScreen(
 
     var selectedFilter by rememberSaveable { mutableStateOf("") }
 
+    // --- PERBAIKAN 1: Buat 'currentPage' sebagai state yang bisa diselamatkan ---
+    var currentPage by rememberSaveable { mutableStateOf(1) }
+
     val paginationState = rememberPaginationState(
         totalPages = totalPages, // Kirim totalPages dari ViewModel
         visiblePages = 3
@@ -48,10 +52,15 @@ fun TopAnimeScreen(
     // Memuat data pertama kali saat screen ditampilkan
     LaunchedEffect(Unit) {
         viewModel.getTopAnimeData(
-            page = paginationState.currentPage,// Gunakan page dari state
+            //page = paginationState.currentPage,// Gunakan page dari state
+            page = paginationState.currentPage,
             filter = selectedFilter // Untuk filter
         )
     }
+
+    /*LaunchedEffect(currentPage) {
+        paginationState.onPageChange(currentPage)
+    }*/
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -68,8 +77,11 @@ fun TopAnimeScreen(
                 onFilterSelected = { newApiValue ->
                     // 1. Update state filter
                     selectedFilter = newApiValue
+                    //currentPage = 1
+                    // Saat filter diubah, reset juga paginationState
+                    paginationState.onPageChange(1)
                     // 2. Reset halaman ke 1 (penting saat ganti filter)
-                    paginationState.onPageChange(1) // Asumsi ini mengupdate currentPage
+                    //paginationState.onPageChange(1) // Asumsi ini mengupdate currentPage
                     // 3. Panggil ViewModel dengan filter baru dan halaman 1
                     viewModel.getTopAnimeData(
                         page = 1,
@@ -82,9 +94,11 @@ fun TopAnimeScreen(
             if (!isLoading && error == null && animeList.isNotEmpty()) {
                 AnimeListTopLayout(
                     animeList = animeList,
+                    //currentPage = paginationState.currentPage,
                     currentPage = paginationState.currentPage,
                     pageSize = 25,
-                    modifier = Modifier // padding sudah dihandle di dalam AnimeListTopLayout
+                    modifier = Modifier, // padding sudah dihandle di dalam AnimeListTopLayout
+                    onAnimeClick = onAnimeClick // <-- 2. TERUSKAN CALLBACK KE BAWAH
                 )
             }
 
@@ -93,13 +107,19 @@ fun TopAnimeScreen(
             // 4. Tampilkan paginasi HANYA JIKA TIDAK LOADING DAN TIDAK ERROR
             if (!isLoading && error == null) {
                 PaginationControls(
+                    //currentPage = paginationState.currentPage,
                     currentPage = paginationState.currentPage,
                     startPage = paginationState.startPage,
                     totalPages = paginationState.totalPages,
                     visiblePages = paginationState.visiblePages,
                     onPageChange = { newPage ->
-                        // 1. Update state holder-nya
+                        currentPage = newPage
+                        // --- 2. INI PERBAIKAN UTAMANYA ---
+                        // Beri tahu 'paginationState' untuk memperbarui
+                        // logika 'startPage' (jendela geser) miliknya.
                         paginationState.onPageChange(newPage)
+                        // 1. Update state holder-nya
+                        //paginationState.onPageChange(newPage)
                         // 2. Panggil ViewModel dengan halaman baru
                         viewModel.getTopAnimeData(
                             page = newPage,
@@ -146,5 +166,5 @@ fun TopAnimeScreen(
 @Preview(showBackground = true)
 @Composable
 fun TopAnimeScreenPreview() {
-    TopAnimeScreen()
+    //TopAnimeScreen()
 }

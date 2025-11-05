@@ -36,6 +36,7 @@ import com.raihan.anicata.data.source.network.model.anime.full.ThemeX
 import com.raihan.anicata.data.source.network.model.anime.full.To
 import com.raihan.anicata.data.source.network.model.anime.full.Trailer
 import com.raihan.anicata.data.source.network.model.anime.full.Webp
+import java.util.regex.Pattern
 
 fun AnimeDetailFullData?.toDetailFullAnime() =
     AnimeData(
@@ -50,7 +51,7 @@ fun AnimeDetailFullData?.toDetailFullAnime() =
         titleSynonyms = this?.titleSynonyms.orEmpty(),
         type = this?.type.orEmpty(),
         source = this?.source.orEmpty(),
-        episodes = this?.episodes ?: 0,
+        episodes = this?.episodes,
         status = this?.status.orEmpty(),
         airing = this?.airing ?: false,
         aired = this?.aired.toDetailAired(),
@@ -96,9 +97,23 @@ fun Webp?.toDetailImageSetWebp() =
         largeImageUrl = this?.largeImageUrl.orEmpty()
     )
 
-fun Trailer?.toDetailTrailer() =
+/*fun Trailer?.toDetailTrailer() =
     TrailerAnime(
         youtubeId = this?.youtubeId.orEmpty(),
+        url = this?.url.orEmpty(),
+        embedUrl = this?.embedUrl.orEmpty()
+    )*/
+
+// --- PERBAIKI FUNGSI INI ---
+fun Trailer?.toDetailTrailer() =
+    TrailerAnime(
+        // 1. Coba ambil 'youtubeId' dulu
+        youtubeId = this?.youtubeId.takeIf { !it.isNullOrBlank() }
+        // 2. Jika 'youtubeId' null/kosong, coba ekstrak dari 'embedUrl'
+            ?: extractYouTubeIdFromEmbedUrl(this?.embedUrl)
+            // 3. Jika keduanya gagal, baru jadikan string kosong
+            ?: "",
+
         url = this?.url.orEmpty(),
         embedUrl = this?.embedUrl.orEmpty()
     )
@@ -232,4 +247,19 @@ fun Collection<AnimeDetailFullData>?.toDetailAnime() =
     this?.map {
         it.toDetailFullAnime()
     } ?: listOf()
+
+private fun extractYouTubeIdFromEmbedUrl(embedUrl: String?): String? {
+    if (embedUrl.isNullOrBlank()) return null
+
+    // Pola regex untuk mencari string di antara "/embed/" dan "?"
+    val pattern = Pattern.compile("/embed/([^/?&]+)")
+    val matcher = pattern.matcher(embedUrl)
+
+    // Jika polanya ditemukan, kembalikan grup pertama (ID videonya)
+    return if (matcher.find()) {
+        matcher.group(1)
+    } else {
+        null // Tidak ditemukan
+    }
+}
 

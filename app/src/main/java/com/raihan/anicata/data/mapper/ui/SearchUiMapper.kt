@@ -11,7 +11,13 @@ import com.raihan.anicata.ui.search.AnimeInfo
 fun SearchAnime.toAnimeInfo(): AnimeInfo {
     // Menggabungkan tipe dan tahun, cth: "(TV, 2002)"
     val typeStr = this.type ?: "Unknown"
-    val yearStr = this.year?.toString() ?: "????"
+    val yearVal = this.year
+    val yearStr = if (yearVal == null || yearVal == 0) {
+        "????"
+    } else {
+        yearVal.toString()
+    }
+    //val yearStr = this.year?.toString() ?: "????"
     val typeAndYear = "($typeStr, $yearStr)"
 
     // Menggabungkan genre dari List<SearchDataGenres>
@@ -19,6 +25,9 @@ fun SearchAnime.toAnimeInfo(): AnimeInfo {
         .ifEmpty { "No genres listed" }
 
     return AnimeInfo(
+        id = this.id,
+        category = "Anime",
+        mainImage = this.images.jpg.largeImageUrl?: "",
         mainTitle = this.title,
         typeAndYear = typeAndYear,
         genres = "Genres : $genresString"
@@ -33,7 +42,17 @@ fun SearchManga.toMangaInfo(): AnimeInfo {
     // Menggabungkan tipe dan tahun
     val typeStr = this.type ?: "Manga"
     // Mengambil tahun dari nested object 'published'
-    val yearStr = this.published?.prop?.from?.year?.toString() ?: "????"
+    //val yearStr = this.published?.prop?.from?.year?.toString() ?: "????"
+    // --- PERBAIKAN DI SINI ---
+    // 1. Ambil nilainya terlebih dahulu
+    val yearVal = this.published?.prop?.from?.year
+    // 2. Cek apakah nilainya null ATAU 0
+    val yearStr = if (yearVal == null || yearVal == 0) {
+        "????" // Tampilkan tanda tanya jika null atau 0
+    } else {
+        yearVal.toString() // Tampilkan tahun jika valid
+    }
+    // --- AKHIR PERBAIKAN ---
     val typeAndYear = "($typeStr, $yearStr)"
 
     // Menggabungkan genre dan memberi penanda [Manga]
@@ -41,6 +60,9 @@ fun SearchManga.toMangaInfo(): AnimeInfo {
         .ifEmpty { "No genres listed" }
 
     return AnimeInfo(
+        id = this.id,
+        category = "Manga",
+        mainImage = this.images.jpg.imageUrl?: "",
         mainTitle = this.title,
         typeAndYear = typeAndYear,
         // Tambahkan prefix [Manga] untuk membedakannya di UI

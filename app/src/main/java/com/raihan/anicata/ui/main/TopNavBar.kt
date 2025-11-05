@@ -44,9 +44,6 @@ fun TopNavBar(
     scrollBehavior: TopAppBarScrollBehavior
 ) {
     CenterAlignedTopAppBar(
-        /*modifier = Modifier.statusBarsPadding(),
-        windowInsets = WindowInsets(0),*/
-        //windowInsets = WindowInsets(0, 0, 0, 0),
         title = {
             Box(
                 modifier = Modifier.fillMaxHeight(),

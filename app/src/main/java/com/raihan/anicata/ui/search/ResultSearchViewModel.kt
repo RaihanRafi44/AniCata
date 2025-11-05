@@ -17,158 +17,6 @@ import kotlinx.coroutines.launch
 import kotlin.collections.emptyList
 import kotlin.math.max
 
-
-/*
-class ResultSearchViewModel(
-    private val animeRepository: AnimeSearchRepository,
-    private val mangaRepository: MangaSearchRepository
-) : ViewModel() {
-
-    // State untuk menampung hasil pencarian (bukan live search)
-    private val _searchState = MutableStateFlow<ResultWrapper<List<MediaItem>>>(ResultWrapper.Idle())
-    val searchState: StateFlow<ResultWrapper<List<MediaItem>>> = _searchState.asStateFlow()
-
-    // Batas 12 item per kategori (total 24)
-    private val searchLimit = 12
-
-    */
-/**
-     * Dipanggil oleh UI untuk memulai pencarian.
-     *//*
-
-    */
-/*fun searchMedia(query: String) {
-        // Hanya jalankan jika query baru (atau jika masih Idle)
-        if (_searchState.value is ResultWrapper.Loading) return
-
-        viewModelScope.launch {
-            _searchState.value = ResultWrapper.Loading()
-
-            val animeFlow = animeRepository.getSearchAnimeList(
-                query = query, limit = searchLimit, page = 1,
-                type = null, score = null, genres = null, orderBy = null, sort = null
-            )
-            val mangaFlow = mangaRepository.getSearchMangaList(
-                query = query, limit = searchLimit, page = 1,
-                type = null, score = null, genres = null, orderBy = null, sort = null
-            )
-
-            // Filter status Loading agar zip tidak ter-trigger terlalu cepat
-            val filteredAnimeFlow = animeFlow.filter { it !is ResultWrapper.Loading && it !is ResultWrapper.Idle }
-            val filteredMangaFlow = mangaFlow.filter { it !is ResultWrapper.Loading && it !is ResultWrapper.Idle }
-
-            filteredAnimeFlow.zip(filteredMangaFlow) { animeResult, mangaResult ->
-
-                // Prioritaskan Error
-                if (animeResult is ResultWrapper.Error) {
-                    return@zip ResultWrapper.Error<List<MediaItem>>(animeResult.exception)
-                }
-                if (mangaResult is ResultWrapper.Error) {
-                    return@zip ResultWrapper.Error<List<MediaItem>>(mangaResult.exception)
-                }
-
-                // Gunakan MediaMapper.kt (toMediaItem)
-                val animeList = when (animeResult) {
-                    is ResultWrapper.Success -> animeResult.payload?.first?.map { it.toMediaItem() } ?: emptyList()
-                    is ResultWrapper.Empty -> emptyList() // Anggap saja kosong
-                    else -> emptyList()
-                }
-
-                val mangaList = when (mangaResult) {
-                    is ResultWrapper.Success -> mangaResult.payload?.first?.map { it.toMediaItem() } ?: emptyList()
-                    is ResultWrapper.Empty -> emptyList()
-                    else -> emptyList()
-                }
-
-                val combinedList = animeList + mangaList
-
-                if (combinedList.isEmpty()) {
-                    ResultWrapper.Empty<List<MediaItem>>(emptyList())
-                } else {
-                    ResultWrapper.Success(combinedList)
-                }
-
-            }.collect { result ->
-                _searchState.value = result
-            }
-        }
-    }*//*
-
-
-    */
-/**
-     * Dipanggil oleh UI untuk memulai pencarian.
-     *//*
-
-    fun searchMedia(query: String) {
-        // Jangan jalankan pencarian baru jika sedang loading
-        if (_searchState.value is ResultWrapper.Loading) return
-
-        viewModelScope.launch {
-            _searchState.value = ResultWrapper.Loading()
-
-            val animeFlow = animeRepository.getSearchAnimeList(
-                query = query, limit = searchLimit, page = 1,
-                type = null, score = null, genres = null, orderBy = null, sort = null
-            )
-            val mangaFlow = mangaRepository.getSearchMangaList(
-                query = query, limit = searchLimit, page = 1,
-                type = null, score = null, genres = null, orderBy = null, sort = null
-            )
-
-            // --- PERBAIKAN DI SINI (SAMA SEPERTI SEARCHVIEWMODEL) ---
-
-            // 1. JANGAN filter flow di sini
-
-            animeFlow.zip(mangaFlow) { animeResult, mangaResult ->
-
-                // 2. Tangani Loading/Idle DI DALAM zip dengan me-return null
-                if (animeResult is ResultWrapper.Loading || mangaResult is ResultWrapper.Loading) {
-                    return@zip null
-                }
-                if (animeResult is ResultWrapper.Idle || mangaResult is ResultWrapper.Idle) {
-                    return@zip null
-                }
-
-                // 3. Prioritaskan Error
-                if (animeResult is ResultWrapper.Error) {
-                    return@zip ResultWrapper.Error<List<MediaItem>>(animeResult.exception)
-                }
-                if (mangaResult is ResultWrapper.Error) {
-                    return@zip ResultWrapper.Error<List<MediaItem>>(mangaResult.exception)
-                }
-
-                // 4. Proses Success (karena Empty tidak akan pernah terjadi)
-                val animeList = when (animeResult) {
-                    // Gunakan toMediaItem()
-                    is ResultWrapper.Success -> animeResult.payload?.first?.map { it.toMediaItem() } ?: emptyList()
-                    else -> emptyList() // Menangani Error (meskipun sudah dicek), Loading/Idle
-                }
-
-                val mangaList = when (mangaResult) {
-                    // Gunakan toMediaItem()
-                    is ResultWrapper.Success -> mangaResult.payload?.first?.map { it.toMediaItem() } ?: emptyList()
-                    else -> emptyList()
-                }
-
-                val combinedList = animeList + mangaList
-
-                if (combinedList.isEmpty()) {
-                    ResultWrapper.Empty<List<MediaItem>>(emptyList())
-                } else {
-                    ResultWrapper.Success(combinedList)
-                }
-
-            }
-                .filterNotNull() // 5. Filter semua emisi 'null' yang kita buat
-                .collect { result ->
-                    _searchState.value = result
-                }
-            // --- AKHIR PERBAIKAN ---
-        }
-    }
-}*/
-
 // --- Data class (ResultSearchUiState dan PaginationInfo) tidak berubah ---
 data class ResultSearchUiState(
     val result: ResultWrapper<List<MediaItem>> = ResultWrapper.Idle(),
@@ -180,7 +28,6 @@ data class PaginationInfo(
     val totalPages: Int = 1
 )
 // --- Akhir Data class ---
-
 
 class ResultSearchViewModel(
     private val animeRepository: AnimeSearchRepository,
@@ -198,6 +45,15 @@ class ResultSearchViewModel(
     private val mangaLimit = 10
     // --- AKHIR PERUBAHAN ---
 
+    // --- 1. TAMBAHKAN VARIABEL CACHE ---
+    // Cache key akan berupa: "query=naruto&page=1"
+    private val mediaCache = mutableMapOf<String, ResultWrapper<List<MediaItem>>>()
+    private val paginationCache = mutableMapOf<String, PaginationInfo>()
+
+    // --- 2. TAMBAHKAN FUNGSI CACHE KEY ---
+    private fun getCacheKey(query: String, page: Int): String {
+        return "query=$query&page=$page"
+    }
 
     /**
      * Dipanggil oleh UI saat pertama kali mencari (dari SearchScreen).
@@ -225,6 +81,15 @@ class ResultSearchViewModel(
     private fun fetchPage(query: String, page: Int) {
         if (_uiState.value.result is ResultWrapper.Loading) return
 
+        // --- 3. CEK CACHE DI AWAL ---
+        val cacheKey = getCacheKey(query, page)
+        if (mediaCache.containsKey(cacheKey)) {
+            _uiState.value = ResultSearchUiState(
+                result = mediaCache[cacheKey]!!,
+                paginationInfo = paginationCache[cacheKey]!!
+            )
+            return // Hentikan, data sudah ada di cache
+        }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 result = ResultWrapper.Loading(),
@@ -283,16 +148,6 @@ class ResultSearchViewModel(
                 //val combinedList = animeList + mangaList
 
                 val combinedList = (animeList + mangaList).distinctBy { it.id to it.itemType }
-
-                /*// 4. Hitung Total Halaman
-                val animePagination = (animeResult as? ResultWrapper.Success)?.payload?.second
-                val mangaPagination = (mangaResult as? ResultWrapper.Success)?.payload?.second
-
-                val animeTotal = animePagination?.last_visible_page ?: 0
-                val mangaTotal = mangaPagination?.last_visible_page ?: 0*/
-
-                // --- PERBAIKAN DI SINI ---
-                // Ambil data pagination dari Success atau Empty, BUKAN cast
                 val animePagination = when (animeResult) {
                     is ResultWrapper.Success -> animeResult.payload?.second
                     is ResultWrapper.Empty -> animeResult.payload?.second
@@ -303,33 +158,26 @@ class ResultSearchViewModel(
                     is ResultWrapper.Empty -> mangaResult.payload?.second
                     else -> null
                 }
-                // --- AKHIR PERBAIKAN ---
-
-                // --- PERBAIKAN DI SINI ---
-                // Variabel animePagination dan mangaPagination sudah bertipe Int?
-                // (sesuai definisi repository)
-                // Kita tidak perlu mengakses .last_visible_page lagi.
                 val animeTotal = animePagination ?: 0
                 val mangaTotal = mangaPagination ?: 0
-                // --- AKHIR PERBAIKAN ---
-
                 val totalPages = max(animeTotal, mangaTotal).coerceAtLeast(1)
-
                 val paginationInfo = PaginationInfo(currentPage = page, totalPages = totalPages)
-
-                // 5. Buat hasil
                 val resultWrapper = if (combinedList.isEmpty()) {
                     ResultWrapper.Empty<List<MediaItem>>()
                 } else {
                     ResultWrapper.Success(combinedList)
                 }
-
                 return@zip Pair(resultWrapper, paginationInfo)
 
             }
-                .filterNotNull()
+                .filterNotNull() //
                 .collect { (result, pagination) ->
-                    _uiState.value = ResultSearchUiState(result, pagination)
+                    // --- 5. SIMPAN KE CACHE ---
+                    mediaCache[cacheKey] = result
+                    paginationCache[cacheKey] = pagination
+
+                    // 6. Update UI
+                    _uiState.value = ResultSearchUiState(result, pagination) //
                 }
         }
     }

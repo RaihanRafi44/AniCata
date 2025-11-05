@@ -39,7 +39,7 @@ data class AllListsUiState(
 
     // --- State KATEGORI ---
     val selectedCategory: String = "Anime",
-    val categoryOptions: List<String> = listOf("Anime", "Manga", "Novel"),
+    val categoryOptions: List<String> = listOf("Anime", "Manga"),
 
     // --- State Filter Sort ---
     val selectedSort: String = "Score",
@@ -86,8 +86,27 @@ class AllListsViewModel(
     private var mangaFilterCache: FilterCache? = null
 
 
+    // --- 1. TAMBAHKAN VARIABEL CACHE (meniru TopAnimeViewModel) ---
+    private val mediaCache = mutableMapOf<String, List<MediaItem>>()
+    private val totalPagesCache = mutableMapOf<String, Int>()
+
     init {
         applyFilters()
+    }
+
+    // --- 2. TAMBAHKAN FUNGSI CACHE KEY ---
+    /**
+     * Membuat cache key unik berdasarkan semua filter yang sedang diterapkan.
+     */
+    private fun getCacheKey(state: AllListsUiState, page: Int): String {
+        val category = state.selectedCategory
+        val orderBy = state.appliedOrderBy
+        val sort = state.appliedSort
+        val type = state.appliedType
+        val genre = state.appliedGenreId
+        val theme = state.appliedThemeId
+        val target = state.appliedTargetId
+        return "cat=$category&order=$orderBy&sort=$sort&type=$type&genre=$genre&theme=$theme&target=$target&page=$page"
     }
 
     /**
@@ -310,6 +329,27 @@ class AllListsViewModel(
      */
     private suspend fun fetchMediaPageInternal(page: Int) {
         val currentState = _uiState.value
+
+        // --- 3a. CEK CACHE DI AWAL ---
+        val cacheKey = getCacheKey(currentState, page)
+
+        if (mediaCache.containsKey(cacheKey)) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isError = false,
+                    errorMessage = "",
+                    mediaList = mediaCache[cacheKey]!!,
+                    totalPages = totalPagesCache[cacheKey] ?: 1,
+                    currentPage = page
+                )
+            }
+            return // Hentikan eksekusi, data sudah ada di cache
+        }
+
+        // --- 3b. JIKA CACHE MISS, LANJUTKAN FETCH DATA ---
+        _uiState.update { it.copy(isLoading = true, isError = false, errorMessage = "") }
+
         val category = currentState.selectedCategory
         val currentOrderBy = currentState.appliedOrderBy
         val currentSort = currentState.appliedSort
@@ -340,6 +380,10 @@ class AllListsViewModel(
                     val payload = result.payload
                     val newMediaList = payload?.first ?: emptyList()
                     val totalPages = payload?.second ?: 1
+                    // --- 3c. SIMPAN KE CACHE SAAT SUKSES ---
+                    mediaCache[cacheKey] = newMediaList
+                    totalPagesCache[cacheKey] = totalPages
+
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -363,6 +407,10 @@ class AllListsViewModel(
                     val payload = result.payload
                     val currentList = payload?.first ?: emptyList()
                     val currentPages = payload?.second ?: 1
+
+                    // --- 3d. SIMPAN KE CACHE SAAT EMPTY ---
+                    mediaCache[cacheKey] = currentList
+                    totalPagesCache[cacheKey] = currentPages
 
                     _uiState.update {
                         it.copy(

@@ -3,6 +3,7 @@ package com.raihan.anicata.ui.seasonalanime
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,7 +34,10 @@ import java.util.*
 
 // --- Composable untuk satu item dalam daftar ---
 @Composable
-fun AnimeCard(item: SeasonAnimeYear) { // Menggunakan SeasonAnimeNow
+fun AnimeCard(
+    item: SeasonAnimeYear,
+    onClick: () -> Unit
+) { // Menggunakan SeasonAnimeNow
     val tvTagColor = Color(0xFFF4842D)
     val epsTagColor = Color(0xFF4CAF50)
     val starColor = Color(0xFFFFC107)
@@ -41,6 +45,7 @@ fun AnimeCard(item: SeasonAnimeYear) { // Menggunakan SeasonAnimeNow
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
@@ -180,7 +185,8 @@ fun Tag(text: String, backgroundColor: Color) {
 // --- Composable Utama untuk menampilkan daftar ---
 @Composable
 fun AnimeListLayout(
-    animeList: List<SeasonAnimeYear> // Menerima list dari data model
+    animeList: List<SeasonAnimeYear>, // Menerima list dari data model
+    onAnimeClick: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -192,7 +198,10 @@ fun AnimeListLayout(
         // Hapus `val animeList = getDummyAnimeList()`
         // Gunakan forEach karena parent-nya (SeasonalScreen) sudah verticalScroll
         animeList.forEach { anime ->
-            AnimeCard(item = anime)
+            AnimeCard(
+                item = anime,
+                onClick = { onAnimeClick(anime.id) }
+            )
         }
     }
 }
@@ -254,6 +263,9 @@ fun AnimeListLayoutPreview() {
                 themes = emptyList(), demographics = emptyList()
             )
         )
-        AnimeListLayout(animeList = dummyPreviewList)
+        AnimeListLayout(
+            animeList = dummyPreviewList,
+            onAnimeClick = {}
+        )
     }
 }

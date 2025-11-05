@@ -3,6 +3,7 @@ package com.raihan.anicata.ui.alllists
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -231,13 +232,18 @@ fun ErrorStateContent(errorMessage: String, modifier: Modifier = Modifier) {
 }*/
 
 @Composable
-fun MediaItemCard(item: MediaItem) { // GANTI: AnimeAllCard -> MediaItemCard, SearchAnime -> MediaItem
+fun MediaItemCard(
+    item: MediaItem,
+    onClick: () -> Unit
+) { // GANTI: AnimeAllCard -> MediaItemCard, SearchAnime -> MediaItem
     val tvTagColor = Color(0xFFF4842D)
     val epsTagColor = Color(0xFF4CAF50)
     val starColor = Color(0xFFFFC107)
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable{ onClick() },
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
     ) {
@@ -338,7 +344,8 @@ fun Tag(text: String, backgroundColor: Color) {
 
 @Composable
 fun MediaListLayout( // GANTI: AnimeListLayout -> MediaListLayout
-    mediaList: List<MediaItem> // GANTI: animeList -> mediaList
+    mediaList: List<MediaItem>, // GANTI: animeList -> mediaList
+    onMediaClick: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -347,7 +354,11 @@ fun MediaListLayout( // GANTI: AnimeListLayout -> MediaListLayout
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         mediaList.forEach { media -> // GANTI: anime -> media
-            MediaItemCard(item = media) // GANTI: AnimeAllCard -> MediaItemCard
+            MediaItemCard(
+                item = media,
+                // 5. Panggil callback dengan ID item
+                onClick = { onMediaClick(media.id) }
+            ) // GANTI: AnimeAllCard -> MediaItemCard
         }
     }
 }
