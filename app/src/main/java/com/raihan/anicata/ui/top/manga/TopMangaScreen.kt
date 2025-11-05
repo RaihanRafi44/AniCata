@@ -29,7 +29,8 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TopMangaScreen(
-    viewModel: TopMangaViewModel = koinViewModel()
+    viewModel: TopMangaViewModel = koinViewModel(),
+    onMangaClick: (Int) -> Unit
 ) {
     // State dari ViewModel (nama variabel tidak berubah)
     val mangaList by viewModel.topManga.collectAsState()
@@ -84,7 +85,8 @@ fun TopMangaScreen(
                     mangaList = mangaList,
                     currentPage = paginationState.currentPage, // Ini PENTING untuk ranking
                     pageSize = 25,
-                    modifier = Modifier
+                    modifier = Modifier,
+                    onMangaClick = onMangaClick
                 )
             }
 

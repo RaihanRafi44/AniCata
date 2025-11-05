@@ -264,12 +264,14 @@ fun AllListsScreen(
 
 @Composable
 fun AllListsScreen(
-    viewModel: AllListsViewModel = koinViewModel()
+    viewModel: AllListsViewModel = koinViewModel(),
+    onAnimeClick: (Int) -> Unit,
+    onMangaClick: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     val paginationState = rememberPaginationState(
-        initialPage = 1,
+        //initialPage = 1,
         totalPages = uiState.totalPages,
         visiblePages = 3
     )
@@ -333,7 +335,19 @@ fun AllListsScreen(
             // 3. Tampilkan list HANYA JIKA tidak loading dan tidak error
             if (!uiState.isLoading && !uiState.isError) {
                 MediaListLayout( // GANTI: AnimeListLayout -> MediaListLayout
-                    mediaList = uiState.mediaList // GANTI: animeList -> mediaList
+                    mediaList = uiState.mediaList, // GANTI: animeList -> mediaList
+                    onMediaClick = { mediaId ->
+                        // 3. INI LOGIKA PENTINGNYA:
+                        // Cek state dari ViewModel. Hanya navigasi jika
+                        // kategori yang dipilih adalah "Anime".
+                        if (uiState.selectedCategory == "Anime") {
+                            onAnimeClick(mediaId) // Panggil navigasi
+                        }
+                        // Jika kategori "Manga" atau "Novel",
+                        if (uiState.selectedCategory == "Manga") {
+                            onMangaClick(mediaId) // Panggil navigasi
+                        }
+                    }
                 )
 
                 if (paginationState.totalPages > 1) {
@@ -357,14 +371,17 @@ fun AllListsScreen(
         when {
             // KASUS 1: LOADING (ISI KEMBALI)
             uiState.isLoading -> {
-                Box(
+                /*Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = 100.dp), // Beri padding agar tidak menutupi filter
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
-                }
+                }*/
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center) // <-- Hapus Box dan padding
+                )
             }
             // KASUS 2: ERROR (ISI KEMBALI)
             uiState.isError -> {

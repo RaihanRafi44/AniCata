@@ -230,9 +230,6 @@ private fun DrawerBody(
                                         restoreState = true
                                     }
                                 }
-                                // Tambahkan case lain jika diperlukan
-                                // "About Us" -> navController.navigate("about")
-                                // "Settings" -> navController.navigate("settings")
                             }
                             scope.launch { closeDrawer() }
                         }

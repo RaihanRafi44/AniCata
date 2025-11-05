@@ -3,6 +3,7 @@ package com.raihan.anicata.ui.top.manga
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -57,14 +58,18 @@ private fun formatAiredDate(aired: TopMangaPublished?): String {
 }
 
 @Composable
-fun MangaCard(item: TopManga) {
+fun MangaCard(
+    item: TopManga,
+    onClick: () -> Unit
+) {
     val tvTagColor = Color(0xFFF4842D)
     val starColor = Color(0xFFFFC107)
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f)),
     ) {
@@ -201,7 +206,8 @@ fun MangaListTopLayout(
     mangaList: List<TopManga>,
     currentPage: Int = 1,
     pageSize: Int = 25,
-    modifier: Modifier
+    modifier: Modifier,
+    onMangaClick: (Int) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -216,7 +222,10 @@ fun MangaListTopLayout(
         }
 
         displayRanked.forEach { manga ->
-            MangaCard(item = manga)
+            MangaCard(
+                item = manga,
+                onClick = { onMangaClick(manga.id) }
+            )
         }
     }
 }

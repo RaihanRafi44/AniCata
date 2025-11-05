@@ -43,6 +43,7 @@ import com.raihan.anicata.data.model.auth.UserData
 import com.raihan.anicata.ui.alllists.AllListsScreen
 import com.raihan.anicata.ui.archive.ArchiveScreen
 import com.raihan.anicata.ui.home.HomeScreen
+import com.raihan.anicata.ui.navigation.Screen
 import com.raihan.anicata.ui.profile.ProfileScreen
 import com.raihan.anicata.ui.search.ResultSearchScreen
 import com.raihan.anicata.ui.search.SearchScreenLayout
@@ -52,177 +53,6 @@ import com.raihan.anicata.ui.top.manga.TopMangaScreen
 import com.raihan.anicata.ui.top.novel.TopNovelScreen
 import kotlinx.coroutines.launch
 
-
-/*@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainScreen(
-    userData: UserData?,
-    onSignOut: () -> Unit
-) {
-    val navController = rememberNavController()
-    // 1. Gunakan 'rememberSaveable' agar state tidak hilang saat ada perubahan konfigurasi
-    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
-
-    // 2. Gunakan 'LaunchedEffect' untuk menyinkronkan 'selectedItem' dengan NavController
-    // Ini akan memperbarui highlight saat menekan tombol kembali (back press)
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    // --- State untuk Drawer dan TopNavBar dipindahkan ke sini ---
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    val topBarColor = Color(0xFFE0F2F1) // Warna yang sama dari HomeScreen
-    val systemUiController = rememberSystemUiController()
-
-    // Efek untuk mengubah warna status bar
-    *//*SideEffect {
-        systemUiController.setStatusBarColor(
-            color = topBarColor,
-            darkIcons = true
-        )
-    }*//*
-
-    // Gunakan LaunchedEffect agar kode ini hanya berjalan sekali saat komponen dibuat
-    LaunchedEffect(Unit) {
-        systemUiController.setStatusBarColor(
-            color = topBarColor, // Atur warna status bar SAMA DENGAN topBarColor
-            darkIcons = true     // Tampilkan ikon (jam, baterai) menjadi gelap agar terlihat
-        )
-    }
-
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-
-    LaunchedEffect(currentRoute) {
-        when (currentRoute) {
-            "home" -> selectedItem = 0
-            "archive" -> selectedItem = 1
-            "profile" -> selectedItem = 2
-        }
-    }
-
-    // --- ModalNavigationDrawer membungkus semua konten ---
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            *//*ModalDrawerSheet {
-                // TODO: Isi konten drawer di sini
-                Text("Menu 1", modifier = Modifier.padding(16.dp))
-                Text("Menu 2", modifier = Modifier.padding(16.dp))
-            }*//*
-            ModalDrawerSheet(
-                // ✅ 1. BATASI LEBAR DRAWER MAKSIMAL 50% DARI LAYAR
-                modifier = Modifier.fillMaxWidth(0.6f),
-                drawerContainerColor = Color(0xFFE0F2F1)
-            ) {
-                AppDrawerContent(
-                    userData = userData,
-                    navController = navController,
-                    scope = scope,
-                    closeDrawer = { scope.launch { drawerState.close() } },
-                    onSignOut = onSignOut
-                )
-            }
-        }
-    ) {
-        Scaffold(
-            // --- TopNavBar didefinisikan di sini ---
-            // ✅ Hubungkan scroll behavior ke Scaffold
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                TopNavBar(
-                    //onMenuClick = { scope.launch { drawerState.open() } },
-                    // ✅ 4. UBAH LOGIKA onMenuClick MENJADI TOGGLE
-                    onMenuClick = {
-                        scope.launch {
-                            if (drawerState.isClosed) {
-                                drawerState.open()
-                            } else {
-                                drawerState.close()
-                            }
-                        }
-                    },
-                    onSearchClick = { *//* TODO: Aksi untuk search *//* },
-                    onSettingsClick = { *//* TODO: Aksi untuk settings *//* },
-                    scrollBehavior = scrollBehavior // <-- Kirim scrollBehavior
-                )
-            },
-            // --- BottomNavBar ditempatkan di dalam Box agar bisa "floating" ---
-            // Menggunakan Box untuk menumpuk NavHost dan FloatingBottomNavBar
-        ) { innerPadding ->
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-            ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = "home",
-                    // Terapkan padding dari Scaffold ke NavHost
-                    // Ini penting agar konten halaman tidak tertutup TopBar
-                    //modifier = Modifier.padding(innerPadding)
-                    // Modifier NavHost tidak perlu padding lagi karena Box sudah menanganinya
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    //composable("home") { HomeScreen() }
-                    composable("home") {
-                        HomeScreen(
-                            onBannerClick = {
-                                navController.navigate("detail")
-                            }
-                        )
-                    }
-                    composable("archive") { ArchiveScreen() }
-                    composable("profile") {
-                        ProfileScreen(
-                            userData = userData,
-                            onSignOut = onSignOut
-                        )
-                    }
-                    // ✅ TAMBAHKAN RUTE BARU UNTUK DETAILSCREEN
-                    composable("detail") {
-                        DetailScreen()
-                    }
-                }
-
-                // FloatingBottomNavBar tetap di sini, diposisikan di atas NavHost
-                FloatingBottomNavBar(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        // Sesuaikan padding bawah jika diperlukan, innerPadding sudah
-                        // menangani ruang untuk BottomNavBar jika ditaruh di slot bottomBar.
-                        // Namun karena floating, kita atur manual.
-                        .padding(bottom = 24.dp),
-                    selectedItem = selectedItem,
-                    onItemSelected = { index ->
-                        selectedItem = index
-                        val route = when (index) {
-                            0 -> "home"
-                            1 -> "archive"
-                            2 -> "profile"
-                            else -> "home"
-                        }
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    MainScreen(
-        userData = UserData("123", "Raihan", "url_gambar_profil.com"),
-        onSignOut = {}
-    )
-}*/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -252,14 +82,6 @@ fun MainScreen(
             darkIcons = true
         )
     }
-
-    /*LaunchedEffect(currentRoute) {
-        when (currentRoute) {
-            "home" -> selectedItem = 0
-            "archive" -> selectedItem = 1
-            "profile" -> selectedItem = 2
-        }
-    }*/
 
     LaunchedEffect(currentRoute) {
         // PERBAIKAN KECIL:
@@ -331,21 +153,41 @@ fun MainScreen(
                     }
                     // ✅ 2. Tambahkan rute baru untuk SeasonalScreen
                     composable("seasonal") {
-                        SeasonalScreen()
+                        SeasonalScreen(
+                            onAnimeClick = { animeId ->
+                                navController.navigate(Screen.Detail.createRoute(animeId))
+                            }
+                        )
                     }
 
                     composable("top_anime") {
-                        TopAnimeScreen()
+                        TopAnimeScreen(
+                            // Tambahkan parameter onAnimeClick
+                            onAnimeClick = { animeId ->
+                                // Saat item diklik, gunakan NavController UTAMA
+                                // untuk pindah ke rute Detail
+                                navController.navigate(Screen.Detail.createRoute(animeId))
+                            }
+                        )
                     }
                     composable("top_manga") {
-                        TopMangaScreen()
+                        TopMangaScreen(
+                            onMangaClick = { mangaId ->
+                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                            }
+                        )
                     }
-                    /*composable("top_novel") {
-                        TopNovelScreen()
-                    }*/
 
                     composable("all_lists") {
-                        AllListsScreen()
+                        //AllListsScreen()
+                        AllListsScreen(
+                            onAnimeClick = { animeId ->
+                                navController.navigate(Screen.Detail.createRoute(animeId))
+                            },
+                            onMangaClick = { mangaId ->
+                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                            }
+                        )
                     }
 
                     // --- 1. TAMBAHKAN RUTE BARU DI SINI ---
@@ -354,9 +196,16 @@ fun MainScreen(
                         arguments = listOf(navArgument("query") { type = NavType.StringType })
                     ) { backStackEntry ->
                         val query = backStackEntry.arguments?.getString("query") ?: ""
-                        ResultSearchScreen(searchQuery = query)
+                        ResultSearchScreen(
+                            searchQuery = query,
+                            onAnimeClick = { animeId ->
+                                navController.navigate(Screen.Detail.createRoute(animeId))
+                            },
+                            onMangaClick = { mangaId ->
+                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                            }
+                        )
                     }
-                    // --- BATAS AKHIR RUTE BARU ---
 
                 }
 
@@ -412,14 +261,34 @@ fun MainScreen(
                     onSearchSubmitted = { query ->
                         // 1. Tutup overlay pencarian
                         isSearchVisible = false
-
-                        // 2. Gunakan internalNavController, BUKAN navController
+                        /*// 2. Gunakan internalNavController, BUKAN navController
                         internalNavController.navigate("result_search/$query") {
                             // Opsi ini agar tidak menumpuk halaman pencarian
                             launchSingleTop = true
+                            }*/
+                        // 2. Gunakan logika navigasi LENGKAP
+                        internalNavController.navigate("result_search/$query") {
+                            // Pop up ke 'home' (start destination)
+                            popUpTo(internalNavController.graph.findStartDestination().id) {
+                                saveState = true // Simpan state layar yg ditinggal
+                            }
+                            launchSingleTop = true //
+                            //restoreState = true // Pulihkan state jika 'result_search' pernah dibuka
                         }
-                    }
+                    },
 
+                        // --- 1. TAMBAHKAN PARAMETER BARU INI ---
+                        onAnimeClick = { animeId ->
+                            // 2. Tutup overlay pencarian
+                            isSearchVisible = false
+
+                            // 3. Gunakan NavController UTAMA untuk navigasi ke Detail
+                            navController.navigate(Screen.Detail.createRoute(animeId))
+                        },
+                        onMangaClick = { mangaId ->
+                            isSearchVisible = false
+                            navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                        }
                 )
             }
         }

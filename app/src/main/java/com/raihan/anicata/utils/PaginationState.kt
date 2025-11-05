@@ -6,11 +6,13 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 
 @Stable
 class PaginationState(
     initialPage: Int,
+    initialStartPage: Int,
     initialTotalPages: Int,
     val visiblePages: Int
 ) {
@@ -30,8 +32,11 @@ class PaginationState(
     /**
      * Halaman pertama yang ditampilkan di deretan tombol (misal: 1, 4, 7).
      */
-    var startPage by mutableStateOf(1)
-        private set
+    /*var startPage by mutableStateOf(1)
+        private set*/
+
+    var startPage by mutableStateOf(initialStartPage)
+        private set // Modifikasi dari
 
     /**
      * Menghitung nilai 'startPage' maksimum yang mungkin.
@@ -80,6 +85,7 @@ class PaginationState(
  * @param totalPages Total halaman dari ViewModel (akan di-observe).
  * @param visiblePages Jumlah tombol angka yang terlihat.
  */
+/*
 @Composable
 fun rememberPaginationState(
     initialPage: Int = 1,
@@ -98,6 +104,46 @@ fun rememberPaginationState(
 
     // Gunakan LaunchedEffect untuk meng-update totalPages di dalam state
     // jika nilainya berubah (misalnya setelah API call pertama selesai).
+    LaunchedEffect(totalPages) {
+        state.totalPages = totalPages
+    }
+
+    return state
+}*/
+
+@Composable
+fun rememberPaginationState(
+    totalPages: Int = 1,
+    visiblePages: Int = 3
+): PaginationState {
+
+    // 1. Simpan 'currentPage' menggunakan rememberSaveable.
+    //    Ini adalah state yang akan selamat saat navigasi.
+    var savedCurrentPage by rememberSaveable { mutableStateOf(1) }
+    var savedStartPage by rememberSaveable { mutableStateOf(1) } // <-- TAMBAHKAN INI
+
+    // 2. Buat objek state menggunakan 'remember'.
+    //    Kita berikan 'savedCurrentPage' sebagai initialPage.
+    val state = remember(totalPages, visiblePages) {
+        PaginationState(
+            initialPage = savedCurrentPage, // Gunakan halaman yang disimpan
+            initialStartPage = savedStartPage,
+            initialTotalPages = totalPages,
+            visiblePages = visiblePages
+        )
+    }
+
+    // 3. Sinkronkan kembali. Jika state internal berubah (misal dipanggil onPageChange),
+    //    simpan nilai barunya ke 'savedCurrentPage'.
+    LaunchedEffect(state.currentPage) {
+        savedCurrentPage = state.currentPage
+    }
+
+    LaunchedEffect(state.startPage) { // <-- TAMBAHKAN BLOK INI
+        savedStartPage = state.startPage
+    }
+
+    // 4. Update totalPages (seperti sebelumnya).
     LaunchedEffect(totalPages) {
         state.totalPages = totalPages
     }

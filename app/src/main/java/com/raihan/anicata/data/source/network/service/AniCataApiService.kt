@@ -1,6 +1,7 @@
 package com.raihan.anicata.data.source.network.service
 
 import  com.raihan.anicata.BuildConfig
+import com.raihan.anicata.data.source.network.model.anime.characters.CharactersAnimeResponse
 import com.raihan.anicata.data.source.network.model.anime.full.AnimeDetailFullResponse
 import com.raihan.anicata.data.source.network.model.anime.genres.GenreAnimeResponse
 import com.raihan.anicata.data.source.network.model.anime.search.SearchAnimeResponse
@@ -8,10 +9,13 @@ import com.raihan.anicata.data.source.network.model.anime.seasons.lists.SeasonLi
 import com.raihan.anicata.data.source.network.model.anime.seasons.now.SeasonNowResponse
 import com.raihan.anicata.data.source.network.model.anime.seasons.upcoming.SeasonUpcomingResponse
 import com.raihan.anicata.data.source.network.model.anime.seasons.year.SeasonYearResponse
+import com.raihan.anicata.data.source.network.model.anime.staff.StaffAnimeResponse
 import com.raihan.anicata.data.source.network.model.anime.top.anime.TopAnimeResponse
+import com.raihan.anicata.data.source.network.model.manga.characters.CharactersMangaResponse
 import com.raihan.anicata.data.source.network.model.manga.full.MangaDetailFullResponse
 import com.raihan.anicata.data.source.network.model.manga.genres.GenreMangaResponse
 import com.raihan.anicata.data.source.network.model.manga.search.SearchMangaResponse
+import com.raihan.anicata.data.source.network.model.manga.staff.StaffMangaResponse
 import com.raihan.anicata.data.source.network.model.manga.top.manga.TopMangaResponse
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -32,6 +36,26 @@ interface AniCataApiService {
     suspend fun getMangaDetailFull(
         @Path("id") id: Int
     ): MangaDetailFullResponse
+
+    @GET("anime/{id}/characters")
+    suspend fun getAnimeCharacters(
+        @Path("id") id: Int
+    ): CharactersAnimeResponse
+
+    @GET("anime/{id}/staff")
+    suspend fun getAnimeStaff(
+        @Path("id") id: Int
+    ): StaffAnimeResponse
+
+    @GET("manga/{id}/characters")
+    suspend fun getMangaCharacters(
+        @Path("id") id: Int
+    ): CharactersMangaResponse
+
+    @GET("manga/{id}/staff")
+    suspend fun getMangaStaff(
+        @Path("id") id: Int
+    ): StaffMangaResponse
 
     @GET("seasons/now")
     suspend fun getSeasonNow(

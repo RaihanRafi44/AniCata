@@ -28,86 +28,11 @@ import com.raihan.anicata.utils.ResultWrapper
 import com.raihan.anicata.utils.rememberPaginationState
 import org.koin.androidx.compose.koinViewModel
 
-/*
-@Composable
-fun ResultSearchScreen(
-    searchQuery: String
-) {
-    // Wadah utama dengan latar belakang hijau mint seperti pada gambar
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            //.background(Color(0xFFE0F2F1)) // Warna latar belakang hijau mint
-            .padding(vertical = 16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        // Memanggil Composable header dari file terpisah
-        //ResultSearchHeader(searchQuery = "Fullmetal Alchemist: Brotherhood The Movie - The Sacred Star of Milos")
-        ResultSearchHeader(searchQuery = searchQuery)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Memanggil layout daftar hasil pencarian dari file ResultList.kt
-        SearchResultListLayout()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ResultSearchScreenPreview() {
-    MaterialTheme {
-        ResultSearchScreen(searchQuery = "Preview Search Query")
-    }
-}*/
-
-/*@Composable
-fun ResultSearchScreen(
-    searchQuery: String,
-    // Inject ViewModel
-    viewModel: ResultSearchViewModel = koinViewModel()
-) {
-    // Ambil state dari ViewModel
-    val uiState by viewModel.searchState.collectAsState()
-
-    // Panggil searchMedia saat composable pertama kali dimuat
-    // atau saat searchQuery berubah
-    LaunchedEffect(key1 = searchQuery) {
-        viewModel.searchMedia(searchQuery)
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ResultSearchHeader(searchQuery = searchQuery)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Kirim uiState ke layout
-        SearchResultListLayout(uiState = uiState)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ResultSearchScreenPreview() {
-    MaterialTheme {
-        ResultSearchScreen(searchQuery = "Preview Search Query")
-    }
-}*/
-
 @Composable
 fun ResultSearchScreen(
     searchQuery: String,
+    onAnimeClick: (Int) -> Unit,
+    onMangaClick: (Int) -> Unit,
     viewModel: ResultSearchViewModel = koinViewModel()
 ) {
     // --- AMBIL STATE BARU (UI STATE) ---
@@ -134,47 +59,6 @@ fun ResultSearchScreen(
         paginationState.onPageChange(paginationInfo.currentPage)
     }
 
-    /*Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ResultSearchHeader(searchQuery = searchQuery)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Kirim HANYA result-nya ke layout list
-        SearchResultListLayout(uiState = uiState.result)
-
-        // --- TAMBAHKAN KONTROL PAGINATION ---
-        // Tampilkan pagination jika total halaman > 1
-        // dan state BUKAN Idle atau Loading
-        val showPagination = paginationInfo.totalPages > 1 &&
-                (uiState.result is ResultWrapper.Success || uiState.result is ResultWrapper.Empty)
-
-        if (showPagination) {
-            Spacer(modifier = Modifier.height(16.dp))
-            PaginationControls(
-                currentPage = paginationState.currentPage,
-                startPage = paginationState.startPage,
-                totalPages = paginationState.totalPages,
-                onPageChange = { newPage ->
-                    // Panggil ViewModel untuk fetch data halaman baru
-                    viewModel.onPageChange(newPage)
-                },
-                visiblePages = 3 // Sesuai default di PaginationState
-            )
-        }
-        // --- AKHIR KONTROL PAGINATION ---
-
-        Spacer(modifier = Modifier.height(80.dp)) // Beri ruang di bawah
-    }*/
-
     // Gunakan Box sebagai root (seperti TopAnimeScreen)
     Box(
         modifier = Modifier.fillMaxSize()
@@ -184,7 +68,7 @@ fun ResultSearchScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 16.dp)
+                //.padding(vertical = 16.dp)
                 .verticalScroll(rememberScrollState()), // Scrollable
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
@@ -197,7 +81,35 @@ fun ResultSearchScreen(
 
             // Hanya tampilkan list jika Success dan tidak kosong
             if (result is ResultWrapper.Success && result.payload!!.isNotEmpty()) {
-                SearchResultListLayout(items = result.payload)
+                //SearchResultListLayout(items = result.payload)
+                SearchResultListLayout(
+                    items = result.payload,
+                    onItemClick = { mediaItem ->
+                        // 3. LOGIKA FILTER:
+                        // Hanya navigasi jika item yang diklik adalah Anime
+                        if (mediaItem.itemType.equals("TV", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Movie", ignoreCase = true) ||
+                            mediaItem.itemType.equals("OVA", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Special", ignoreCase = true) ||
+                            mediaItem.itemType.equals("ONA", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Music", ignoreCase = true) ||
+                            mediaItem.itemType.equals("CM", ignoreCase = true) ||
+                            mediaItem.itemType.equals("PV", ignoreCase = true) ||
+                            mediaItem.itemType.equals("TV Special", ignoreCase = true)) {
+                            onAnimeClick(mediaItem.id)
+                        }
+
+                        else if (mediaItem.itemType.equals("Manga", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Manhua", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Manhwa", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Novel", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Doujin", ignoreCase = true) ||
+                            mediaItem.itemType.equals("Light Novel", ignoreCase = true) ||
+                            mediaItem.itemType.equals("One-shot", ignoreCase = true)) {
+                            onMangaClick(mediaItem.id)
+                        }
+                    }
+                )
             }
 
             // Tampilkan pagination jika total halaman > 1
@@ -255,10 +167,10 @@ fun ResultSearchScreen(
     }
 }
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun ResultSearchScreenPreview() {
     MaterialTheme {
         ResultSearchScreen(searchQuery = "Preview Search Query")
     }
-}
+}*/

@@ -1,10 +1,14 @@
 package com.raihan.anicata.di
 
 import com.google.android.gms.auth.api.identity.Identity
+import com.raihan.anicata.data.datasource.anime.AnimeCharactersApiDataSource
+import com.raihan.anicata.data.datasource.anime.AnimeCharactersDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeDetailFullApiDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeDetailFullDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeGenreApiDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeGenreDataSource
+import com.raihan.anicata.data.datasource.anime.AnimeStaffApiDataSource
+import com.raihan.anicata.data.datasource.anime.AnimeStaffDataSource
 import com.raihan.anicata.data.datasource.anime.SearchAnimeApiDataSource
 import com.raihan.anicata.data.datasource.anime.SearchAnimeDataSource
 import com.raihan.anicata.data.datasource.anime.SeasonListApiDataSource
@@ -17,14 +21,20 @@ import com.raihan.anicata.data.datasource.anime.SeasonYearApiDataSource
 import com.raihan.anicata.data.datasource.anime.SeasonYearDataSource
 import com.raihan.anicata.data.datasource.anime.TopAnimeApiDataSource
 import com.raihan.anicata.data.datasource.anime.TopAnimeDataSource
+import com.raihan.anicata.data.datasource.manga.MangaCharactersApiDataSource
+import com.raihan.anicata.data.datasource.manga.MangaCharactersDataSource
 import com.raihan.anicata.data.datasource.manga.MangaDetailFullApiDataSource
 import com.raihan.anicata.data.datasource.manga.MangaDetailFullDataSource
 import com.raihan.anicata.data.datasource.manga.MangaGenreApiDataSource
 import com.raihan.anicata.data.datasource.manga.MangaGenreDataSource
+import com.raihan.anicata.data.datasource.manga.MangaStaffApiDataSource
+import com.raihan.anicata.data.datasource.manga.MangaStaffDataSource
 import com.raihan.anicata.data.datasource.manga.SearchMangaApiDataSource
 import com.raihan.anicata.data.datasource.manga.SearchMangaDataSource
 import com.raihan.anicata.data.datasource.manga.TopMangaApiDataSource
 import com.raihan.anicata.data.datasource.manga.TopMangaDataSource
+import com.raihan.anicata.data.repository.anime.AnimeCharacterRepository
+import com.raihan.anicata.data.repository.anime.AnimeCharacterRepositoryImpl
 import com.raihan.anicata.data.repository.anime.AnimeDetailRepository
 import com.raihan.anicata.data.repository.anime.AnimeDetailRepositoryImpl
 import com.raihan.anicata.data.repository.anime.AnimeGenreRepository
@@ -39,14 +49,20 @@ import com.raihan.anicata.data.repository.anime.AnimeSeasonUpcomingRepository
 import com.raihan.anicata.data.repository.anime.AnimeSeasonUpcomingRepositoryImpl
 import com.raihan.anicata.data.repository.anime.AnimeSeasonYearRepository
 import com.raihan.anicata.data.repository.anime.AnimeSeasonYearRepositoryImpl
+import com.raihan.anicata.data.repository.anime.AnimeStaffRepository
+import com.raihan.anicata.data.repository.anime.AnimeStaffRepositoryImpl
 import com.raihan.anicata.data.repository.anime.AnimeTopRepository
 import com.raihan.anicata.data.repository.anime.AnimeTopRepositoryImpl
+import com.raihan.anicata.data.repository.manga.MangaCharacterRepository
+import com.raihan.anicata.data.repository.manga.MangaCharacterRepositoryImpl
 import com.raihan.anicata.data.repository.manga.MangaDetailRepository
 import com.raihan.anicata.data.repository.manga.MangaDetailRepositoryImpl
 import com.raihan.anicata.data.repository.manga.MangaGenreRepository
 import com.raihan.anicata.data.repository.manga.MangaGenreRepositoryImpl
 import com.raihan.anicata.data.repository.manga.MangaSearchRepository
 import com.raihan.anicata.data.repository.manga.MangaSearchRepositoryImpl
+import com.raihan.anicata.data.repository.manga.MangaStaffRepository
+import com.raihan.anicata.data.repository.manga.MangaStaffRepositoryImpl
 import com.raihan.anicata.data.repository.manga.MangaTopRepository
 import com.raihan.anicata.data.repository.manga.MangaTopRepositoryImpl
 import com.raihan.anicata.data.source.network.service.AniCataApiService
@@ -54,6 +70,8 @@ import com.raihan.anicata.data.usecase.GetGenreListUseCase
 import com.raihan.anicata.data.usecase.GetMediaListUseCase
 import com.raihan.anicata.data.usecase.GetSeasonalUseCase
 import com.raihan.anicata.ui.alllists.AllListsViewModel
+import com.raihan.anicata.ui.detail.anime.DetailAnimeViewModel
+import com.raihan.anicata.ui.detail.manga.DetailMangaViewModel
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
 import com.raihan.anicata.ui.login.LoginViewModel
 import com.raihan.anicata.ui.search.ResultSearchViewModel
@@ -92,10 +110,14 @@ object AppModules {
             single<SeasonUpcomingDataSource> { SeasonUpcomingApiDataSource(get()) }
             single<SeasonYearDataSource> { SeasonYearApiDataSource(get()) }
             single<TopAnimeDataSource> { TopAnimeApiDataSource(get()) }
+            single<AnimeCharactersDataSource> { AnimeCharactersApiDataSource(get()) }
+            single<AnimeStaffDataSource> { AnimeStaffApiDataSource(get()) }
             single<MangaDetailFullDataSource> { MangaDetailFullApiDataSource(get()) }
             single<MangaGenreDataSource> { MangaGenreApiDataSource(get()) }
             single<SearchMangaDataSource> { SearchMangaApiDataSource(get()) }
             single<TopMangaDataSource> { TopMangaApiDataSource(get()) }
+            single<MangaCharactersDataSource> { MangaCharactersApiDataSource(get()) }
+            single<MangaStaffDataSource> { MangaStaffApiDataSource(get()) }
         }
 
     private val repository =
@@ -108,10 +130,14 @@ object AppModules {
             single<AnimeSeasonUpcomingRepository> { AnimeSeasonUpcomingRepositoryImpl(get()) }
             single<AnimeSeasonYearRepository> { AnimeSeasonYearRepositoryImpl(get()) }
             single<AnimeTopRepository> { AnimeTopRepositoryImpl(get()) }
+            single<AnimeCharacterRepository> { AnimeCharacterRepositoryImpl(get()) }
+            single<AnimeStaffRepository> { AnimeStaffRepositoryImpl(get()) }
             single<MangaDetailRepository> { MangaDetailRepositoryImpl(get()) }
             single<MangaGenreRepository> { MangaGenreRepositoryImpl(get()) }
             single<MangaSearchRepository> { MangaSearchRepositoryImpl(get()) }
             single<MangaTopRepository> { MangaTopRepositoryImpl(get()) }
+            single<MangaCharacterRepository> { MangaCharacterRepositoryImpl(get()) }
+            single<MangaStaffRepository> { MangaStaffRepositoryImpl(get()) }
         }
 
     private val useCase =
@@ -131,6 +157,8 @@ object AppModules {
             viewModelOf(::SeasonalViewModel)
             viewModelOf(::SearchViewModel)
             viewModelOf(::ResultSearchViewModel)
+            viewModelOf(::DetailAnimeViewModel)
+            viewModelOf(::DetailMangaViewModel)
         }
 
     val modules =

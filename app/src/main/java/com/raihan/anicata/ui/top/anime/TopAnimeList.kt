@@ -3,6 +3,7 @@ package com.raihan.anicata.ui.top.anime
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -57,7 +58,10 @@ private fun formatAiredDate(aired: AiredTopAnime?): String {
 }
 
 @Composable
-fun AnimeCard(item: TopAnime) {
+fun AnimeCard(
+    item: TopAnime,
+    onCLick: () -> Unit
+    ) {
     val tvTagColor = Color(0xFFF4842D)
     val epsTagColor = Color(0xFF4CAF50)
     val starColor = Color(0xFFFFC107)
@@ -65,7 +69,8 @@ fun AnimeCard(item: TopAnime) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp), // <- Diambil dari kode referensi Anda
+            .padding(vertical = 4.dp)
+            .clickable { onCLick() },
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f)),
     ) {
@@ -158,7 +163,19 @@ fun AnimeCard(item: TopAnime) {
                     // Bagian kiri (Tags)
                     item.type?.let { Tag(text = it, backgroundColor = tvTagColor) }
                     Spacer(modifier = Modifier.width(6.dp))
-                    item.episodes?.let { Tag(text = "$it eps", backgroundColor = epsTagColor) }
+                    //item.episodes?.let { Tag(text = "$it eps", backgroundColor = epsTagColor) }
+                    // 1. Ambil nilainya
+                    val episodeCount = item.episodes
+
+                    // 2. Cek apakah null ATAU 0
+                    val episodeText = if (episodeCount == null || episodeCount == 0) {
+                        "? eps" // Tampilkan tanda tanya
+                    } else {
+                        "$episodeCount eps" // Tampilkan jumlahnya
+                    }
+
+                    // 3. Tampilkan Tag dengan teks yang sudah diformat
+                    Tag(text = episodeText, backgroundColor = epsTagColor)
 
                     // Spacer untuk mendorong Score ke kanan
                     Spacer(Modifier.weight(1f))
@@ -204,8 +221,8 @@ fun AnimeListTopLayout(
     animeList: List<TopAnime>,
     currentPage: Int = 1,   // halaman sekarang, 1-based
     pageSize: Int = 25,     // jumlah item per halaman
-    // isLoading dan error DIHAPUS dari parameter
-    modifier: Modifier // Ubah jadi modifier biasa
+    modifier: Modifier, // Ubah jadi modifier biasa
+    onAnimeClick: (Int) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -221,7 +238,12 @@ fun AnimeListTopLayout(
 
         // Tampilkan list
         displayRanked.forEach { anime ->
-            AnimeCard(item = anime)
+            AnimeCard(
+                item = anime,
+                onCLick = {
+                    onAnimeClick(anime.id)
+                }
+            )
         }
     }
 }
