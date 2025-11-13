@@ -138,9 +138,28 @@ fun MainScreen(
                 ) {
                     composable("home") {
                         HomeScreen(
-                            onBannerClick = {
+                            onBannerClick = { animeId ->
                                 // Saat banner diklik, gunakan controller utama untuk navigasi
-                                navController.navigate("detail")
+                                //navController.navigate("detail")
+                                navController.navigate(Screen.Detail.createRoute(animeId))
+                            },
+                            // ✅ 1. Sambungkan navigasi klik card
+                            onAnimeClick = { animeId ->
+                                // Gunakan NavController UTAMA (dari MainActivity)
+                                // untuk pindah ke rute Detail
+                                navController.navigate(Screen.Detail.createRoute(animeId))
+                            },
+                            // ✅ 2. Sambungkan navigasi klik panah "View All"
+                            onViewAllTopRatedClick = {
+                                // Gunakan NavController INTERNAL (dari MainScreen)
+                                // untuk pindah ke rute Top Anime
+                                internalNavController.navigate("top_anime")
+                            },
+                            onViewAllSeasonalClick = {
+                                internalNavController.navigate("seasonal")
+                            },
+                            onViewAllUpcomingClick = {
+                                internalNavController.navigate("seasonal")
                             }
                         )
                     }

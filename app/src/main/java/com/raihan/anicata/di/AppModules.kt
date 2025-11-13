@@ -72,6 +72,7 @@ import com.raihan.anicata.data.usecase.GetSeasonalUseCase
 import com.raihan.anicata.ui.alllists.AllListsViewModel
 import com.raihan.anicata.ui.detail.anime.DetailAnimeViewModel
 import com.raihan.anicata.ui.detail.manga.DetailMangaViewModel
+import com.raihan.anicata.ui.home.HomeViewModel
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
 import com.raihan.anicata.ui.login.LoginViewModel
 import com.raihan.anicata.ui.search.ResultSearchViewModel
@@ -159,6 +160,7 @@ object AppModules {
             viewModelOf(::ResultSearchViewModel)
             viewModelOf(::DetailAnimeViewModel)
             viewModelOf(::DetailMangaViewModel)
+            viewModelOf(::HomeViewModel)
         }
 
     val modules =
