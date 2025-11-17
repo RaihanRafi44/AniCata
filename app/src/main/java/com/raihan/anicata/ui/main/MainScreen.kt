@@ -41,7 +41,9 @@ import androidx.navigation.navArgument
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.raihan.anicata.data.model.auth.UserData
 import com.raihan.anicata.ui.alllists.AllListsScreen
-import com.raihan.anicata.ui.archive.ArchiveScreen
+import com.raihan.anicata.ui.archive.ArchiveMainScreen
+import com.raihan.anicata.ui.archive.anime.ArchiveAnimeScreen
+import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.navigation.Screen
 import com.raihan.anicata.ui.profile.ProfileScreen
@@ -163,7 +165,41 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable("archive") { ArchiveScreen() }
+                    composable("archive") {
+                        ArchiveMainScreen(
+                            onNavigateToAnime = {
+                                internalNavController.navigate("archive_anime")
+                            },
+                            onNavigateToManga = {
+                                internalNavController.navigate("archive_manga")
+                            }
+                        )
+                    }
+
+                    composable("archive_anime") {
+                        ArchiveAnimeScreen(
+                            onNavigateBack = { internalNavController.popBackStack() },
+                            onBookmarkClicked = {
+                                internalNavController.navigate("all_lists")
+                            },
+                            onFavoriteClicked = {
+                                internalNavController.navigate("all_lists")
+                            }
+                        )
+                    }
+
+                    composable("archive_manga") {
+                        ArchiveMangaScreen(
+                            onNavigateBack = { internalNavController.popBackStack() },
+                            onBookmarkClicked = {
+                                internalNavController.navigate("all_lists")
+                            },
+                            onFavoriteClicked = {
+                                internalNavController.navigate("all_lists")
+                            }
+                        )
+                    }
+
                     composable("profile") {
                         ProfileScreen(
                             userData = userData,
