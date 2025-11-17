@@ -128,7 +128,6 @@ private fun StaffListView(
 
         // Tampilkan tombol jika jumlah staf lebih dari 4
         if (staffList.size > 4) {
-            // PERUBAHAN: Bagian ini disamakan dengan model CharvaInfo.kt
             // Menggunakan Text dengan modifier clickable, bukan TextButton.
             Text(
                 text = if (isExpanded) "View Less" else "View More",

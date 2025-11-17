@@ -31,7 +31,6 @@ import com.raihan.anicata.data.model.anime.full.RelationAnime
 private val specialOrange = Color(0xFFF57C00)
 private val tvBrown = Color(0xFFBF360C)
 
-// Warna tambahan dari file RelatedInfo.kt
 private val mangaBlue = Color(0xFF2DB8F4)
 private val animePink = Color(0xFFD81B60)
 
