@@ -168,13 +168,13 @@ fun ArchiveMainLayout(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE6F5F3)) // Latar belakang mint muda
-            .padding(16.dp),
+            //.background(Color(0xFFE6F5F3)) // Latar belakang mint muda
+            .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Your Archive",
-            fontSize = 28.sp,
+            text = "My Archive",
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )
