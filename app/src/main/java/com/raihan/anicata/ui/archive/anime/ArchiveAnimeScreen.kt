@@ -79,13 +79,13 @@ fun ArchiveAnimeLayout(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Judul Halaman (dari gambar kedua)
         Text(
-            text = "Your Archive",
-            fontSize = 28.sp,
+            text = "My Archive",
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )

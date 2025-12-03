@@ -43,7 +43,11 @@ import com.raihan.anicata.data.model.auth.UserData
 import com.raihan.anicata.ui.alllists.AllListsScreen
 import com.raihan.anicata.ui.archive.ArchiveMainScreen
 import com.raihan.anicata.ui.archive.anime.ArchiveAnimeScreen
+import com.raihan.anicata.ui.archive.anime.ArchiveAnimeScreenBookmark
+import com.raihan.anicata.ui.archive.anime.ArchiveAnimeScreenFavorite
 import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreen
+import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreenBookmark
+import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreenFavorite
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.navigation.Screen
 import com.raihan.anicata.ui.profile.ProfileScreen
@@ -180,10 +184,10 @@ fun MainScreen(
                         ArchiveAnimeScreen(
                             onNavigateBack = { internalNavController.popBackStack() },
                             onBookmarkClicked = {
-                                internalNavController.navigate("all_lists")
+                                internalNavController.navigate("archive_anime_bookmark")
                             },
                             onFavoriteClicked = {
-                                internalNavController.navigate("all_lists")
+                                internalNavController.navigate("archive_anime_favorite")
                             }
                         )
                     }
@@ -192,11 +196,79 @@ fun MainScreen(
                         ArchiveMangaScreen(
                             onNavigateBack = { internalNavController.popBackStack() },
                             onBookmarkClicked = {
-                                internalNavController.navigate("all_lists")
+                                internalNavController.navigate("archive_manga_bookmark")
                             },
                             onFavoriteClicked = {
-                                internalNavController.navigate("all_lists")
+                                internalNavController.navigate("archive_manga_favorite")
                             }
+                        )
+                    }
+
+                    composable("archive_anime_bookmark") {
+                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
+
+
+                        ArchiveAnimeScreenBookmark(
+                            //animeList = dummyList,
+                            onAnimeClick = { animeId ->
+                                // Navigasi ke Detail Anime
+                                navController.navigate("detail/$animeId")
+                            },
+                            /*onNavigateBack = {
+                                // Kembali ke Archive Anime (Rute B)
+                                navController.popBackStack()
+                            }*/
+                        )
+                    }
+
+                    composable("archive_anime_favorite") {
+                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
+
+
+                        ArchiveAnimeScreenFavorite(
+                            //animeList = dummyList,
+                            onAnimeClick = { animeId ->
+                                // Navigasi ke Detail Anime
+                                navController.navigate("detail/$animeId")
+                            },
+                            /*onNavigateBack = {
+                                // Kembali ke Archive Anime (Rute B)
+                                navController.popBackStack()
+                            }*/
+                        )
+                    }
+
+                    composable("archive_manga_bookmark") {
+                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
+
+
+                        ArchiveMangaScreenBookmark(
+                            //animeList = dummyList,
+                            onMangaClick = { mangaId ->
+                                // Navigasi ke Detail Anime
+                                navController.navigate("detail/$mangaId")
+                            },
+                            /*onNavigateBack = {
+                                // Kembali ke Archive Anime (Rute B)
+                                navController.popBackStack()
+                            }*/
+                        )
+                    }
+
+                    composable("archive_manga_favorite") {
+                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
+
+
+                        ArchiveMangaScreenFavorite(
+                            //animeList = dummyList,
+                            onMangaClick = { mangaId ->
+                                // Navigasi ke Detail Anime
+                                navController.navigate("detail/$mangaId")
+                            },
+                            /*onNavigateBack = {
+                                // Kembali ke Archive Anime (Rute B)
+                                navController.popBackStack()
+                            }*/
                         )
                     }
 
