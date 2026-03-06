@@ -1,18 +1,33 @@
 package com.raihan.anicata.ui.archive.manga
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,204 +36,226 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.raihan.anicata.ui.top.anime.Tag // Menggunakan Tag yang sudah ada
+import com.raihan.anicata.data.model.storage.UserBookmarkManga
+import com.raihan.anicata.ui.top.anime.Tag
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
-// --- Data Dummy (Ganti dengan model data Archive Anda) ---
-data class DummyArchiveMangaBookmark(
-    val id: Int,
-    val title: String,
-    val imageUrl: String,
-    val score: Double,
-    val members: Int,
-    val type: String,
-    val episodes: Int?,
-    val year: Int,
-    val season: String
-)
-
-private val dummyList = listOf(
-    DummyArchiveMangaBookmark(1, "Fairy Tail", "https://cdn.myanimelist.net/images/anime/1769/126629.jpg", 8.02, 2700000, "Manga", 12, 2022, "Fall"),
-    DummyArchiveMangaBookmark(2, "Jujutsu Kaisen", "https://cdn.myanimelist.net/images/anime/1665/134707.jpg", 8.44, 3200000, "Novel", 16, 2023, "Fall"),
-    DummyArchiveMangaBookmark(3, "Chainsaw Man", "https://cdn.myanimelist.net/images/anime/1812/129758.jpg", 7.77, 1200000, "Oneshot", null, 2023, "Winter"),
-)
-// -----------------------------------------------------------
 
 @Composable
 fun ArchiveMangaCardBookmark(
-    item: DummyArchiveMangaBookmark, // Ganti dengan model data Archive yang sebenarnya
-    onCLick: () -> Unit
+    item: UserBookmarkManga,
+    isSelected: Boolean,
+    isSelectionMode: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
-    val tvTagColor = Color(0xFFF4842D) // Orange
-    val epsTagColor = Color(0xFF4CAF50) // Green
-    val starColor = Color(0xFFFFC107) // Yellow
+    val typeTagColor = Color(0xFFF4842D)
+    val chpTagColor = Color(0xFF4CAF50)
+    val ratingColor = Color(0xFFFFC107)
+
+    val cardShape = RoundedCornerShape(8.dp)
+
+    val backgroundColor = if (isSelected) Color(0xFFE3F2FD) else MaterialTheme.colorScheme.surface
+
+    val formattedAiredDate = remember(item.publishedFrom, item.publishedTo) {
+        formatAiredDateMangaBookmark(item.publishedFrom, item.publishedTo)
+    }
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { onCLick() },
-        shape = RoundedCornerShape(8.dp),
+            .clip(cardShape)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+
+        shape = cardShape,
+        color = backgroundColor,
         border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f)),
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min),
+
         ) {
-            // Gambar
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.imageUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
-            )
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Kolom Info Utama
-            Column(
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                    .padding(8.dp)
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
             ) {
-                // Judul
-                Text(
-                    text = item.title,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 20.sp,
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .width(80.dp)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(6.dp))
+                        .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
                 )
 
-                // Season dan Tahun
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "Season/Year",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.DarkGray
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${item.season} ${item.year}",
-                        fontSize = 12.sp,
-                        color = Color.DarkGray
-                    )
-                }
+                Spacer(modifier = Modifier.width(12.dp))
 
-                // Members dan Archive/Type
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Members
-                    Icon(
-                        imageVector = Icons.Default.People,
-                        contentDescription = "Members",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    val formatter = NumberFormat.getInstance(Locale.US)
                     Text(
-                        text = formatter.format(item.members),
-                        fontSize = 12.sp,
-                        color = Color.DarkGray
+                        text = item.title,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 20.sp
                     )
 
-                    // Spacer
-                    Spacer(Modifier.weight(1f))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = "Aired Date",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.DarkGray
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
 
-                    // Archive / Type Tag (Contoh mengganti Rank dengan informasi Archive)
-                    //Tag(text = item.type, backgroundColor = archiveTagColor)
-                }
-
-                // Tags dan Score
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Tags
-                    Tag(text = item.type, backgroundColor = tvTagColor)
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    val episodeCount = item.episodes
-                    val episodeText = if (episodeCount == null || episodeCount == 0) {
-                        "? eps"
-                    } else {
-                        "$episodeCount eps"
+                        Text(
+                            text = formattedAiredDate,
+                            fontSize = 12.sp,
+                            color = Color.DarkGray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-                    Tag(text = episodeText, backgroundColor = epsTagColor)
 
-                    // Spacer
-                    Spacer(Modifier.weight(1f))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.People,
+                            contentDescription = "Members",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        val formatter = NumberFormat.getInstance(Locale.US)
+                        Text(
+                            fontSize = 12.sp,
+                            text = formatter.format(item.members),
+                            color = Color.DarkGray
+                        )
+                    }
 
-                    // Score
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Score",
-                        tint = starColor,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = String.format(Locale.US, "%.2f", item.score),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Tag(text = item.type, backgroundColor = typeTagColor)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        val chapterCount = item.chapters
+                        val chapterText = if (chapterCount == null || chapterCount == 0) "? ch" else "$chapterCount ch"
+                        Tag(text = chapterText, backgroundColor = chpTagColor)
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Score",
+                            tint = ratingColor,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = String.format(Locale.US,"%.2f", item.score),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color.Black
+                        )
+                    }
                 }
             }
+
+                if (isSelected) {
+
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Selected",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            . align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    )
+                }
         }
     }
 }
 
 @Composable
 fun ArchiveMangaListBookmarkLayout(
-    mangaList: List<DummyArchiveMangaBookmark>,
-    modifier: Modifier = Modifier,
-    onMangaClick: (Int) -> Unit
+    mangaList: List<UserBookmarkManga>,
+    selectedIds: Set<String>,
+    isSelectionMode: Boolean,
+    onMangaClick: (String) -> Unit,
+    onMangaLongClick: (String) -> Unit
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     ) {
-        // Tampilkan list
         mangaList.forEach { manga ->
             ArchiveMangaCardBookmark(
                 item = manga,
-                onCLick = {
-                    onMangaClick(manga.id)
-                }
+                isSelected = selectedIds.contains(manga.id),
+                isSelectionMode = isSelectionMode,
+                onClick = { onMangaClick(manga.id) },
+                onLongClick = { onMangaLongClick(manga.id)}
             )
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ArchiveMangaListPreview() {
-    ArchiveMangaListBookmarkLayout(
-        mangaList = dummyList,
-        onMangaClick = {}
-    )
+fun formatAiredDateMangaBookmark(fromDate: String?, toDate: String?): String {
+    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec")
+
+    fun parseDate(dateStr: String?): String? {
+        if (dateStr.isNullOrBlank()) return null
+        try {
+            val datePart = dateStr.substringBefore("T")
+            val parts = datePart.split("-")
+            if(parts.size >= 2) {
+                val year = parts[0]
+                val month = parts[1].toIntOrNull()
+                if (month != null && month in 1..12) {
+                    val monthName = monthNames[month - 1]
+                    return "$monthName $year"
+                }
+            }
+        } catch (e: Exception) {
+            return null
+        }
+        return null
+
+    }
+
+    val fromStr = parseDate(fromDate)
+    val toStr = parseDate(toDate)
+
+    return when {
+        fromStr != null && toStr != null -> {
+            if (fromStr == toStr) fromStr else "$fromStr - $toStr"
+        }
+        fromStr != null -> fromStr
+        else -> "-"
+    }
 }

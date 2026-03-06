@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.raihan.anicata.utils.clickableSingle
 
 @Composable
 fun ArchiveCategoryCard(
@@ -30,7 +31,8 @@ fun ArchiveCategoryCard(
     Card(
         modifier = modifier
             .height(220.dp)
-            .clickable { onClick() }, // Menambahkan aksi klik
+            //.clickable { onClick() },
+            .clickableSingle { onClick() },
         shape = RoundedCornerShape(20.dp)
     ) {
         Box(
@@ -73,7 +75,8 @@ fun ArchiveDetailCard(
     Card(
         modifier = modifier
             .height(220.dp)
-            .clickable { onClick() }, // Menambahkan aksi klik
+            //.clickable { onClick() }, // Menambahkan aksi klik
+            .clickableSingle { onClick() },
         shape = RoundedCornerShape(20.dp)
     ) {
         Box(
@@ -112,7 +115,8 @@ fun SmallArchiveHeaderCard(
     Card(
         modifier = modifier
             .height(64.dp) // Tinggi card lebih pendek
-            .clickable { onClick() }, // Aksi klik (untuk kembali)
+            //.clickable { onClick() }, // Aksi klik (untuk kembali)
+            .clickableSingle { onClick() },
         shape = RoundedCornerShape(16.dp)
     ) {
         Box(

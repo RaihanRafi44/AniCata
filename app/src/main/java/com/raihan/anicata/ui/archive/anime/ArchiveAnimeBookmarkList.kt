@@ -1,18 +1,18 @@
 package com.raihan.anicata.ui.archive.anime
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,53 +21,51 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.raihan.anicata.ui.top.anime.Tag // Menggunakan Tag yang sudah ada
+import com.raihan.anicata.data.model.storage.UserBookmarkAnime
+import com.raihan.anicata.ui.top.anime.Tag
 import java.text.NumberFormat
 import java.util.*
 
-// --- Data Dummy (Ganti dengan model data Archive Anda) ---
-data class DummyArchiveAnimeBookmark(
-    val id: Int,
-    val title: String,
-    val imageUrl: String,
-    val score: Double,
-    val members: Int,
-    val type: String,
-    val episodes: Int?,
-    val year: Int,
-    val season: String
-)
-
-private val dummyList = listOf(
-    DummyArchiveAnimeBookmark(1, "Naruto", "https://cdn.myanimelist.net/images/anime/1769/126629.jpg", 8.02, 2700000, "TV", 12, 2022, "Fall"),
-    DummyArchiveAnimeBookmark(2, "One Piece", "https://cdn.myanimelist.net/images/anime/1665/134707.jpg", 8.44, 3200000, "TV", 16, 2023, "Fall"),
-    DummyArchiveAnimeBookmark(3, "Sword Art Online", "https://cdn.myanimelist.net/images/anime/1812/129758.jpg", 7.77, 1200000, "TV", null, 2023, "Winter"),
-)
-// -----------------------------------------------------------
-
 @Composable
 fun ArchiveAnimeCardBookmark(
-    item: DummyArchiveAnimeBookmark, // Ganti dengan model data Archive yang sebenarnya
-    onCLick: () -> Unit
+    item: UserBookmarkAnime,
+    isSelected: Boolean, // Parameter baru: Status terpilih
+    isSelectionMode: Boolean, // Parameter baru: Apakah sedang mode pilih?
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
-    val tvTagColor = Color(0xFFF4842D) // Orange
-    val epsTagColor = Color(0xFF4CAF50) // Green
-    val starColor = Color(0xFFFFC107) // Yellow
-    //val archiveTagColor = Color(0xFF673AB7) // Purple
+    val tvTagColor = Color(0xFFF4842D)
+    val epsTagColor = Color(0xFF4CAF50)
+    val starColor = Color(0xFFFFC107)
+
+    val cardShape = RoundedCornerShape(8.dp)
+
+    val backgroundColor = if (isSelected) Color(0xFFE3F2FD) else MaterialTheme.colorScheme.surface
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.6f)
+
+    val formattedAiredDate = remember(item.airedFrom, item.airedTo) {
+        formatAiredDate(item.airedFrom, item.airedTo)
+    }
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { onCLick() },
-        shape = RoundedCornerShape(8.dp),
+            .clip(cardShape)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+            //.clickable { onCLick() },
+        shape = cardShape,
+        color = backgroundColor,
         border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f)),
     ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .padding(8.dp)
@@ -111,26 +109,35 @@ fun ArchiveAnimeCardBookmark(
 
                 // Season dan Tahun
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Type
+
+
+                    //Spacer(modifier = Modifier.width(6.dp))
+
+                    // Icon Calendar
                     Icon(
                         imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "Season/Year",
+                        contentDescription = "Aired Date",
                         modifier = Modifier.size(16.dp),
                         tint = Color.DarkGray
                     )
                     Spacer(modifier = Modifier.width(4.dp))
+
+                    // Text Aired Range
                     Text(
-                        text = "${item.season} ${item.year}",
+                        text = formattedAiredDate,
                         fontSize = 12.sp,
-                        color = Color.DarkGray
+                        color = Color.DarkGray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                // Members dan Archive/Type
+                // Members
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Members
                     Icon(
                         imageVector = Icons.Default.People,
                         contentDescription = "Members",
@@ -144,32 +151,20 @@ fun ArchiveAnimeCardBookmark(
                         fontSize = 12.sp,
                         color = Color.DarkGray
                     )
-
-                    // Spacer
-                    Spacer(Modifier.weight(1f))
-
-                    // Archive / Type Tag (Contoh mengganti Rank dengan informasi Archive)
-                    //Tag(text = item.type, backgroundColor = archiveTagColor)
                 }
 
-                // Tags dan Score
+                // Episode dan Score
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Tags
                     Tag(text = item.type, backgroundColor = tvTagColor)
-                    Spacer(modifier = Modifier.width(6.dp))
-
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Episode Tag
                     val episodeCount = item.episodes
-                    val episodeText = if (episodeCount == null || episodeCount == 0) {
-                        "? eps"
-                    } else {
-                        "$episodeCount eps"
-                    }
+                    val episodeText = if (episodeCount == null || episodeCount == 0) "? eps" else "$episodeCount eps"
                     Tag(text = episodeText, backgroundColor = epsTagColor)
 
-                    // Spacer
                     Spacer(Modifier.weight(1f))
 
                     // Score
@@ -189,37 +184,74 @@ fun ArchiveAnimeCardBookmark(
                 }
             }
         }
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Selected",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                )
+            }
+    }
     }
 }
 
 @Composable
 fun ArchiveAnimeListBookmarkLayout(
-    animeList: List<DummyArchiveAnimeBookmark>, // Ganti dengan List<ArchiveAnime>
-    modifier: Modifier = Modifier,
-    onAnimeClick: (Int) -> Unit
+    animeList: List<UserBookmarkAnime>,
+    selectedIds: Set<String>, // Terima data seleksi
+    isSelectionMode: Boolean,
+    onAnimeClick: (String) -> Unit, // Kirim ID (String) agar lebih fleksibel
+    onAnimeLongClick: (String) -> Unit
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp) // Padding horizontal seperti di TopAnimeList.kt
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     ) {
-        // Tampilkan list
         animeList.forEach { anime ->
             ArchiveAnimeCardBookmark(
                 item = anime,
-                onCLick = {
-                    onAnimeClick(anime.id)
-                }
+                isSelected = selectedIds.contains(anime.id),
+                isSelectionMode = isSelectionMode,
+                onClick = { onAnimeClick(anime.id) },
+                onLongClick = { onAnimeLongClick(anime.id) }
             )
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ArchiveAnimeListPreview() {
-    ArchiveAnimeListBookmarkLayout(
-        animeList = dummyList,
-        onAnimeClick = {}
-    )
+fun formatAiredDate(fromDate: String?, toDate: String?): String {
+    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec")
+
+    fun parseDate(dateStr: String?): String? {
+        if (dateStr.isNullOrBlank()) return null
+        try {
+            val datePart = dateStr.substringBefore("T")
+            val parts = datePart.split("-")
+            if(parts.size >= 2) {
+                val year = parts[0]
+                val month = parts[1].toIntOrNull()
+                if (month != null && month in 1..12) {
+                    val monthName = monthNames[month - 1]
+                    return "$monthName $year"
+                }
+            }
+        } catch (e: Exception) {
+            return null
+        }
+        return null
+
+    }
+
+    val fromStr = parseDate(fromDate)
+    val toStr = parseDate(toDate)
+
+    return when {
+        fromStr != null && toStr != null -> {
+            if (fromStr == toStr) fromStr else "$fromStr - $toStr"
+        }
+        fromStr != null -> fromStr
+        else -> "-"
+    }
 }

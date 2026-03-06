@@ -34,31 +34,6 @@ fun ArchiveMangaScreen(
     onBookmarkClicked: () -> Unit,
     onFavoriteClicked: () -> Unit
 ) {
-    /*Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Manga Archive") }, // Judul diubah
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFE6F5F3)
-                )
-            )
-        },
-        containerColor = Color(0xFFE6F5F3)
-    ) { innerPadding ->
-        ArchiveMangaLayout(
-            modifier = Modifier.padding(innerPadding),
-            onBookmarkClicked = onBookmarkClicked,
-            onFavoriteClicked = onFavoriteClicked
-        )
-    }*/
 
     ArchiveMangaLayout(
         onNavigateBack = onNavigateBack,
@@ -67,9 +42,6 @@ fun ArchiveMangaScreen(
     )
 }
 
-/**
- * Layout untuk Halaman Arsip Manga.
- */
 @Composable
 fun ArchiveMangaLayout(
     modifier: Modifier = Modifier,

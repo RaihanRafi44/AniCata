@@ -14,14 +14,6 @@ fun ArchiveMainScreen(
         onMangaClicked = onNavigateToManga
     )
 
-    /*Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Ini Halaman Archive")
-    }*/
-    //ArchiveMainLayout()
-
 }
 
 @Preview(showBackground = true)

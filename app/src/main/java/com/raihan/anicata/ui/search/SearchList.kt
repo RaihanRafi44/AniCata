@@ -123,12 +123,3 @@ fun SearchResultList(
         }
     }
 }
-
-/*@Preview(showBackground = true, name = "Search Result List Preview")
-@Composable
-fun SearchResultListPreview() {
-    val sampleData = getAnimeData()
-    Box(modifier = Modifier.padding(16.dp)) {
-        SearchResultList(animeList = sampleData)
-    }
-}*/

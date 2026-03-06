@@ -57,11 +57,6 @@ fun TopAnimeScreen(
             filter = selectedFilter // Untuk filter
         )
     }
-
-    /*LaunchedEffect(currentPage) {
-        paginationState.onPageChange(currentPage)
-    }*/
-
     Box(
         modifier = Modifier.fillMaxSize()
     ) {

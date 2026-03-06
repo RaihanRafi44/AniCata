@@ -80,9 +80,6 @@ fun HomeScreen(
             .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
-        // 🔥 Banner slider tampil di bagian atas
-        //BannerSlider()
-        //BannerSlider(onBannerClick = onBannerClick)
         BannerSlider(
             banners = bannerList,
             onBannerClick = onBannerClick

@@ -24,43 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.ui.res.painterResource
 import com.raihan.anicata.R
 
-
-/*
-@Composable
-fun ProfileScreen(
-    userData: UserData?,
-    onSignOut: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        if (userData?.profilePictureUrl != null){
-            AsyncImage(
-                model = userData.profilePictureUrl,
-                contentDescription = "Profile picture",
-                modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        if (userData?.username != null){
-            Text(
-                text = userData.username,
-                textAlign = TextAlign.Center,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        Button(onClick = onSignOut) {
-            Text(text = "Sign Out")
-        }
-    }
-}*/
 @Composable
 fun ProfileScreen(
     userData: UserData?,

@@ -108,10 +108,6 @@ fun MangaInfoDetail(
 
     addDetail("Authors", mangaData.authors.map { "${it.name} (${it.type}}" })
     addDetail("Serialization", mangaData.serializations.map { it.name })
-    /*addDetail("Licensors", mangaData.licensors.map { it.name })
-    addDetail("Source", mangaData.source)
-    addDetail("Duration", mangaData.duration)
-    addDetail("Rating", mangaData.rating)*/
 
     Box(
         modifier = Modifier

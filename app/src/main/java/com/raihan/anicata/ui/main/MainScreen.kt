@@ -146,7 +146,7 @@ fun MainScreen(
                         HomeScreen(
                             onBannerClick = { animeId ->
                                 // Saat banner diklik, gunakan controller utama untuk navigasi
-                                //navController.navigate("detail")
+
                                 navController.navigate(Screen.Detail.createRoute(animeId))
                             },
                             // ✅ 1. Sambungkan navigasi klik card
@@ -205,36 +205,30 @@ fun MainScreen(
                     }
 
                     composable("archive_anime_bookmark") {
-                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
-
-
                         ArchiveAnimeScreenBookmark(
-                            //animeList = dummyList,
                             onAnimeClick = { animeId ->
-                                // Navigasi ke Detail Anime
                                 navController.navigate("detail/$animeId")
                             },
-                            /*onNavigateBack = {
-                                // Kembali ke Archive Anime (Rute B)
-                                navController.popBackStack()
-                            }*/
+                            onNavigateBack = {
+                                internalNavController.popBackStack()
+                            },
+                            onDeleteClick = {
+                            },
                         )
                     }
 
                     composable("archive_anime_favorite") {
-                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
-
-
                         ArchiveAnimeScreenFavorite(
                             //animeList = dummyList,
                             onAnimeClick = { animeId ->
                                 // Navigasi ke Detail Anime
                                 navController.navigate("detail/$animeId")
                             },
-                            /*onNavigateBack = {
+                            onNavigateBack = {
                                 // Kembali ke Archive Anime (Rute B)
-                                navController.popBackStack()
-                            }*/
+                                internalNavController.popBackStack()
+                            },
+                            onDeleteClick = {}
                         )
                     }
 
@@ -243,32 +237,26 @@ fun MainScreen(
 
 
                         ArchiveMangaScreenBookmark(
-                            //animeList = dummyList,
                             onMangaClick = { mangaId ->
-                                // Navigasi ke Detail Anime
                                 navController.navigate("detail/$mangaId")
                             },
-                            /*onNavigateBack = {
-                                // Kembali ke Archive Anime (Rute B)
-                                navController.popBackStack()
-                            }*/
+                            onNavigateBack = {
+                                internalNavController.popBackStack()
+                            },
+                            onDeleteClick = {}
                         )
                     }
 
                     composable("archive_manga_favorite") {
-                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
-
 
                         ArchiveMangaScreenFavorite(
-                            //animeList = dummyList,
                             onMangaClick = { mangaId ->
-                                // Navigasi ke Detail Anime
                                 navController.navigate("detail/$mangaId")
                             },
-                            /*onNavigateBack = {
-                                // Kembali ke Archive Anime (Rute B)
-                                navController.popBackStack()
-                            }*/
+                            onNavigateBack = {
+                                internalNavController.popBackStack()
+                            },
+                            onDeleteClick = {}
                         )
                     }
 

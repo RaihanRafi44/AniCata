@@ -134,21 +134,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                    // Rute "detail" didefinisikan di sini, sejajar dengan "main"
-                    // Sehingga tidak akan menampilkan Scaffold dari MainScreen
-                    /*composable(
-                        route = Screen.Detail.route,
-                        arguments = listOf(navArgument(NAV_ARG_ANIME_ID) {
-                            type = NavType.IntType
-                        })
-                    ) { navBackStackEntry ->
-                        // Ambil ID dari argumen navigasi
-                        val animeId = navBackStackEntry.arguments?.getInt(NAV_ARG_ANIME_ID) ?: 0
-
-                        // Panggil DetailAnimeScreen yang benar dengan ID
-                        DetailAnimeScreen(animeId = animeId)
-                        //DetailScreen()
-                    }*/
 
                     composable(
                         route = Screen.Detail.route, // "detail/{animeId}"
@@ -164,8 +149,6 @@ class MainActivity : ComponentActivity() {
                             navController = navController // <-- 1. BERIKAN NAVCONTROLLER KE SCREEN
                         )
                     }
-
-                    // --- 3. TAMBAHKAN BLOK COMPOSABLE BARU INI ---
                     composable(
                         route = Screen.MangaDetail.route, // "manga_detail/{mangaId}"
                         arguments = listOf(navArgument(NAV_ARG_MANGA_ID) {
