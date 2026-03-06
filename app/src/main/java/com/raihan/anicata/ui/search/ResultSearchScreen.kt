@@ -161,16 +161,7 @@ fun ResultSearchScreen(
                         .padding(horizontal = 32.dp)
                 )
             }
-            // Untuk Success dan Idle, tidak perlu tampilkan apa-apa di overlay
             else -> {}
         }
     }
 }
-
-/*@Preview(showBackground = true)
-@Composable
-fun ResultSearchScreenPreview() {
-    MaterialTheme {
-        ResultSearchScreen(searchQuery = "Preview Search Query")
-    }
-}*/

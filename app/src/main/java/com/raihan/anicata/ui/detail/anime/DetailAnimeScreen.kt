@@ -3,12 +3,19 @@ package com.raihan.anicata.ui.detail.anime
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +40,111 @@ fun DetailAnimeScreen(
     // Observasi state dari ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
+    val isBookmarked by viewModel.isBookmarked.collectAsState() // Observasi status bookmark
+
+    val isFavorite by viewModel.isFavorite.collectAsState() // Observasi status favorite
+
+    var showAddDialogBookmarkAnime by remember { mutableStateOf(false) }
+    var showRemoveDialogBookmarkAnime by remember { mutableStateOf(false) }
+
+    var showAddDialogFavoriteAnime by remember { mutableStateOf(false) }
+    var showRemoveDialogFavoriteAnime by remember { mutableStateOf(false) }
+
+    if (showAddDialogBookmarkAnime) {
+        AlertDialog(
+            onDismissRequest = { showAddDialogBookmarkAnime = false },
+            title = { Text(text = "Konfirmasi") },
+            text = { Text(text = "Apakah Anda yakin ingin menambahkan anime ini ke Bookmark?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Ambil data anime dari state (jika sukses) untuk disimpan
+                        val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
+                        if (animeData != null) {
+                            viewModel.saveToBookmark(animeData)
+                        }
+                        showAddDialogBookmarkAnime = false
+                    }
+                ) {
+                    Text("Ya, Simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialogBookmarkAnime = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    if (showRemoveDialogBookmarkAnime) {
+        AlertDialog(
+            onDismissRequest = { showRemoveDialogBookmarkAnime = false },
+            title = { Text("Hapus Bookmark") },
+            text = { Text("Anda yakin ingin menghapus anime ini dari bookmark?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Panggil fungsi Hapus di ViewModel
+                        viewModel.removeFromBookmark(animeId.toString())
+                        showRemoveDialogBookmarkAnime = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Hapus") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoveDialogBookmarkAnime = false }) { Text("Batal") }
+            }
+        )
+    }
+
+    if (showAddDialogFavoriteAnime) {
+        AlertDialog(
+            onDismissRequest = { showAddDialogFavoriteAnime = false },
+            title = { Text(text = "Konfirmasi") },
+            text = { Text(text = "Apakah Anda yakin ingin menambahkan anime ini ke Favorite?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Ambil data anime dari state (jika sukses) untuk disimpan
+                        val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
+                        if (animeData != null) {
+                            viewModel.saveToFavorite(animeData)
+                        }
+                        showAddDialogFavoriteAnime = false
+                    }
+                ) {
+                    Text("Ya, Simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialogFavoriteAnime = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    if (showRemoveDialogFavoriteAnime) {
+        AlertDialog(
+            onDismissRequest = { showRemoveDialogFavoriteAnime = false },
+            title = { Text("Hapus Favorite") },
+            text = { Text("Anda yakin ingin menghapus anime ini dari favorite?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.removeFromFavorite(animeId.toString())
+                        showRemoveDialogFavoriteAnime = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Hapus") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoveDialogFavoriteAnime = false }) { Text("Batal") }
+            }
+        )
+    }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -48,19 +160,8 @@ fun DetailAnimeScreen(
                 )
             }
             is ResultWrapper.Success -> {
-                // Jika sukses, tampilkan emua konten
-                // detailResult.payload berisi objek AnimeData
+
                 val animeData = detailResult.payload!!
-
-                // --- PERBAIKAN DI SINI ---
-                // 1. Tentukan relasi utama
-                //val primaryRelationTypes = setOf("Sequel", "Prequel", "Adaptation")
-
-                // 2. Pisahkan (partition) list relasi
-                /*val (primaryRelations, otherRelations) = animeData.relations.partition {
-                    it.relation in primaryRelationTypes
-                }*/
-                // --- AKHIR PERBAIKAN ---
 
                 Column(
                     modifier = Modifier
@@ -75,7 +176,24 @@ fun DetailAnimeScreen(
 
                     AnimeInfoStats(animeData = animeData)
 
-                    ActionButtonsGroup()
+                    ActionButtonsGroup(
+                        isBookmarked = isBookmarked,
+                        isFavorite = isFavorite,
+                        onBookmarkClick = {
+                            if (!isBookmarked) {
+                                showAddDialogBookmarkAnime = true
+                            } else {
+                                showRemoveDialogBookmarkAnime = true
+                            }
+                        },
+                        onFavoriteClick = {
+                            if (!isFavorite) {
+                                showAddDialogFavoriteAnime = true
+                            } else {
+                                showRemoveDialogFavoriteAnime = true
+                            }
+                        }
+                    )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -89,20 +207,9 @@ fun DetailAnimeScreen(
 
                     VideoPromoSection(trailer = animeData.trailer)
 
-                    //RelatedInfo(relations = primaryRelations)
-
-                    //OtherAnimeInfo(relations = otherRelations)
-                    // --- BERIKAN SELURUH DATA KE 'OtherAnimeInfo' ---
-                    //OtherAnimeInfo(relations = animeData.relations)
                     OtherAnimeInfo(
                         relations = animeData.relations,
-                        // 3. Buat lambda onClick di sini
-                        /*onRelationClick = { relatedAnimeId ->
-                            // 4. Perintahkan NavController untuk navigasi
-                            // Ini akan membuka DetailAnimeScreen LAGI,
-                            // tapi dengan ID baru.
-                            navController.navigate(Screen.Detail.createRoute(relatedAnimeId))
-                        },*/
+
                         onRelationClick = { id, type ->
                             if (type.lowercase() == "manga" || type.lowercase() == "novel" || type.lowercase() == "light novel") {
                                 navController.navigate(Screen.MangaDetail.createRoute(id))
@@ -122,7 +229,7 @@ fun DetailAnimeScreen(
                 )
             }
             is ResultWrapper.Idle -> {
-                // State awal, tidak melakukan apa-apa
+
             }
         }
     }
@@ -130,9 +237,3 @@ fun DetailAnimeScreen(
 
 }
 
-/*
-@Preview(showBackground = true)
-@Composable
-fun DetailAnimeScreenPreview() {
-    DetailAnimeScreen()
-}*/

@@ -73,28 +73,6 @@ fun OtherMangaInfo(
             textAlign = TextAlign.Center
         )
     }
-    /*Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            //.background(lightGreenishBackground)
-            .padding(16.dp)
-    ) {
-        // --- Bagian Side Story ---
-        SectionHeader(title = "Side Story")
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // --- Bagian Spin-Off ---
-        SectionHeader(title = "Spin-Off")
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // --- Bagian Alternative Version ---
-        SectionHeader(title = "Alternative Version")
-        Spacer(modifier = Modifier.height(8.dp))
-    }*/
 }
 
 @Composable

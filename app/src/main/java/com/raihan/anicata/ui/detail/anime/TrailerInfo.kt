@@ -108,50 +108,6 @@ fun VideoPromoSection(
                 textAlign = TextAlign.Center
             )
         }
-
-        /*if (videoId != null) {
-            if (isPlaying) {
-                // Tampilkan player jika isPlaying = true
-                YoutubePlayer(
-                    youtubeVideoId = videoId,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            } else {
-                // Tampilkan placeholder jika tidak
-                VideoPlaceholder(
-                    title = "Official Trailer",
-                    youtubeId = videoId,
-                    onPlay = { isPlaying = true },
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-        } else {
-            // Tampilkan pesan jika tidak ada trailer
-            Text(
-                text = "No trailer available",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-        }*/
-
-        /*videos.forEach { videoItem ->
-            val videoId = getVideoIdFromUrl(videoItem.youtubeUrl)
-
-            // >> PERBAIKAN 2.2: Cek apakah ID video ada di dalam Set <<
-            if (videoId != null && playingVideoIds.contains(videoId)) {
-                YoutubePlayer(youtubeVideoId = videoId)
-            } else {
-                VideoPlaceholder(
-                    title = videoItem.title,
-                    youtubeUrl = videoItem.youtubeUrl,
-                    onPlay = { id ->
-                        // >> PERBAIKAN 2.3: Menambahkan ID ke Set, bukan mengganti <<
-                        playingVideoIds = playingVideoIds + id
-                    }
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-        }*/
     }
 }
 

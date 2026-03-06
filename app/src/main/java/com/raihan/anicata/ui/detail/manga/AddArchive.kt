@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,7 +33,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ActionButtonsGroup(modifier: Modifier = Modifier) {
+fun ActionButtonsGroup(
+    modifier: Modifier = Modifier,
+    isBookmarked: Boolean,
+    isFavorite: Boolean,
+    onBookmarkClick: () -> Unit,
+    onFavoriteClick: () -> Unit
+) {
     // Surface adalah container utama dengan latar belakang hijau dan sudut membulat.
     // Ukurannya akan menyesuaikan dengan konten di dalamnya (wrap_content).
     Surface(
@@ -45,18 +53,29 @@ fun ActionButtonsGroup(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp) // Jarak antar tombol
         ) {
+            val bookmarkText = if (isBookmarked) "Bookmarked" else "Bookmark"
+            val bookmarkIcon = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder
+
+            val favoriteText = if (isFavorite) "Favorited" else "Favorite"
+            val favoriteIcon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+
+            val containerBookmarkColor = if (isBookmarked) Color(0xFFE0E0E0) else Color(0xFFF1D1FD)
+            val containerFavoriteColor = if (isFavorite) Color(0xFFE0E0E0) else Color(0xFFF1D1FD)
+
             // Tombol pertama: Bookmark
             CustomActionButton(
-                text = "Bookmark",
-                icon = Icons.Filled.Bookmark,
-                onClick = { /* TODO: Logika ketika tombol Bookmark diklik */ }
+                text = bookmarkText,
+                icon = bookmarkIcon,
+                containerColor = containerBookmarkColor,
+                onClick = onBookmarkClick
             )
 
             // Tombol kedua: Add to my favorite
             CustomActionButton(
-                text = "Add to my favorite",
-                icon = Icons.Outlined.FavoriteBorder,
-                onClick = { /* TODO: Logika ketika tombol Favorite diklik */ }
+                text = favoriteText,
+                icon = favoriteIcon,
+                containerColor = containerFavoriteColor,
+                onClick = onFavoriteClick
             )
         }
     }
@@ -69,13 +88,14 @@ fun ActionButtonsGroup(modifier: Modifier = Modifier) {
 private fun CustomActionButton(
     text: String,
     icon: ImageVector,
+    containerColor: Color,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFF1D1FD),
+            containerColor = containerColor,
             contentColor = Color.Black
         ),
         modifier = Modifier
@@ -90,13 +110,4 @@ private fun CustomActionButton(
         Spacer(modifier = Modifier.width(12.dp))
         Text(text = text, fontSize = 16.sp)
     }
-}
-
-/**
- * Fungsi pratinjau untuk melihat tampilan `ActionButtonsScreen` di Android Studio.
- */
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-fun ActionButtonsScreenPreview() {
-    ActionButtonsGroup()
 }

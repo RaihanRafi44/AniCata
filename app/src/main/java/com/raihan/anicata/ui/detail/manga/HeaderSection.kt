@@ -114,14 +114,3 @@ fun MangaHeaderSection(
         }
     }
 }
-
-
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-fun HeaderSectionPreview() {
-    /*Column {
-        HeaderSection()
-        // Sekarang, meskipun tidak ada Spacer, poster tidak akan terpotong
-        // karena HeaderSection sudah memiliki tinggi yang benar (sekitar 320dp).
-    }*/
-}

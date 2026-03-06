@@ -78,39 +78,6 @@ class PaginationState(
     }
 }
 
-/**
- * Composable function untuk mengingat instance dari [PaginationState].
- *
- * @param initialPage Halaman awal.
- * @param totalPages Total halaman dari ViewModel (akan di-observe).
- * @param visiblePages Jumlah tombol angka yang terlihat.
- */
-/*
-@Composable
-fun rememberPaginationState(
-    initialPage: Int = 1,
-    totalPages: Int = 1,
-    visiblePages: Int = 3
-): PaginationState {
-
-    // Ingat state-nya
-    val state = remember {
-        PaginationState(
-            initialPage = initialPage,
-            initialTotalPages = totalPages,
-            visiblePages = visiblePages
-        )
-    }
-
-    // Gunakan LaunchedEffect untuk meng-update totalPages di dalam state
-    // jika nilainya berubah (misalnya setelah API call pertama selesai).
-    LaunchedEffect(totalPages) {
-        state.totalPages = totalPages
-    }
-
-    return state
-}*/
-
 @Composable
 fun rememberPaginationState(
     totalPages: Int = 1,

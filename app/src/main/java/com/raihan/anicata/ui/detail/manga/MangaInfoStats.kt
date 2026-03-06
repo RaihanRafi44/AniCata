@@ -33,12 +33,6 @@ import com.raihan.anicata.data.model.manga.full.MangaDetailFull
 import java.text.NumberFormat
 import java.util.Locale
 
-// Warna latar belakang yang mirip dengan gambar
-//val lightGreenBg = Color(0xFFE0F7FA)
-
-/**
- * Komponen utama yang menampilkan informasi anime.
- */
 @Composable
 fun MangaInfoStats(
     mangaData: MangaDetailFull

@@ -3,96 +3,160 @@ package com.raihan.anicata.ui.archive.anime
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
-val dummy_anime_archive_favorite_data = listOf(
-    DummyArchiveAnimeFavorite(1, "Naruto", "https://cdn.myanimelist.net/images/anime/1769/126629.jpg", 8.02, 2700000, "TV", 12, 2022, "Fall"),
-    DummyArchiveAnimeFavorite(2, "One Piece", "https://cdn.myanimelist.net/images/anime/1665/134707.jpg", 8.44, 3200000, "TV", 16, 2023, "Fall"),
-    DummyArchiveAnimeFavorite(3, "Sword Art Online", "https://cdn.myanimelist.net/images/anime/1812/129758.jpg", 7.77, 1200000, "TV", null, 2023, "Winter"),
-    DummyArchiveAnimeFavorite(4, "My Hero Academia", "https://cdn.myanimelist.net/images/anime/1758/125868.jpg", 8.00, 2000000, "TV", 25, 2021, "Spring"),
-    DummyArchiveAnimeFavorite(5, "Jujutsu Kaisen", "https://cdn.myanimelist.net/images/anime/4/85888.jpg", 8.70, 4000000, "TV", 24, 2020, "Fall"),
-    DummyArchiveAnimeFavorite(6, "Demon Slayer", "https://cdn.myanimelist.net/images/anime/1498/107024.jpg", 8.60, 4500000, "TV", 26, 2019, "Spring"),
-)
-// ------------------------------------------
+import com.raihan.anicata.utils.ResultWrapper
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveAnimeScreenFavorite(
-    // Default value diisi dengan data dummy kita, jadi pemanggil tidak wajib mengirim list jika belum ada data asli
-    animeList: List<DummyArchiveAnimeFavorite> = dummy_anime_archive_favorite_data,
+
+    //animeList: List<DummyArchiveAnimeBookmark> = dummy_anime_archive_bookmark_data,
+    viewModel: ArchiveAnimeViewModel = koinViewModel(),
     onAnimeClick: (Int) -> Unit,
-    //onNavigateBack: () -> Unit // <-- 1. Callback Back ditambahkan
+    onNavigateBack: () -> Unit ,
+    onDeleteClick: () -> Unit,
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.getFavorites()
+    }
+
+    val favoriteState by viewModel.favoriteState.collectAsState()
+    val selectedIds by viewModel.selectedIds.collectAsState()
+    val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-    ) {
-        // --- 1. Top Bar ---
-        TopAppBar(
-            title = {
-                Text(
-                    text = "Anime Archive Favorite",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            },
-            // --- 2. Tombol Back ---
-            /*navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Kembali"
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = if (isSelectionMode) "${selectedIds.size} Dipilih" else "Favorite",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                },
+                windowInsets = WindowInsets(0, 0, 0, 0),
+                navigationIcon = {
+                    IconButton(onClick = {
+
+                        if (isSelectionMode) {
+                            viewModel.clearSelection()
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = if (isSelectionMode) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = if (isSelectionMode) "Batal" else "Kembali"
+                        )
+                    }
+                },
+                actions = {
+                    if (isSelectionMode && selectedIds.isNotEmpty()) {
+                        IconButton(onClick = {
+                            viewModel.deleteSelectedFavorites()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Hapus",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 }
-            }*/
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // --- 2. List Anime ---
-        if (animeList.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Belum ada anime di favorite.")
-            }
-        } else {
-            ArchiveAnimeListFavoriteLayout(
-                animeList = animeList,
-                onAnimeClick = onAnimeClick,
             )
         }
+    ) { paddingValues ->
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            when (val state = favoriteState) {
+                is ResultWrapper.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(300.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(300.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Gagal memuat data: ${state.exception?.message}")
+                    }
+                }
+                is ResultWrapper.Success -> {
+                    val data = state.payload
+
+                    if (data.isNullOrEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Belum ada anime di favorite")
+                        }
+                    } else {
+                        ArchiveAnimeListFavoriteLayout(
+                            animeList = data,
+                            selectedIds = selectedIds,
+                            isSelectionMode = isSelectionMode,
+                            onAnimeClick = { idString ->
+                                if (isSelectionMode) {
+                                    viewModel.toggleSelection(idString)
+                                } else {
+                                    val idInt = idString.toIntOrNull() ?: 0
+                                    onAnimeClick(idInt)
+                                }
+                            },
+                            onAnimeLongClick = { idString ->
+                                // Jika belum mode seleksi, mulai seleksi
+                                if (!isSelectionMode) {
+                                    viewModel.startSelection(idString)
+                                }
+                            }
+                        )
+                    }
+                }
+                else -> {}
+            }
+            Spacer(modifier = Modifier.height(80.dp))
+        }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ArchiveAnimeScreenFavoritePreview() {
-    ArchiveAnimeScreenFavorite(
-        animeList = dummy_anime_archive_favorite_data, // Gunakan variable public tadi
-        onAnimeClick = {},
-        //onNavigateBack = {}
-    )
 }

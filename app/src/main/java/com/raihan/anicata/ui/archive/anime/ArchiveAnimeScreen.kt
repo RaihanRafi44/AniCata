@@ -34,31 +34,7 @@ fun ArchiveAnimeScreen(
     onBookmarkClicked: () -> Unit,
     onFavoriteClicked: () -> Unit
 ) {
-    /*Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Anime Archive") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFE6F5F3) // Samakan warna
-                )
-            )
-        },
-        containerColor = Color(0xFFE6F5F3) // Latar belakang mint muda
-    ) { innerPadding ->
-        ArchiveAnimeLayout(
-            modifier = Modifier.padding(innerPadding),
-            onBookmarkClicked = onBookmarkClicked,
-            onFavoriteClicked = onFavoriteClicked
-        )
-    }*/
+
     ArchiveAnimeLayout(
         onNavigateBack = onNavigateBack,
         onBookmarkClicked = onBookmarkClicked,
@@ -66,9 +42,6 @@ fun ArchiveAnimeScreen(
     )
 }
 
-/**
- * Layout untuk Halaman Arsip Anime (Tampilan dari gambar kedua).
- */
 @Composable
 fun ArchiveAnimeLayout(
     modifier: Modifier = Modifier,

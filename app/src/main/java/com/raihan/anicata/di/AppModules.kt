@@ -1,6 +1,8 @@
 package com.raihan.anicata.di
 
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.raihan.anicata.data.datasource.anime.AnimeCharactersApiDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeCharactersDataSource
 import com.raihan.anicata.data.datasource.anime.AnimeDetailFullApiDataSource
@@ -33,6 +35,16 @@ import com.raihan.anicata.data.datasource.manga.SearchMangaApiDataSource
 import com.raihan.anicata.data.datasource.manga.SearchMangaDataSource
 import com.raihan.anicata.data.datasource.manga.TopMangaApiDataSource
 import com.raihan.anicata.data.datasource.manga.TopMangaDataSource
+import com.raihan.anicata.data.datasource.user.BookmarkMangaDataSource
+import com.raihan.anicata.data.datasource.user.BookmarkMangaDataSourceImpl
+import com.raihan.anicata.data.datasource.user.FavoriteAnimeDataSource
+import com.raihan.anicata.data.datasource.user.FavoriteAnimeDataSourceImpl
+import com.raihan.anicata.data.datasource.user.FavoriteMangaDataSource
+import com.raihan.anicata.data.datasource.user.FavoriteMangaDataSourceImpl
+import com.raihan.anicata.data.datasource.user.LibraryDataSource
+import com.raihan.anicata.data.datasource.user.LibraryDataSourceImpl
+import com.raihan.anicata.data.datasource.user.UserDataSource
+import com.raihan.anicata.data.datasource.user.UserDataSourceImpl
 import com.raihan.anicata.data.repository.anime.AnimeCharacterRepository
 import com.raihan.anicata.data.repository.anime.AnimeCharacterRepositoryImpl
 import com.raihan.anicata.data.repository.anime.AnimeDetailRepository
@@ -65,11 +77,25 @@ import com.raihan.anicata.data.repository.manga.MangaStaffRepository
 import com.raihan.anicata.data.repository.manga.MangaStaffRepositoryImpl
 import com.raihan.anicata.data.repository.manga.MangaTopRepository
 import com.raihan.anicata.data.repository.manga.MangaTopRepositoryImpl
+import com.raihan.anicata.data.repository.user.BookmarkMangaRepository
+import com.raihan.anicata.data.repository.user.BookmarkMangaRepositoryImpl
+import com.raihan.anicata.data.repository.user.FavoriteAnimeRepository
+import com.raihan.anicata.data.repository.user.FavoriteAnimeRepositoryImpl
+import com.raihan.anicata.data.repository.user.FavoriteMangaRepository
+import com.raihan.anicata.data.repository.user.FavoriteMangaRepositoryImpl
+import com.raihan.anicata.data.repository.user.LibraryRepository
+import com.raihan.anicata.data.repository.user.LibraryRepositoryImpl
+import com.raihan.anicata.data.repository.user.UserRepository
+import com.raihan.anicata.data.repository.user.UserRepositoryImpl
+import com.raihan.anicata.data.source.firebase.FirebaseService
+import com.raihan.anicata.data.source.firebase.FirebaseServiceImpl
 import com.raihan.anicata.data.source.network.service.AniCataApiService
 import com.raihan.anicata.data.usecase.GetGenreListUseCase
 import com.raihan.anicata.data.usecase.GetMediaListUseCase
 import com.raihan.anicata.data.usecase.GetSeasonalUseCase
 import com.raihan.anicata.ui.alllists.AllListsViewModel
+import com.raihan.anicata.ui.archive.anime.ArchiveAnimeViewModel
+import com.raihan.anicata.ui.archive.manga.ArchiveMangaViewModel
 import com.raihan.anicata.ui.detail.anime.DetailAnimeViewModel
 import com.raihan.anicata.ui.detail.manga.DetailMangaViewModel
 import com.raihan.anicata.ui.home.HomeViewModel
@@ -80,7 +106,6 @@ import com.raihan.anicata.ui.search.SearchViewModel
 import com.raihan.anicata.ui.seasonalanime.SeasonalViewModel
 import com.raihan.anicata.ui.top.anime.TopAnimeViewModel
 import com.raihan.anicata.ui.top.manga.TopMangaViewModel
-import com.raihan.anicata.ui.top.novel.TopNovelViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
@@ -93,8 +118,11 @@ object AppModules {
             single<AniCataApiService> { AniCataApiService.invoke() }
         }
 
-    private val firebaseModule =
-        module{}
+    private val firebaseModule = module {
+        single<FirebaseAuth> { FirebaseAuth.getInstance()}
+        single<FirebaseService> { FirebaseServiceImpl(get(), get()) }
+        single<FirebaseFirestore> { FirebaseFirestore.getInstance() }
+    }
 
     private val authModule = module {
         single { Identity.getSignInClient(androidContext()) }
@@ -119,6 +147,11 @@ object AppModules {
             single<TopMangaDataSource> { TopMangaApiDataSource(get()) }
             single<MangaCharactersDataSource> { MangaCharactersApiDataSource(get()) }
             single<MangaStaffDataSource> { MangaStaffApiDataSource(get()) }
+            single<UserDataSource> { UserDataSourceImpl(get()) }
+            single<LibraryDataSource> { LibraryDataSourceImpl(get()) }
+            single<FavoriteAnimeDataSource> { FavoriteAnimeDataSourceImpl(get()) }
+            single<BookmarkMangaDataSource> { BookmarkMangaDataSourceImpl(get()) }
+            single<FavoriteMangaDataSource> { FavoriteMangaDataSourceImpl(get()) }
         }
 
     private val repository =
@@ -139,6 +172,11 @@ object AppModules {
             single<MangaTopRepository> { MangaTopRepositoryImpl(get()) }
             single<MangaCharacterRepository> { MangaCharacterRepositoryImpl(get()) }
             single<MangaStaffRepository> { MangaStaffRepositoryImpl(get()) }
+            single<UserRepository> { UserRepositoryImpl(get()) }
+            single<LibraryRepository> { LibraryRepositoryImpl(get()) }
+            single<FavoriteAnimeRepository> { FavoriteAnimeRepositoryImpl(get()) }
+            single<BookmarkMangaRepository> { BookmarkMangaRepositoryImpl(get()) }
+            single<FavoriteMangaRepository> { FavoriteMangaRepositoryImpl(get()) }
         }
 
     private val useCase =
@@ -153,7 +191,6 @@ object AppModules {
             viewModelOf(::LoginViewModel)
             viewModelOf(::TopAnimeViewModel)
             viewModelOf(::TopMangaViewModel)
-            viewModelOf(::TopNovelViewModel)
             viewModelOf(::AllListsViewModel)
             viewModelOf(::SeasonalViewModel)
             viewModelOf(::SearchViewModel)
@@ -161,6 +198,8 @@ object AppModules {
             viewModelOf(::DetailAnimeViewModel)
             viewModelOf(::DetailMangaViewModel)
             viewModelOf(::HomeViewModel)
+            viewModelOf(::ArchiveAnimeViewModel)
+            viewModelOf(::ArchiveMangaViewModel)
         }
 
     val modules =
@@ -170,6 +209,7 @@ object AppModules {
             repository,
             authModule,
             useCase,
+            firebaseModule,
             viewModel
         )
 }

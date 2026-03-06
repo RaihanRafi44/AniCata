@@ -107,14 +107,6 @@ private fun CharacterListView(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        /*Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            itemsToShow.forEach { data ->
-                CharacterListItem(info = data)
-            }
-        }*/
-
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp) // Jarak antar baris
         ) {
@@ -163,99 +155,6 @@ private fun CharacterListView(
     }
 }
 
-
-/**
- * Composable untuk menampilkan satu baris item dalam daftar.
- * (Tidak ada perubahan di sini)
- */
-@Composable
-fun CharacterListItem(info: CharacterManga) {
-
-    /*val japaneseVA = info.voiceActors.find { it.language == "Japanese" }
-        ?: info.voiceActors.firstOrNull()*/
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top, // Ganti ke Top
-        //verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Sisi Kiri: Info Karakter
-        Row(
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.Top
-        ) {
-            AsyncImage(
-                model = info.character?.images?.jpg?.imageUrl,
-                contentDescription = info.character?.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE0E0E0))
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(
-                modifier = Modifier.padding(top = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = info.character?.name ?: "Unknown",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis)
-                Text(
-                    text = info.role ?: "N/A",
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(8.dp)) // Spasi antar sisi
-        // Sisi Kanan: Info Pengisi Suara
-        /*Row(
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.End
-        ) {
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = japaneseVA?.person?.name ?: "Unknown",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.End
-                )
-                Text(
-                    text = japaneseVA?.language ?: "N/A",
-                    color = Color.Gray,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.End
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            AsyncImage(
-                model = japaneseVA?.person?.images?.jpg?.imageUrl,
-                contentDescription = japaneseVA?.person?.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE0E0E0))
-            )
-        }*/
-    }
-}
-
 @Composable
 fun CharacterCard(info: CharacterManga) {
     // Logika ini diambil dari "Sisi Kiri" di CharacterListItem
@@ -291,15 +190,5 @@ fun CharacterCard(info: CharacterManga) {
                 fontSize = 12.sp
             )
         }
-    }
-}
-
-// --- Preview untuk Pengecekan ---
-
-@Preview(showBackground = true)
-@Composable
-fun CharacterListLayoutPreview() {
-    Surface(color = Color(0xFFEBF5EE)) {
-        //CharacterListLayout(characters = characterDataList)
     }
 }
