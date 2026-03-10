@@ -56,7 +56,6 @@ import com.raihan.anicata.ui.search.SearchScreenLayout
 import com.raihan.anicata.ui.seasonalanime.SeasonalScreen
 import com.raihan.anicata.ui.top.anime.TopAnimeScreen
 import com.raihan.anicata.ui.top.manga.TopMangaScreen
-import com.raihan.anicata.ui.top.novel.TopNovelScreen
 import kotlinx.coroutines.launch
 
 
@@ -145,15 +144,13 @@ fun MainScreen(
                     composable("home") {
                         HomeScreen(
                             onBannerClick = { animeId ->
-                                // Saat banner diklik, gunakan controller utama untuk navigasi
-
                                 navController.navigate(Screen.Detail.createRoute(animeId))
                             },
-                            // ✅ 1. Sambungkan navigasi klik card
                             onAnimeClick = { animeId ->
-                                // Gunakan NavController UTAMA (dari MainActivity)
-                                // untuk pindah ke rute Detail
                                 navController.navigate(Screen.Detail.createRoute(animeId))
+                            },
+                            onMangaClick = { mangaId ->
+                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                             },
                             // ✅ 2. Sambungkan navigasi klik panah "View All"
                             onViewAllTopRatedClick = {

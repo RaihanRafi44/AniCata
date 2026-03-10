@@ -23,6 +23,8 @@ import com.raihan.anicata.data.datasource.anime.SeasonYearApiDataSource
 import com.raihan.anicata.data.datasource.anime.SeasonYearDataSource
 import com.raihan.anicata.data.datasource.anime.TopAnimeApiDataSource
 import com.raihan.anicata.data.datasource.anime.TopAnimeDataSource
+import com.raihan.anicata.data.datasource.local.RecentlyViewedDataSource
+import com.raihan.anicata.data.datasource.local.RecentlyViewedDataSourceImpl
 import com.raihan.anicata.data.datasource.manga.MangaCharactersApiDataSource
 import com.raihan.anicata.data.datasource.manga.MangaCharactersDataSource
 import com.raihan.anicata.data.datasource.manga.MangaDetailFullApiDataSource
@@ -85,10 +87,14 @@ import com.raihan.anicata.data.repository.user.FavoriteMangaRepository
 import com.raihan.anicata.data.repository.user.FavoriteMangaRepositoryImpl
 import com.raihan.anicata.data.repository.user.LibraryRepository
 import com.raihan.anicata.data.repository.user.LibraryRepositoryImpl
+import com.raihan.anicata.data.repository.user.RecentlyViewedRepository
+import com.raihan.anicata.data.repository.user.RecentlyViewedRepositoryImpl
 import com.raihan.anicata.data.repository.user.UserRepository
 import com.raihan.anicata.data.repository.user.UserRepositoryImpl
 import com.raihan.anicata.data.source.firebase.FirebaseService
 import com.raihan.anicata.data.source.firebase.FirebaseServiceImpl
+import com.raihan.anicata.data.source.local.AppDatabase
+import com.raihan.anicata.data.source.local.database.dao.RecentlyViewedDao
 import com.raihan.anicata.data.source.network.service.AniCataApiService
 import com.raihan.anicata.data.usecase.GetGenreListUseCase
 import com.raihan.anicata.data.usecase.GetMediaListUseCase
@@ -129,6 +135,13 @@ object AppModules {
         single { GoogleAuthUiClient(androidContext(), get()) }
     }
 
+    private val localModule =
+        module{
+            single { com.google.gson.Gson() }
+            single<AppDatabase> { AppDatabase.createInstance(androidContext()) }
+            single<RecentlyViewedDao> { get<AppDatabase>().recentlyViewedDao() }
+        }
+
     private val dataSource =
         module{
             single<AnimeDetailFullDataSource> {AnimeDetailFullApiDataSource(get()) }
@@ -152,6 +165,7 @@ object AppModules {
             single<FavoriteAnimeDataSource> { FavoriteAnimeDataSourceImpl(get()) }
             single<BookmarkMangaDataSource> { BookmarkMangaDataSourceImpl(get()) }
             single<FavoriteMangaDataSource> { FavoriteMangaDataSourceImpl(get()) }
+            single<RecentlyViewedDataSource> { RecentlyViewedDataSourceImpl(get()) }
         }
 
     private val repository =
@@ -177,6 +191,7 @@ object AppModules {
             single<FavoriteAnimeRepository> { FavoriteAnimeRepositoryImpl(get()) }
             single<BookmarkMangaRepository> { BookmarkMangaRepositoryImpl(get()) }
             single<FavoriteMangaRepository> { FavoriteMangaRepositoryImpl(get()) }
+            single<RecentlyViewedRepository> { RecentlyViewedRepositoryImpl(get()) }
         }
 
     private val useCase =
@@ -205,6 +220,7 @@ object AppModules {
     val modules =
         listOf<Module>(
             networkModule,
+            localModule,
             dataSource,
             repository,
             authModule,

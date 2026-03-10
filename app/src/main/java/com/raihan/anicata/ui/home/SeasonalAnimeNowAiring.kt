@@ -151,13 +151,14 @@ fun AnimeNowAiringCard(
         modifier = modifier
             .width(130.dp)
             .height(230.dp)
-            .clip(RoundedCornerShape(8.dp))
+            //.clip(RoundedCornerShape(8.dp))
             .clickable { onAnimeClick(anime.id) } // <-- NAVIGASI DETAIL
     ) {
         Box(
             modifier = Modifier
                 .height(180.dp)
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -222,7 +223,7 @@ fun AnimeNowAiringCard(
             fontWeight = FontWeight.Medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)

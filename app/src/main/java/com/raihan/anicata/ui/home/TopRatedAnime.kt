@@ -144,11 +144,6 @@ fun TopRatedSection(
     }
 }
 
-
-/**
- * Composable untuk satu item card anime.
- * Menggunakan data model TopAnime
- */
 @Composable
 fun AnimeTopRatedCard(
     anime: TopAnime,
@@ -159,13 +154,14 @@ fun AnimeTopRatedCard(
         modifier = modifier
             .width(130.dp) // Lebar setiap kartu
             .height(230.dp) // TINGGI TETAP untuk setiap kartu
-            .clip(RoundedCornerShape(8.dp))
+            //.clip(RoundedCornerShape(8.dp))
             .clickable { onAnimeClick(anime.id) } // <-- NAVIGASI DETAIL
     ) {
         Box(
             modifier = Modifier
                 .height(180.dp) // Tinggi area gambar
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
         ) {
             // Gambar dari Coil
             AsyncImage(
@@ -234,7 +230,7 @@ fun AnimeTopRatedCard(
             fontWeight = FontWeight.Medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)

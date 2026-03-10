@@ -1,24 +1,30 @@
 package com.raihan.anicata.ui.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
 import com.raihan.anicata.data.model.anime.season.upcoming.SeasonAnimeUpcoming
 import com.raihan.anicata.data.model.anime.top.TopAnime
+import com.raihan.anicata.data.model.storage.RecentlyViewed
 import com.raihan.anicata.data.repository.anime.AnimeSeasonNowRepository
 import com.raihan.anicata.data.repository.anime.AnimeSeasonUpcomingRepository
 import com.raihan.anicata.data.repository.anime.AnimeTopRepository
+import com.raihan.anicata.data.repository.user.RecentlyViewedRepository
 import com.raihan.anicata.utils.ResultWrapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val topAnimeRepository: AnimeTopRepository,
     private val seasonNowRepository: AnimeSeasonNowRepository,
-    private val seasonUpcomingRepository: AnimeSeasonUpcomingRepository
+    private val seasonUpcomingRepository: AnimeSeasonUpcomingRepository,
+    private val recentlyViewedRepository: RecentlyViewedRepository
 ) : ViewModel() {
 
     // State untuk daftar top rated anime
@@ -52,6 +58,8 @@ class HomeViewModel(
 
     private val _errorUpcoming = MutableStateFlow<String?>(null)
     val errorUpcoming: StateFlow<String?> = _errorUpcoming.asStateFlow()
+
+    val recentlyViewed = recentlyViewedRepository.getRecentlyViewed().asLiveData(Dispatchers.IO)
 
     init {
         // Langsung panggil saat ViewModel dibuat
