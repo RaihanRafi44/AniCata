@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.raihan.anicata.ui.main.TopNavBar
+import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -35,6 +37,7 @@ fun HomeScreen(
     // Parameter navigasi baru
     onBannerClick: (Int) -> Unit,
     onAnimeClick: (Int) -> Unit,
+    onMangaClick: (Int) -> Unit,
     onViewAllTopRatedClick: () -> Unit,
     onViewAllSeasonalClick: () -> Unit,
     onViewAllUpcomingClick: () -> Unit,
@@ -59,6 +62,9 @@ fun HomeScreen(
     val upcomingList by viewModel.upcomingAnime.collectAsState()
     val isLoadingUpcoming by viewModel.isLoadingUpcoming.collectAsState()
     val errorUpcoming by viewModel.errorUpcoming.collectAsState()
+
+    val recentlyViewedState by viewModel.recentlyViewed.observeAsState(ResultWrapper.Idle())
+    //val recentlyViewedList = recentlyViewedState.payload ?: emptyList()
 
     // --- 2. BUAT LIST BANNER DI SINI ---
     // Ambil 5 teratas dari Now Airing dan map ke BannerData
@@ -88,7 +94,17 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 🌟 Section "Recently Viewed" dari file RecentlyViewed.kt
-        RecentlyViewedSection()
+        RecentlyViewedSection(
+            state = recentlyViewedState,
+            onItemClick = { id, type ->
+                val typeLowerCase = type.lowercase()
+                if (typeLowerCase == "manga" || typeLowerCase == "manhwa" || typeLowerCase == "manhua" || typeLowerCase == "novel" || typeLowerCase == "light novel" || typeLowerCase == "doujin") {
+                    onMangaClick(id)
+                } else {
+                    onAnimeClick(id)
+                }
+            }
+            )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -124,9 +140,9 @@ fun HomeScreen(
             onAnimeClick = onAnimeClick      // Navigasi ke DetailScreen
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        //Spacer(modifier = Modifier.height(20.dp))
 
-        NewsUpdateScreen()
+        /*NewsUpdateScreen()*/
 
         // Beri ruang agar konten terakhir tidak tertutup FloatingBottomNavBar
         Spacer(modifier = Modifier.height(120.dp))

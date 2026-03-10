@@ -80,7 +80,6 @@ fun UpcomingSection(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Handle Loading, Error, dan Data
         when {
             isLoading -> {
                 Box(
@@ -139,10 +138,6 @@ fun UpcomingSection(
     }
 }
 
-
-/**
- * Composable untuk satu item card anime.
- */
 @Composable
 fun AnimeUpcomingCard(
     anime: SeasonAnimeUpcoming,
@@ -153,13 +148,14 @@ fun AnimeUpcomingCard(
         modifier = modifier
             .width(130.dp)
             .height(230.dp)
-            .clip(RoundedCornerShape(8.dp))
+            //.clip(RoundedCornerShape(8.dp))
             .clickable { onAnimeClick(anime.id) } // <-- NAVIGASI DETAIL
     ) {
         Box(
             modifier = Modifier
                 .height(180.dp)
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -186,34 +182,6 @@ fun AnimeUpcomingCard(
                     style = MaterialTheme.typography.labelSmall
                 )
             }
-
-            /*anime.score?.let { score ->
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(6.dp)
-                        .background(
-                            Color.Black.copy(alpha = 0.7f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Score",
-                        tint = Color(0xFFFFC107),
-                        modifier = Modifier.height(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = String.format(Locale.US, "%.2f", score),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }*/
         }
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -224,7 +192,7 @@ fun AnimeUpcomingCard(
             fontWeight = FontWeight.Medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)

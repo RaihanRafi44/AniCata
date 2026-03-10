@@ -4,16 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raihan.anicata.data.model.anime.full.AnimeData
 import com.raihan.anicata.data.model.domain.DetailAnimeUiState
+import com.raihan.anicata.data.model.storage.RecentlyViewed
 import com.raihan.anicata.data.repository.anime.AnimeCharacterRepository
 import com.raihan.anicata.data.repository.anime.AnimeDetailRepository
 import com.raihan.anicata.data.repository.anime.AnimeStaffRepository
 import com.raihan.anicata.data.repository.user.FavoriteAnimeRepository
 import com.raihan.anicata.data.repository.user.LibraryRepository
+import com.raihan.anicata.data.repository.user.RecentlyViewedRepository
 import com.raihan.anicata.utils.ResultWrapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,7 +26,8 @@ class DetailAnimeViewModel(
     private val characterRepository: AnimeCharacterRepository,
     private val staffRepository: AnimeStaffRepository,
     private val libraryRepository: LibraryRepository,
-    private val favoriteRepository: FavoriteAnimeRepository
+    private val favoriteRepository: FavoriteAnimeRepository,
+    private val recentlyViewedRepository: RecentlyViewedRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DetailAnimeUiState())
@@ -42,6 +47,12 @@ class DetailAnimeViewModel(
             detailRepository.getAnimeDetailList(id).collect { result ->
                 _uiState.update { currentState ->
                     currentState.copy(animeDetail = result)
+                }
+
+                if (result is ResultWrapper.Success) {
+                    result.payload?.let { detail ->
+                        saveToRecentlyViewed(detail)
+                    }
                 }
             }
         }
@@ -176,6 +187,19 @@ class DetailAnimeViewModel(
                     else -> {}
                 }
             }
+        }
+    }
+
+    private fun saveToRecentlyViewed(anime: AnimeData) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val historyItem = RecentlyViewed(
+                id = anime.id, // Sesuaikan dengan ID dari model Jikan API Anda
+                title = anime.title ?: "Unknown Title",
+                imageUrl = anime.images?.jpg?.largeImageUrl ?: "",
+                type = anime.type ?: "Anime"
+            )
+            // Panggil fungsi create yang sudah kita buat sebelumnya
+            recentlyViewedRepository.createRecentlyViewed(historyItem).collect()
         }
     }
 }

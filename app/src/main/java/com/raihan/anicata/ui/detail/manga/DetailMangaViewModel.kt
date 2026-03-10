@@ -6,6 +6,7 @@ import com.raihan.anicata.data.model.anime.full.AnimeData
 import com.raihan.anicata.data.model.domain.DetailAnimeUiState
 import com.raihan.anicata.data.model.domain.DetailMangaUiState
 import com.raihan.anicata.data.model.manga.full.MangaDetailFull
+import com.raihan.anicata.data.model.storage.RecentlyViewed
 import com.raihan.anicata.data.repository.anime.AnimeCharacterRepository
 import com.raihan.anicata.data.repository.anime.AnimeDetailRepository
 import com.raihan.anicata.data.repository.anime.AnimeStaffRepository
@@ -14,12 +15,15 @@ import com.raihan.anicata.data.repository.manga.MangaDetailRepository
 import com.raihan.anicata.data.repository.manga.MangaStaffRepository
 import com.raihan.anicata.data.repository.user.BookmarkMangaRepository
 import com.raihan.anicata.data.repository.user.FavoriteMangaRepository
+import com.raihan.anicata.data.repository.user.RecentlyViewedRepository
 import com.raihan.anicata.ui.navigation.Screen
 import com.raihan.anicata.utils.ResultWrapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,7 +32,8 @@ class DetailMangaViewModel (
     private val characterMangaRepository: MangaCharacterRepository,
     private val staffMangaRepository: MangaStaffRepository,
     private val bookmarkMangaRepository: BookmarkMangaRepository,
-    private val favoriteMangaRepository: FavoriteMangaRepository
+    private val favoriteMangaRepository: FavoriteMangaRepository,
+    private val recentlyViewedRepository: RecentlyViewedRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DetailMangaUiState())
@@ -47,6 +52,12 @@ class DetailMangaViewModel (
             detailMangaRepository.getMangaDetailList(id).collect { result ->
                 _uiState.update { currentState ->
                     currentState.copy(mangaDetail = result)
+                }
+
+                if (result is ResultWrapper.Success) {
+                    result.payload?.let { detail ->
+                        saveToRecentlyViewed(detail)
+                    }
                 }
             }
         }
@@ -172,6 +183,18 @@ class DetailMangaViewModel (
                     else -> {}
                 }
             }
+        }
+    }
+
+    private fun saveToRecentlyViewed(manga: MangaDetailFull) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val historyItem = RecentlyViewed(
+                id = manga.id,
+                title = manga.title,
+                imageUrl = manga.images.jpg.largeImageUrl,
+                type = manga.type
+            )
+            recentlyViewedRepository.createRecentlyViewed(historyItem).collect()
         }
     }
 }
