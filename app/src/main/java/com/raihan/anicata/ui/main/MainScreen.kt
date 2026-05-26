@@ -1,5 +1,15 @@
 package com.raihan.anicata.ui.main
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -89,8 +100,6 @@ fun MainScreen(
     }
 
     LaunchedEffect(currentRoute) {
-        // PERBAIKAN KECIL:
-        // Jika rute saat ini adalah result_search, jangan ubah selectedItem
         if (currentRoute?.startsWith("result_search") == false) {
             when (currentRoute) {
                 "home" -> selectedItem = 0
@@ -109,7 +118,7 @@ fun MainScreen(
             ) {
                 AppDrawerContent(
                     userData = userData,
-                    navController = internalNavController, // Gunakan internalNavController untuk drawer
+                    navController = internalNavController,
                     scope = scope,
                     closeDrawer = { scope.launch { drawerState.close() } },
                     onSignOut = onSignOut
@@ -117,303 +126,322 @@ fun MainScreen(
             }
         }
     ) {
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                TopNavBar(
-                    onMenuClick = {
-                        scope.launch {
-                            if (drawerState.isClosed) drawerState.open() else drawerState.close()
-                        }
-                    },
-                    onSearchClick = { isSearchVisible = true },
-                    onSettingsClick = { /* TODO */ },
-                    scrollBehavior = scrollBehavior
-                )
-            },
-        ) { innerPadding ->
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-            ) {
-                NavHost(
-                    navController = internalNavController, // NavHost ini pakai controller internal
-                    startDestination = "home",
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    composable("home") {
-                        HomeScreen(
-                            onBannerClick = { animeId ->
-                                navController.navigate(Screen.Detail.createRoute(animeId))
-                            },
-                            onAnimeClick = { animeId ->
-                                navController.navigate(Screen.Detail.createRoute(animeId))
-                            },
-                            onMangaClick = { mangaId ->
-                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                            },
-                            // ✅ 2. Sambungkan navigasi klik panah "View All"
-                            onViewAllTopRatedClick = {
-                                // Gunakan NavController INTERNAL (dari MainScreen)
-                                // untuk pindah ke rute Top Anime
-                                internalNavController.navigate("top_anime")
-                            },
-                            onViewAllSeasonalClick = {
-                                internalNavController.navigate("seasonal")
-                            },
-                            onViewAllUpcomingClick = {
-                                internalNavController.navigate("seasonal")
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    TopNavBar(
+                        onMenuClick = {
+                            scope.launch {
+                                if (drawerState.isClosed) drawerState.open() else drawerState.close()
                             }
-                        )
-                    }
-                    composable("archive") {
-                        ArchiveMainScreen(
-                            onNavigateToAnime = {
-                                internalNavController.navigate("archive_anime")
-                            },
-                            onNavigateToManga = {
-                                internalNavController.navigate("archive_manga")
-                            }
-                        )
-                    }
-
-                    composable("archive_anime") {
-                        ArchiveAnimeScreen(
-                            onNavigateBack = { internalNavController.popBackStack() },
-                            onBookmarkClicked = {
-                                internalNavController.navigate("archive_anime_bookmark")
-                            },
-                            onFavoriteClicked = {
-                                internalNavController.navigate("archive_anime_favorite")
-                            }
-                        )
-                    }
-
-                    composable("archive_manga") {
-                        ArchiveMangaScreen(
-                            onNavigateBack = { internalNavController.popBackStack() },
-                            onBookmarkClicked = {
-                                internalNavController.navigate("archive_manga_bookmark")
-                            },
-                            onFavoriteClicked = {
-                                internalNavController.navigate("archive_manga_favorite")
-                            }
-                        )
-                    }
-
-                    composable("archive_anime_bookmark") {
-                        ArchiveAnimeScreenBookmark(
-                            onAnimeClick = { animeId ->
-                                navController.navigate("detail/$animeId")
-                            },
-                            onNavigateBack = {
-                                internalNavController.popBackStack()
-                            },
-                            onDeleteClick = {
-                            },
-                        )
-                    }
-
-                    composable("archive_anime_favorite") {
-                        ArchiveAnimeScreenFavorite(
-                            //animeList = dummyList,
-                            onAnimeClick = { animeId ->
-                                // Navigasi ke Detail Anime
-                                navController.navigate("detail/$animeId")
-                            },
-                            onNavigateBack = {
-                                // Kembali ke Archive Anime (Rute B)
-                                internalNavController.popBackStack()
-                            },
-                            onDeleteClick = {}
-                        )
-                    }
-
-                    composable("archive_manga_bookmark") {
-                        // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
-
-
-                        ArchiveMangaScreenBookmark(
-                            onMangaClick = { mangaId ->
-                                navController.navigate("detail/$mangaId")
-                            },
-                            onNavigateBack = {
-                                internalNavController.popBackStack()
-                            },
-                            onDeleteClick = {}
-                        )
-                    }
-
-                    composable("archive_manga_favorite") {
-
-                        ArchiveMangaScreenFavorite(
-                            onMangaClick = { mangaId ->
-                                navController.navigate("detail/$mangaId")
-                            },
-                            onNavigateBack = {
-                                internalNavController.popBackStack()
-                            },
-                            onDeleteClick = {}
-                        )
-                    }
-
-                    composable("profile") {
-                        ProfileScreen(
-                            userData = userData,
-                            onSignOut = onSignOut
-                        )
-                    }
-                    // ✅ 2. Tambahkan rute baru untuk SeasonalScreen
-                    composable("seasonal") {
-                        SeasonalScreen(
-                            onAnimeClick = { animeId ->
-                                navController.navigate(Screen.Detail.createRoute(animeId))
-                            }
-                        )
-                    }
-
-                    composable("top_anime") {
-                        TopAnimeScreen(
-                            // Tambahkan parameter onAnimeClick
-                            onAnimeClick = { animeId ->
-                                // Saat item diklik, gunakan NavController UTAMA
-                                // untuk pindah ke rute Detail
-                                navController.navigate(Screen.Detail.createRoute(animeId))
-                            }
-                        )
-                    }
-                    composable("top_manga") {
-                        TopMangaScreen(
-                            onMangaClick = { mangaId ->
-                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                            }
-                        )
-                    }
-
-                    composable("all_lists") {
-                        //AllListsScreen()
-                        AllListsScreen(
-                            onAnimeClick = { animeId ->
-                                navController.navigate(Screen.Detail.createRoute(animeId))
-                            },
-                            onMangaClick = { mangaId ->
-                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                            }
-                        )
-                    }
-
-                    // --- 1. TAMBAHKAN RUTE BARU DI SINI ---
-                    composable(
-                        route = "result_search/{query}",
-                        arguments = listOf(navArgument("query") { type = NavType.StringType })
-                    ) { backStackEntry ->
-                        val query = backStackEntry.arguments?.getString("query") ?: ""
-                        ResultSearchScreen(
-                            searchQuery = query,
-                            onAnimeClick = { animeId ->
-                                navController.navigate(Screen.Detail.createRoute(animeId))
-                            },
-                            onMangaClick = { mangaId ->
-                                navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                            }
-                        )
-                    }
-
-                }
-
-                FloatingBottomNavBar(
+                        },
+                        onSearchClick = { isSearchVisible = true },
+                        onSettingsClick = { /* TODO */ },
+                        scrollBehavior = scrollBehavior
+                    )
+                },
+            ) { innerPadding ->
+                Box(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 24.dp),
-                    selectedItem = selectedItem,
-                    onItemSelected = { index ->
-                        selectedItem = index
-                        val route = when (index) {
-                            0 -> "home"
-                            1 -> "archive"
-                            2 -> "profile"
-                            else -> "home"
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    NavHost(
+                        navController = internalNavController, // NavHost ini pakai controller internal
+                        startDestination = "home",
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        composable("home") {
+                            HomeScreen(
+                                onBannerClick = { animeId ->
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
+                                },
+                                onAnimeClick = { animeId ->
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
+                                },
+                                onMangaClick = { mangaId ->
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                                },
+                                // ✅ 2. Sambungkan navigasi klik panah "View All"
+                                onViewAllTopRatedClick = {
+                                    // Gunakan NavController INTERNAL (dari MainScreen)
+                                    // untuk pindah ke rute Top Anime
+                                    internalNavController.navigate("top_anime")
+                                },
+                                onViewAllSeasonalClick = {
+                                    internalNavController.navigate("seasonal")
+                                },
+                                onViewAllUpcomingClick = {
+                                    internalNavController.navigate("seasonal")
+                                }
+                            )
                         }
-                        internalNavController.navigate(route) {
+                        composable("archive") {
+                            ArchiveMainScreen(
+                                onNavigateToAnime = {
+                                    internalNavController.navigate("archive_anime")
+                                },
+                                onNavigateToManga = {
+                                    internalNavController.navigate("archive_manga")
+                                }
+                            )
+                        }
+
+                        composable("archive_anime") {
+                            ArchiveAnimeScreen(
+                                onNavigateBack = { internalNavController.popBackStack() },
+                                onBookmarkClicked = {
+                                    internalNavController.navigate("archive_anime_bookmark")
+                                },
+                                onFavoriteClicked = {
+                                    internalNavController.navigate("archive_anime_favorite")
+                                }
+                            )
+                        }
+
+                        composable("archive_manga") {
+                            ArchiveMangaScreen(
+                                onNavigateBack = { internalNavController.popBackStack() },
+                                onBookmarkClicked = {
+                                    internalNavController.navigate("archive_manga_bookmark")
+                                },
+                                onFavoriteClicked = {
+                                    internalNavController.navigate("archive_manga_favorite")
+                                }
+                            )
+                        }
+
+                        composable("archive_anime_bookmark") {
+                            ArchiveAnimeScreenBookmark(
+                                onAnimeClick = { animeId ->
+                                    navController.navigate("detail/$animeId")
+                                },
+                                onNavigateBack = {
+                                    internalNavController.popBackStack()
+                                },
+                                onDeleteClick = {
+                                },
+                            )
+                        }
+
+                        composable("archive_anime_favorite") {
+                            ArchiveAnimeScreenFavorite(
+                                //animeList = dummyList,
+                                onAnimeClick = { animeId ->
+                                    // Navigasi ke Detail Anime
+                                    navController.navigate("detail/$animeId")
+                                },
+                                onNavigateBack = {
+                                    // Kembali ke Archive Anime (Rute B)
+                                    internalNavController.popBackStack()
+                                },
+                                onDeleteClick = {}
+                            )
+                        }
+
+                        composable("archive_manga_bookmark") {
+                            // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
+
+
+                            ArchiveMangaScreenBookmark(
+                                onMangaClick = { mangaId ->
+                                    navController.navigate("detail/$mangaId")
+                                },
+                                onNavigateBack = {
+                                    internalNavController.popBackStack()
+                                },
+                                onDeleteClick = {}
+                            )
+                        }
+
+                        composable("archive_manga_favorite") {
+
+                            ArchiveMangaScreenFavorite(
+                                onMangaClick = { mangaId ->
+                                    navController.navigate("detail/$mangaId")
+                                },
+                                onNavigateBack = {
+                                    internalNavController.popBackStack()
+                                },
+                                onDeleteClick = {}
+                            )
+                        }
+
+                        composable("profile") {
+                            ProfileScreen(
+                                userData = userData,
+                                onSignOut = onSignOut
+                            )
+                        }
+                        // ✅ 2. Tambahkan rute baru untuk SeasonalScreen
+                        composable("seasonal") {
+                            SeasonalScreen(
+                                onAnimeClick = { animeId ->
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
+                                }
+                            )
+                        }
+
+                        composable("top_anime") {
+                            TopAnimeScreen(
+                                // Tambahkan parameter onAnimeClick
+                                onAnimeClick = { animeId ->
+                                    // Saat item diklik, gunakan NavController UTAMA
+                                    // untuk pindah ke rute Detail
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
+                                }
+                            )
+                        }
+                        composable("top_manga") {
+                            TopMangaScreen(
+                                onMangaClick = { mangaId ->
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                                }
+                            )
+                        }
+
+                        composable("all_lists") {
+                            //AllListsScreen()
+                            AllListsScreen(
+                                onAnimeClick = { animeId ->
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
+                                },
+                                onMangaClick = { mangaId ->
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                                }
+                            )
+                        }
+
+                        // --- 1. TAMBAHKAN RUTE BARU DI SINI ---
+                        composable(
+                            route = "result_search/{query}",
+                            arguments = listOf(navArgument("query") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val query = backStackEntry.arguments?.getString("query") ?: ""
+                            ResultSearchScreen(
+                                searchQuery = query,
+                                onAnimeClick = { animeId ->
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
+                                },
+                                onMangaClick = { mangaId ->
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
+                                }
+                            )
+                        }
+
+                    }
+
+                    FloatingBottomNavBar(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 24.dp),
+                        selectedItem = selectedItem,
+                        onItemSelected = { index ->
+                            //selectedItem = index
+                            val route = when (index) {
+                                0 -> "home"
+                                1 -> "archive"
+                                2 -> "profile"
+                                else -> "home"
+                            }
+                            /*internalNavController.navigate(route) {
                             popUpTo(internalNavController.graph.findStartDestination().id) {
                                 saveState = true
                             }
                             launchSingleTop = true
                             restoreState = true
+                        }*/
+                            if (selectedItem == index) {
+                                internalNavController.popBackStack(route, inclusive = false)
+                            } else {
+                                selectedItem = index
+                                internalNavController.navigate(route) {
+                                    popUpTo(internalNavController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+
                         }
-                    }
+                    )
+                }
+            }
+
+            // --- BAGIAN BACKGROUND GELAP (Muncul Instan/Default) ---
+            if (isSearchVisible) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.9f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            isSearchVisible = false
+                        }
                 )
             }
-        }
 
-        // Tampilkan overlay jika isSearchVisible adalah true
-        if (isSearchVisible) {
-            // Latar belakang gelap semi-transparan
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 1.2f))
-                    // Klik di luar area pencarian akan menutup overlay
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null // Menghilangkan efek ripple
-                    ) {
-                        isSearchVisible = false
-                    }
-            )
-
-            // Konten Search Screen di atas latar belakang gelap
-            Box(
-                // Memberi padding agar tidak tertimpa status bar
-                modifier = Modifier.statusBarsPadding()
+            // --- BAGIAN ANIMASI KHUSUS KOLOM SEARCH & HASILNYA ---
+            AnimatedVisibility(
+                visible = isSearchVisible,
+                // Kombinasi: Fade In + Membesar dari 80% + Terbuka ke bawah dari arah atas
+                enter = fadeIn(animationSpec = tween(300)) +
+                        scaleIn(
+                            initialScale = 0.8f,
+                            transformOrigin = TransformOrigin(0.5f, 0f),
+                            animationSpec = tween(300)
+                        ) +
+                        expandVertically(
+                            expandFrom = Alignment.Top,
+                            animationSpec = tween(300)
+                        ),
+                // Kombinasi: Fade Out + Mengecil ke 80% + Menutup ke arah atas
+                exit = fadeOut(animationSpec = tween(250)) +
+                        scaleOut(
+                            targetScale = 0.8f,
+                            transformOrigin = TransformOrigin(0.5f, 0f),
+                            animationSpec = tween(250)
+                        ) +
+                        shrinkVertically(
+                            shrinkTowards = Alignment.Top,
+                            animationSpec = tween(250)
+                        )
             ) {
-                SearchScreenLayout(
-                    onClose = { isSearchVisible = false }, // Tombol close akan menutup overlay
-                    // Tambahkan parameter onSearchSubmitted yang hilang
-                    onSearchSubmitted = { query ->
-                        // 1. Tutup overlay pencarian
-                        isSearchVisible = false
-                        /*// 2. Gunakan internalNavController, BUKAN navController
-                        internalNavController.navigate("result_search/$query") {
-                            // Opsi ini agar tidak menumpuk halaman pencarian
-                            launchSingleTop = true
-                            }*/
-                        // 2. Gunakan logika navigasi LENGKAP
-                        internalNavController.navigate("result_search/$query") {
-                            // Pop up ke 'home' (start destination)
-                            popUpTo(internalNavController.graph.findStartDestination().id) {
-                                saveState = true // Simpan state layar yg ditinggal
-                            }
-                            launchSingleTop = true //
-                            //restoreState = true // Pulihkan state jika 'result_search' pernah dibuka
-                        }
-                    },
-
-                        // --- 1. TAMBAHKAN PARAMETER BARU INI ---
-                        onAnimeClick = { animeId ->
-                            // 2. Tutup overlay pencarian
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                ) {
+                    SearchScreenLayout(
+                        onClose = { isSearchVisible = false },
+                        onSearchSubmitted = { query ->
                             isSearchVisible = false
-
-                            // 3. Gunakan NavController UTAMA untuk navigasi ke Detail
+                            internalNavController.navigate("result_search/$query") {
+                                popUpTo(internalNavController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                            }
+                        },
+                        onAnimeClick = { animeId ->
+                            isSearchVisible = false
                             navController.navigate(Screen.Detail.createRoute(animeId))
                         },
                         onMangaClick = { mangaId ->
                             isSearchVisible = false
                             navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                         }
-                )
+                    )
+                }
             }
         }
     }
-}
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    // Perbaiki preview agar tidak error
-    MainScreen(
-        navController = rememberNavController(), // Beri NavController palsu
-        userData = UserData("123", "Raihan", "url_gambar_profil.com"),
-        onSignOut = {}
-    )
-}

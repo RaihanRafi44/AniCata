@@ -42,19 +42,17 @@ import coil.request.ImageRequest
 import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
 import com.raihan.anicata.data.model.anime.season.upcoming.SeasonAnimeUpcoming
 import com.raihan.anicata.data.source.network.model.anime.seasons.upcoming.SeasonUpcomingData
+import com.raihan.anicata.utils.ResultWrapper
 import java.util.Locale
 
 @Composable
 fun UpcomingSection(
     modifier: Modifier = Modifier,
-    animeList: List<SeasonAnimeUpcoming>,
-    isLoading: Boolean,
-    error: String?,
+    state: ResultWrapper<List<SeasonAnimeUpcoming>>,
     onViewAllClick: () -> Unit,
     onAnimeClick: (Int) -> Unit
 ) {
     Column(modifier = modifier) {
-        // Baris untuk judul dan ikon panah
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -73,40 +71,48 @@ fun UpcomingSection(
                 contentDescription = "View All Seasonal",
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable { onViewAllClick() } // <-- NAVIGASI DI SINI
+                    .clickable { onViewAllClick() }
                     .padding(4.dp)
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        when {
-            isLoading -> {
+        when (state) {
+            is ResultWrapper.Loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp),
+                    modifier = Modifier.fillMaxWidth().height(230.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
             }
-            error != null -> {
+            is ResultWrapper.Error -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxWidth().height(230.dp).padding(16.dp),
+                contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Gagal memuat: $error",
+                        text = "Failed load data. Please try again later.",
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
                 }
             }
-            animeList.isNotEmpty() -> {
+            is ResultWrapper.Empty -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(230.dp).padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No data available",
+                        color = Color.DarkGray,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            is ResultWrapper.Success -> {
+                val animeList = state.payload ?: emptyList()
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -119,24 +125,10 @@ fun UpcomingSection(
                     }
                 }
             }
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Tidak ada data.",
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            else -> {}
         }
     }
-}
+    }
 
 @Composable
 fun AnimeUpcomingCard(
@@ -149,7 +141,7 @@ fun AnimeUpcomingCard(
             .width(130.dp)
             .height(230.dp)
             //.clip(RoundedCornerShape(8.dp))
-            .clickable { onAnimeClick(anime.id) } // <-- NAVIGASI DETAIL
+            .clickable { onAnimeClick(anime.id) }
     ) {
         Box(
             modifier = Modifier

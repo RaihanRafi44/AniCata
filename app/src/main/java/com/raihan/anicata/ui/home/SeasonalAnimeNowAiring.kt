@@ -1,5 +1,6 @@
 package com.raihan.anicata.ui.home
 
+import android.graphics.Paint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,19 +41,18 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
+import com.raihan.anicata.utils.ResultWrapper
 import java.util.Locale
 
 @Composable
 fun NowAiringSection(
     modifier: Modifier = Modifier,
-    animeList: List<SeasonAnimeNow>,
-    isLoading: Boolean,
-    error: String?,
+    state: ResultWrapper<List<SeasonAnimeNow>>,
     onViewAllClick: () -> Unit,
     onAnimeClick: (Int) -> Unit
 ) {
     Column(modifier = modifier) {
-        // Baris untuk judul dan ikon panah
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,34 +78,44 @@ fun NowAiringSection(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Handle Loading, Error, dan Data
-        when {
-            isLoading -> {
+        when (state) {
+            is ResultWrapper.Loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp),
+                    modifier = Modifier.fillMaxWidth().height(230.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
             }
-            error != null -> {
+
+            is ResultWrapper.Error -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp)
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(230.dp).padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Gagal memuat: $error",
+                        text = "Failed load data. Please try again later.",
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
                 }
             }
-            animeList.isNotEmpty() -> {
+
+            is ResultWrapper.Empty -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(230.dp).padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No data available",
+                        color = Color.DarkGray,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            is ResultWrapper.Success -> {
+                val animeList = state.payload ?: emptyList()
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -118,29 +128,12 @@ fun NowAiringSection(
                     }
                 }
             }
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Tidak ada data.",
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+
+            else -> {}
         }
     }
 }
 
-
-/**
- * Composable untuk satu item card anime.
- */
 @Composable
 fun AnimeNowAiringCard(
     anime: SeasonAnimeNow,

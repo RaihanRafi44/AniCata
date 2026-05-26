@@ -1,64 +1,108 @@
 package com.raihan.anicata.ui.top.anime
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.raihan.anicata.ui.paging.PaginationControls
+import com.raihan.anicata.utils.ResultWrapper
 import com.raihan.anicata.utils.rememberPaginationState
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAnimeScreen(
     viewModel: TopAnimeViewModel = koinViewModel(),
     onAnimeClick: (Int) -> Unit
 ) {
-    // Mengumpulkan state dari ViewModel
-    val animeList by viewModel.topAnime.collectAsState()
-    val totalPages by viewModel.totalPages.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val topAnimeState by viewModel.topAnimeState.collectAsState()
 
     var selectedFilter by rememberSaveable { mutableStateOf("") }
+    var currentPage by rememberSaveable { mutableIntStateOf(1) }
 
-    // --- PERBAIKAN 1: Buat 'currentPage' sebagai state yang bisa diselamatkan ---
-    var currentPage by rememberSaveable { mutableStateOf(1) }
+    val totalPages = when (val state = topAnimeState) {
+        is ResultWrapper.Success -> state.payload?.second ?: 1
+        is ResultWrapper.Empty -> state.payload?.second ?: 1
+        else -> 1
+    }
 
     val paginationState = rememberPaginationState(
-        totalPages = totalPages, // Kirim totalPages dari ViewModel
+        totalPages = totalPages,
         visiblePages = 3
     )
 
-    // Memuat data pertama kali saat screen ditampilkan
     LaunchedEffect(Unit) {
         viewModel.getTopAnimeData(
-            //page = paginationState.currentPage,// Gunakan page dari state
             page = paginationState.currentPage,
-            filter = selectedFilter // Untuk filter
+            type = "",
+            filter = selectedFilter,
+            limit = 25
         )
     }
-    Box(
-        modifier = Modifier.fillMaxSize()
+
+    var isRefreshing by remember { mutableStateOf(false)}
+    val pullRefreshState = rememberPullToRefreshState()
+
+    LaunchedEffect(topAnimeState) {
+        if (topAnimeState !is ResultWrapper.Loading) {
+            delay(250)
+            isRefreshing = false
+        }
+    }
+
+    //Box(modifier = Modifier.fillMaxSize()) {
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.getTopAnimeData(
+                page = paginationState.currentPage,
+                type = "",
+                filter = selectedFilter,
+                limit = 25,
+                forceRefresh = true
+            )
+        },
+        modifier = Modifier.fillMaxSize(),
+        state = pullRefreshState,
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isRefreshing = isRefreshing,
+                state = pullRefreshState,
+                containerColor = Color(0xFF2C2C2C),
+                color = Color(0xFFFF9800)
+            )
+        }
     ) {
         Column(
             modifier = Modifier
@@ -70,96 +114,101 @@ fun TopAnimeScreen(
             FilterTopAnime(
                 selectedFilterApiValue = selectedFilter,
                 onFilterSelected = { newApiValue ->
-                    // 1. Update state filter
                     selectedFilter = newApiValue
-                    //currentPage = 1
-                    // Saat filter diubah, reset juga paginationState
                     paginationState.onPageChange(1)
-                    // 2. Reset halaman ke 1 (penting saat ganti filter)
-                    //paginationState.onPageChange(1) // Asumsi ini mengupdate currentPage
-                    // 3. Panggil ViewModel dengan filter baru dan halaman 1
                     viewModel.getTopAnimeData(
                         page = 1,
-                        filter = newApiValue
+                        type = "",
+                        filter = newApiValue,
+                        limit = 25
                     )
                 }
             )
 
-            // 3. Tampilkan list HANYA JIKA TIDAK LOADING, TIDAK ERROR, DAN ADA ISINYA
-            if (!isLoading && error == null && animeList.isNotEmpty()) {
-                AnimeListTopLayout(
-                    animeList = animeList,
-                    //currentPage = paginationState.currentPage,
-                    currentPage = paginationState.currentPage,
-                    pageSize = 25,
-                    modifier = Modifier, // padding sudah dihandle di dalam AnimeListTopLayout
-                    onAnimeClick = onAnimeClick // <-- 2. TERUSKAN CALLBACK KE BAWAH
-                )
-            }
+            Crossfade(
+                targetState = topAnimeState,
+                animationSpec = tween(durationMillis = 400),
+                label = "StateTransition"
+            ) { animatedState ->
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 4. Tampilkan paginasi HANYA JIKA TIDAK LOADING DAN TIDAK ERROR
-            if (!isLoading && error == null) {
-                PaginationControls(
-                    //currentPage = paginationState.currentPage,
-                    currentPage = paginationState.currentPage,
-                    startPage = paginationState.startPage,
-                    totalPages = paginationState.totalPages,
-                    visiblePages = paginationState.visiblePages,
-                    onPageChange = { newPage ->
-                        currentPage = newPage
-                        // --- 2. INI PERBAIKAN UTAMANYA ---
-                        // Beri tahu 'paginationState' untuk memperbarui
-                        // logika 'startPage' (jendela geser) miliknya.
-                        paginationState.onPageChange(newPage)
-                        // 1. Update state holder-nya
-                        //paginationState.onPageChange(newPage)
-                        // 2. Panggil ViewModel dengan halaman baru
-                        viewModel.getTopAnimeData(
-                            page = newPage,
-                            filter = selectedFilter // <-- TAMBAHKAN INI
-                        )
+                when (animatedState) {
+                    is ResultWrapper.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                )
+
+                    is ResultWrapper.Error -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(300.dp).padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = animatedState.exception?.message
+                                    ?: "An error occurred, please try again",
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    is ResultWrapper.Empty -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(300.dp).padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No data",
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    is ResultWrapper.Success -> {
+                        val animeList = animatedState.payload?.first ?: emptyList()
+
+                        Column {
+
+                            AnimeListTopLayout(
+                                animeList = animeList,
+                                currentPage = paginationState.currentPage,
+                                pageSize = 25,
+                                modifier = Modifier,
+                                onAnimeClick = onAnimeClick
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            if (paginationState.totalPages > 1) {
+                                PaginationControls(
+                                    currentPage = paginationState.currentPage,
+                                    startPage = paginationState.startPage,
+                                    totalPages = paginationState.totalPages,
+                                    visiblePages = paginationState.visiblePages,
+                                    onPageChange = { newPage ->
+                                        currentPage = newPage
+                                        paginationState.onPageChange(newPage)
+                                        viewModel.getTopAnimeData(
+                                            page = newPage,
+                                            type = "",
+                                            filter = selectedFilter,
+                                            limit = 25
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    else -> {}
+                }
             }
 
-            Spacer(modifier = Modifier.height(80.dp)) // Beri ruang di bawah
-        }
-
-        when {
-            isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center) // Center di dalam Box
-                )
-            }
-            error != null -> {
-                Text(
-                    text = error!!,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center) // Center di dalam Box
-                        .padding(horizontal = 32.dp) // Beri padding agar text error tidak terlalu lebar
-                )
-            }
-            // Handle juga kasus "Empty"
-            animeList.isEmpty() && !isLoading && error == null -> {
-                Text(
-                    text = "Tidak ada data.",
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center) // Center di dalam Box
-                        .padding(horizontal = 32.dp)
-                )
-            }
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TopAnimeScreenPreview() {
-    //TopAnimeScreen()
 }

@@ -1,85 +1,124 @@
 package com.raihan.anicata.ui.home
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.raihan.anicata.ui.main.TopNavBar
 import com.raihan.anicata.utils.ResultWrapper
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    //onBannerClick: () -> Unit, // <-- TAMBAHKAN PARAMETER INI
-    // Parameter navigasi baru
     onBannerClick: (Int) -> Unit,
     onAnimeClick: (Int) -> Unit,
     onMangaClick: (Int) -> Unit,
     onViewAllTopRatedClick: () -> Unit,
     onViewAllSeasonalClick: () -> Unit,
     onViewAllUpcomingClick: () -> Unit,
-    // Injeksi ViewModel
     viewModel: HomeViewModel = koinViewModel()
 ) {
-    // HomeScreen sekarang hanya berisi konten spesifiknya.
-    // Tidak perlu lagi Scaffold, TopBar, atau Drawer.
+
     val scrollState = rememberScrollState()
 
-    // Kumpulkan state dari HomeViewModel
-    val topRatedList by viewModel.topRatedAnime.collectAsState()
-    val isLoadingTopRated by viewModel.isLoading.collectAsState()
-    val errorTopRated by viewModel.error.collectAsState()
-
-    // 2. Kumpulkan state BARU Now Airing
-    val nowAiringList by viewModel.nowAiringAnime.collectAsState()
-    val isLoadingNowAiring by viewModel.isLoadingNowAiring.collectAsState()
-    val errorNowAiring by viewModel.errorNowAiring.collectAsState()
-
-    // 2. Kumpulkan state BARU Upcoming
-    val upcomingList by viewModel.upcomingAnime.collectAsState()
-    val isLoadingUpcoming by viewModel.isLoadingUpcoming.collectAsState()
-    val errorUpcoming by viewModel.errorUpcoming.collectAsState()
-
+    val upcomingState by viewModel.upcomingState.collectAsState()
+    val nowAiringState by viewModel.nowAiringState.collectAsState()
+    val topRatedState by viewModel.topRatedState.collectAsState()
     val recentlyViewedState by viewModel.recentlyViewed.observeAsState(ResultWrapper.Idle())
-    //val recentlyViewedList = recentlyViewedState.payload ?: emptyList()
 
-    // --- 2. BUAT LIST BANNER DI SINI ---
-    // Ambil 5 teratas dari Now Airing dan map ke BannerData
-    val bannerList = nowAiringList.take(5).map { anime ->
-        BannerData(
-            id = anime.id,
-            imageUrl = anime.images.jpg.largeImageUrl,
-            title = anime.title,
-            // Gabungkan list genre menjadi satu String
-            genres = anime.genres.joinToString(separator = ", ") { it.name.toString() }
-                .ifEmpty { "N/A" },
-            synopsis = anime.synopsis ?: "No synopsis available.",
-            type = anime.type ?: "N/A"
-        )
+    /*val bannerList = remember(nowAiringState) {
+        if (nowAiringState is ResultWrapper.Success) {
+            val payload = (nowAiringState as ResultWrapper.Success).payload ?: emptyList()
+
+            payload.take(5).map { anime ->
+                BannerData(
+                    id = anime.id,
+                    imageUrl = anime.images.jpg.largeImageUrl,
+                    title = anime.title,
+                    genres = anime.genres.joinToString(separator = ", ") { it.name.toString() }.ifEmpty { "N/A" },
+                    synopsis = anime.synopsis ?: "No synopsis available.",
+                    type = anime.type ?: "N/A"
+                )
+            }
+        } else {
+            emptyList()
+        }
+    }*/
+
+    val bannerState = remember(nowAiringState) {
+        when (nowAiringState) {
+            is ResultWrapper.Loading -> ResultWrapper.Loading()
+            is ResultWrapper.Error -> ResultWrapper.Error(nowAiringState.exception)
+            is ResultWrapper.Empty -> ResultWrapper.Empty()
+            is ResultWrapper.Success -> {
+                val payload = (nowAiringState as ResultWrapper.Success).payload ?: emptyList()
+                val banners = payload.take(5).map { anime ->
+                    BannerData(
+                        id = anime.id,
+                        imageUrl = anime.images.jpg.largeImageUrl,
+                        title = anime.title,
+                        genres = anime.genres.joinToString(separator = ", ") { it.name.toString() }.ifEmpty { "N/A" },
+                        synopsis = anime.synopsis ?: "No synopsis available.",
+                        type = anime.type ?: "N/A"
+                    )
+                }
+                if (banners.isEmpty()) ResultWrapper.Empty() else ResultWrapper.Success(banners)
+            }
+            is ResultWrapper.Idle -> ResultWrapper.Idle()
+        }
     }
+
+    val isAnyLoading = upcomingState is ResultWrapper.Loading ||
+            nowAiringState is ResultWrapper.Loading ||
+            topRatedState is ResultWrapper.Loading ||
+            bannerState is ResultWrapper.Loading
+
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isAnyLoading) {
+        if (!isAnyLoading) {
+            isRefreshing = false
+        }
+    }
+
+    val pullRefreshState = rememberPullToRefreshState()
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.refreshData()
+        },
+        modifier = Modifier.fillMaxSize(),
+        state = pullRefreshState,
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isRefreshing = isRefreshing,
+                state = pullRefreshState,
+                containerColor = Color(0xFF2C2C2C), // Background Color
+                color = Color(0xFFFF9800)           // Icon Color
+            )
+        }
+    ) {
 
     Column(
         modifier = Modifier
@@ -87,13 +126,12 @@ fun HomeScreen(
             .verticalScroll(scrollState)
     ) {
         BannerSlider(
-            banners = bannerList,
+            state = bannerState,
             onBannerClick = onBannerClick
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 🌟 Section "Recently Viewed" dari file RecentlyViewed.kt
         RecentlyViewedSection(
             state = recentlyViewedState,
             onItemClick = { id, type ->
@@ -108,44 +146,31 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 🌟 Section "Now Airing" dari file SeasonalAnimeNowAiring.kt
-        //NowAiringSection()
         NowAiringSection(
-            animeList = nowAiringList,
-            isLoading = isLoadingNowAiring,
-            error = errorNowAiring,
-            onViewAllClick = onViewAllSeasonalClick, // Navigasi ke SeasonalScreen
-            onAnimeClick = onAnimeClick              // Navigasi ke DetailScreen
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        //UpcomingSection()
-        UpcomingSection(
-            animeList = upcomingList,
-            isLoading = isLoadingUpcoming,
-            error = errorUpcoming,
-            onViewAllClick = onViewAllUpcomingClick, // Navigasi ke SeasonalScreen
+            state = nowAiringState,
+            onViewAllClick = onViewAllSeasonalClick,
             onAnimeClick = onAnimeClick
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        //TopRatedSection()
-        TopRatedSection(
-            animeList = topRatedList,
-            isLoading = isLoadingTopRated,
-            error = errorTopRated,
-            onViewAllClick = onViewAllTopRatedClick, // Navigasi ke TopAnimeScreen
-            onAnimeClick = onAnimeClick      // Navigasi ke DetailScreen
+        UpcomingSection(
+            state = upcomingState,
+            onViewAllClick = onViewAllUpcomingClick,
+            onAnimeClick = onAnimeClick
         )
 
-        //Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        /*NewsUpdateScreen()*/
+        TopRatedSection(
+            state = topRatedState,
+            onViewAllClick = onViewAllTopRatedClick,
+            onAnimeClick = onAnimeClick
+        )
 
-        // Beri ruang agar konten terakhir tidak tertutup FloatingBottomNavBar
         Spacer(modifier = Modifier.height(120.dp))
+
+    }
     }
 }
 

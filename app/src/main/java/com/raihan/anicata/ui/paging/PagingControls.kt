@@ -55,6 +55,8 @@ fun PaginationControls(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val isLeftEnabled = currentPage > 1
+            val isRightEnabled = currentPage < totalPages
             // Tombol "Sebelumnya"
             OutlinedButton(
                 onClick = {
@@ -65,10 +67,20 @@ fun PaginationControls(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(0.dp),
-                border = BorderStroke(1.5.dp, Color.Black),
+                // Border warna ungu saat aktif, abu-abu saat inactive
+                border = BorderStroke(
+                    width = 2.dp,
+                    color = if (isLeftEnabled) activeColor else inactiveColor
+                ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.Black,
-                    containerColor = Color.White
+                    // Background transparan agar menyatu dengan background halaman
+                    containerColor = Color.Transparent,
+                    // Ikon panah warna ungu saat aktif
+                    contentColor = activeColor,
+                    // Background tetap transparan saat inactive
+                    disabledContainerColor = Color.Transparent,
+                    // Ikon panah warna abu-abu saat inactive
+                    disabledContentColor = inactiveColor
                 ),
                 enabled = currentPage > 1
             ) {
@@ -102,10 +114,20 @@ fun PaginationControls(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(0.dp),
-                border = BorderStroke(1.5.dp, Color.Black),
+                // Border warna ungu saat aktif, abu-abu saat inactive
+                border = BorderStroke(
+                    width = 2.dp,
+                    color = if (isRightEnabled) activeColor else inactiveColor
+                ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.Black,
-                    containerColor = Color.White
+                    // Background transparan agar menyatu dengan background halaman
+                    containerColor = Color.Transparent,
+                    // Ikon panah warna ungu saat aktif
+                    contentColor = activeColor,
+                    // Background tetap transparan saat inactive
+                    disabledContainerColor = Color.Transparent,
+                    // Ikon panah warna abu-abu saat inactive
+                    disabledContentColor = inactiveColor
                 ),
                 enabled = currentPage < totalPages
             ) {
