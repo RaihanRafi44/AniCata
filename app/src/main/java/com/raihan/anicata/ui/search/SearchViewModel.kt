@@ -27,7 +27,6 @@ class SearchViewModel(
     private val mangaRepository: MangaSearchRepository
 ) : ViewModel() {
 
-    // ... (property _searchQuery, searchResults, liveSearchLimit tidak berubah)
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     private val _searchResults = MutableStateFlow<ResultWrapper<List<AnimeInfo>>>(ResultWrapper.Idle())

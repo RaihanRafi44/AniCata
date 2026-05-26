@@ -6,19 +6,20 @@ import androidx.lifecycle.viewModelScope
 import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
 import com.raihan.anicata.data.model.anime.season.upcoming.SeasonAnimeUpcoming
 import com.raihan.anicata.data.model.anime.top.TopAnime
-import com.raihan.anicata.data.model.storage.RecentlyViewed
 import com.raihan.anicata.data.repository.anime.AnimeSeasonNowRepository
 import com.raihan.anicata.data.repository.anime.AnimeSeasonUpcomingRepository
 import com.raihan.anicata.data.repository.anime.AnimeTopRepository
 import com.raihan.anicata.data.repository.user.RecentlyViewedRepository
 import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(
     private val topAnimeRepository: AnimeTopRepository,
@@ -27,149 +28,53 @@ class HomeViewModel(
     private val recentlyViewedRepository: RecentlyViewedRepository
 ) : ViewModel() {
 
-    // State untuk daftar top rated anime
-    private val _topRatedAnime = MutableStateFlow<List<TopAnime>>(emptyList())
-    val topRatedAnime: StateFlow<List<TopAnime>> = _topRatedAnime.asStateFlow()
-
-    // State untuk loading
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    // State untuk pesan error
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
-
-    // == 2. State BARU untuk Now Airing Anime ==
-    private val _nowAiringAnime = MutableStateFlow<List<SeasonAnimeNow>>(emptyList())
-    val nowAiringAnime: StateFlow<List<SeasonAnimeNow>> = _nowAiringAnime.asStateFlow()
-
-    private val _isLoadingNowAiring = MutableStateFlow(false)
-    val isLoadingNowAiring: StateFlow<Boolean> = _isLoadingNowAiring.asStateFlow()
-
-    private val _errorNowAiring = MutableStateFlow<String?>(null)
-    val errorNowAiring: StateFlow<String?> = _errorNowAiring.asStateFlow()
-
-    // == 2. State BARU untuk Upcoming Anime ==
-    private val _upcomingAnime = MutableStateFlow<List<SeasonAnimeUpcoming>>(emptyList())
-    val upcomingAnime: StateFlow<List<SeasonAnimeUpcoming>> = _upcomingAnime.asStateFlow()
-
-    private val _isLoadingUpcoming = MutableStateFlow(false)
-    val isLoadingUpcoming: StateFlow<Boolean> = _isLoadingUpcoming.asStateFlow()
-
-    private val _errorUpcoming = MutableStateFlow<String?>(null)
-    val errorUpcoming: StateFlow<String?> = _errorUpcoming.asStateFlow()
-
     val recentlyViewed = recentlyViewedRepository.getRecentlyViewed().asLiveData(Dispatchers.IO)
 
-    init {
-        // Langsung panggil saat ViewModel dibuat
-        getTopRatedAnime()
-        getNowAiringAnime()
-        getUpcomingAnime()
-    }
+    private val refreshTrigger = MutableStateFlow(0)
 
-    // Fungsi untuk mengambil data (halaman 1, limit 10 untuk home)
-    fun getTopRatedAnime() {
-        viewModelScope.launch {
-            // Kita gunakan filter default ("") karena itu sudah di-sort berdasarkan score
-            // di TopAnimeViewModel Anda. Kita hanya ambil 10 data teratas.
-            topAnimeRepository.getTopAnimeList(type = "", filter = "", page = 1, limit = 10).collectLatest { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
-                        _isLoading.value = true
-                        _error.value = null
-                    }
-                    is ResultWrapper.Success -> {
-                        var animeList = result.payload?.first ?: emptyList()
-
-                        // Terapkan logika sorting yang sama seperti di TopAnimeViewModel
-                        // untuk memastikan ini adalah "Top Rated"
-                        animeList = animeList.sortedWith(
-                            compareByDescending<TopAnime> { it.score } // 1. Skor tertinggi
-                                .thenByDescending { it.members }       // 2. Member terbanyak
-                        )
-
-                        _isLoading.value = false
-                        _topRatedAnime.value = animeList
-                    }
-                    is ResultWrapper.Error -> {
-                        _isLoading.value = false
-                        _error.value = result.exception?.message ?: "An unknown error occurred"
-                    }
-                    is ResultWrapper.Empty -> {
-                        _isLoading.value = false
-                        _topRatedAnime.value = emptyList()
-                    }
-                    is ResultWrapper.Idle -> {}
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val topRatedState: StateFlow<ResultWrapper<List<TopAnime>>> = refreshTrigger
+        .flatMapLatest { topAnimeRepository.getTopAnimeList(type = "", filter = "", page = 1, limit = 10) }
+        .map { result ->
+            when (result) {
+                is ResultWrapper.Success -> {
+                    val animeList = result.payload?.first ?: emptyList()
+                    val sortedList = animeList.sortedWith(
+                        compareByDescending<TopAnime> { it.score }.thenByDescending { it.members }
+                    )
+                    if (sortedList.isEmpty()) ResultWrapper.Empty() else ResultWrapper.Success(sortedList)
                 }
+                is ResultWrapper.Loading -> ResultWrapper.Loading()
+                is ResultWrapper.Error -> ResultWrapper.Error(result.exception)
+                is ResultWrapper.Empty -> ResultWrapper.Empty()
+                is ResultWrapper.Idle -> ResultWrapper.Idle()
             }
         }
-    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ResultWrapper.Loading()
+        )
 
-    // == 3. Fungsi BARU untuk mengambil data Now Airing ==
-    fun getNowAiringAnime() {
-        viewModelScope.launch {
-            // Kita hanya ambil 10 data terpopuler untuk ditampilkan di home
-            seasonNowRepository.getSeasonNowAnimeList(filter = "tv", continuing = false).collectLatest { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
-                        _isLoadingNowAiring.value = true
-                        _errorNowAiring.value = null
-                    }
-                    is ResultWrapper.Success -> {
-                        // Sortir berdasarkan jumlah members/popularity untuk menampilkan yang paling relevan
-                        /*val animeList = result.payload?.sortedByDescending { it.members } ?: emptyList()
-                        _isLoadingNowAiring.value = false
-                        _nowAiringAnime.value = animeList*/
-                        val animeList = result.payload
-                            ?.sortedByDescending { it.members }
-                            ?.take(10)
-                            ?: emptyList()
-                        _isLoadingNowAiring.value = false
-                        _nowAiringAnime.value = animeList
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val nowAiringState: StateFlow<ResultWrapper<List<SeasonAnimeNow>>> = refreshTrigger
+        .flatMapLatest { seasonNowRepository.getSeasonNowAnimeList(filter = "tv", continuing = false) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ResultWrapper.Loading()
+        )
 
-                    }
-                    is ResultWrapper.Error -> {
-                        _isLoadingNowAiring.value = false
-                        _errorNowAiring.value = result.exception?.message ?: "An unknown error occurred"
-                    }
-                    is ResultWrapper.Empty -> {
-                        _isLoadingNowAiring.value = false
-                        _nowAiringAnime.value = emptyList()
-                    }
-                    is ResultWrapper.Idle -> {}
-                }
-            }
-        }
-    }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val upcomingState: StateFlow<ResultWrapper<List<SeasonAnimeUpcoming>>> = refreshTrigger
+        .flatMapLatest { seasonUpcomingRepository.getSeasonUpcomingAnimeList(filter = "tv", continuing = false) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ResultWrapper.Loading()
+        )
 
-    fun getUpcomingAnime() {
-        viewModelScope.launch {
-            seasonUpcomingRepository.getSeasonUpcomingAnimeList(filter = "tv", continuing = false).collectLatest { result ->
-                when (result) {
-                    is ResultWrapper.Loading -> {
-                        _isLoadingUpcoming.value = true
-                        _errorUpcoming.value = null
-                    }
-                    is ResultWrapper.Success -> {
-                        val animeList = result.payload
-                            ?.sortedByDescending { it.members }
-                            ?.take(10)
-                            ?: emptyList()
-                        _isLoadingUpcoming.value = false
-                        _upcomingAnime.value = animeList
-                    }
-                    is ResultWrapper.Error -> {
-                        _isLoadingUpcoming.value = false
-                        _errorUpcoming.value = result.exception?.message ?: "An unknown error occurred"
-                    }
-                    is ResultWrapper.Empty -> {
-                        _isLoadingUpcoming.value = false
-                        _upcomingAnime.value = emptyList()
-                    }
-                    is ResultWrapper.Idle -> {}
-                }
-            }
-        }
+    fun refreshData() {
+        refreshTrigger.value++
     }
 }

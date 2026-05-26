@@ -30,9 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * Composable dropdown menu yang dapat digunakan kembali di beberapa layar.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StyledDropdownFromFilter(

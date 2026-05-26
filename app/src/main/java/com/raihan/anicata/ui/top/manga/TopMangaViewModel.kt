@@ -18,158 +18,78 @@ import java.util.Locale
 
 class TopMangaViewModel(private val repository: MangaTopRepository) : ViewModel() {
 
-    // Ukuran halaman yang diinginkan UI
-    private val uiPageSize = 25
+    private val _topMangaState = MutableStateFlow<ResultWrapper<Pair<List<TopManga>, Int>>>(
+        ResultWrapper.Idle())
 
-    // --- State Internal ViewModel ---
-    private var currentApiPage = 1 // Halaman API mana yang sedang kita ambil
-    private var totalApiPages = 1 // Total halaman dari API
-    private var currentFilter = "" // Filter yang sedang aktif ("publishing", dll)
-    private var isFetching = false // Mencegah fetch ganda
+    val topMangaState: StateFlow<ResultWrapper<Pair<List<TopManga>, Int>>> = _topMangaState
 
-    // Buffer untuk menyimpan item valid yang "tersisa" dari fetch sebelumnya
-    private val itemBuffer = mutableListOf<TopManga>()
+    private val mangaCache = mutableMapOf<String, Pair<List<TopManga>, Int>>()
 
-    // Cache untuk menyimpan halaman yang sudah jadi (Key: Nomor Halaman UI, Value: Daftar item)
-    private val pageCache = MutableStateFlow<Map<Int, List<TopManga>>>(emptyMap())
+    private fun getCacheKey(filter: String, page: Int): String {
+        return "filter=$filter&page=$page"
+    }
 
-    // State untuk UI
-    private val _currentUiPage = MutableStateFlow(1)
-    private val _totalPages = MutableStateFlow(1)
-    val totalPages: StateFlow<Int> = _totalPages // Tetap gunakan totalPages dari API untuk PagingControls
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    fun getTopMangaData(
+        page: Int,
+        type: String,
+        filter: String,
+        limit: Int = 25,
+        forceRefreshing: Boolean = false
+    ) {
+        val cacheKeyManga = getCacheKey(filter, page)
 
-    // Ia akan mengambil data dari cache berdasarkan halaman UI saat ini
-    val topManga: StateFlow<List<TopManga>> = _currentUiPage
-        .combine(pageCache) { uiPage, cache ->
-            cache[uiPage] ?: emptyList() // Ambil list dari cache, atau list kosong
-        }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Lazily, emptyList())
+        if (forceRefreshing) {
+            mangaCache.remove(cacheKeyManga)
+        } else if (mangaCache.containsKey(cacheKeyManga)) {
+            _topMangaState.value = ResultWrapper.Success(mangaCache[cacheKeyManga]!!)
+            return
+        }
 
-    fun getMangaForUiPage(uiPage: Int, filter: String = currentFilter) {
+        /*if (mangaCache.containsKey(cacheKeyManga)) {
+            _topMangaState.value = ResultWrapper.Success(mangaCache[cacheKeyManga]!!)
+            return
+        }*/
+
         viewModelScope.launch {
-            // Jika filter berubah, reset semuanya
-            if (filter != currentFilter) {
-                resetData(filter)
-            }
+            _topMangaState.value = ResultWrapper.Loading()
 
-            _currentUiPage.value = uiPage // Set halaman UI yang aktif
-
-            // Jika halaman sudah ada di cache, tidak perlu fetch
-            if (pageCache.value.containsKey(uiPage)) {
-                return@launch
-            }
-
-            // Jika sudah ada proses fetch, jangan fetch lagi
-            if (isFetching) return@launch
-
-            _isLoading.value = true
-            isFetching = true
-            _error.value = null
-
-            val itemsForThisPage = mutableListOf<TopManga>()
-
-            // 1. Ambil item dari buffer (sisa fetch sebelumnya)
-            itemsForThisPage.addAll(itemBuffer)
-            itemBuffer.clear()
-
-            // 2. Terus fetch dari API sampai kita punya cukup item (25)
-            while (itemsForThisPage.size < uiPageSize) {
-                // Cek jika kita sudah mencapai akhir data API
-                if (currentApiPage > totalApiPages && totalApiPages > 1) {
-                    break // Berhenti, tidak ada data lagi
-                }
-
-                var fetchSuccess = false
-
-                // Ambil data dari repository
-                repository.getTopMangaList(
-                    type = "", // KOSONGKAN type agar dapat semua
-                    filter = currentFilter,
-                    page = currentApiPage,
-                    limit = 25 // Ambil 25 item (standar API) per fetch
-                ).collectLatest { result ->
-                    when (result) {
-                        is ResultWrapper.Success -> {
-                            val apiList = result.payload?.first ?: emptyList()
-                            _totalPages.value = result.payload?.second ?: 1
-                            totalApiPages = _totalPages.value // Simpan total halaman API
-
-                            // Hapus logika filter, langsung tambahkan semua item dari API
-                            itemsForThisPage.addAll(apiList) // Tambahkan ke daftar
-
-                            currentApiPage++ // Siapkan untuk fetch halaman API berikutnya
-                            fetchSuccess = true
-                        }
-                        is ResultWrapper.Error -> {
-                            _error.value = result.exception?.message ?: "Unknown error"
-                            isFetching = false
-                            _isLoading.value = false
-                            return@collectLatest // Hentikan loop jika error
-                        }
-                        is ResultWrapper.Loading -> { /* Biarkan loading */ }
-                        is ResultWrapper.Empty -> {
-                            totalApiPages = currentApiPage // Tandai sudah habis
-                            fetchSuccess = true // Anggap sukses (tapi kosong)
-                        }
-                        else -> {}
+            repository.getTopMangaList(type, filter, page, limit).collectLatest { result ->
+                when (result) {
+                is ResultWrapper.Loading -> {
+                    if (_topMangaState.value !is ResultWrapper.Loading) {
+                        _topMangaState.value = ResultWrapper.Loading()
                     }
                 }
 
-                // Jika fetch gagal atau sudah di akhir, hentikan loop
-                if (!fetchSuccess || (currentApiPage > totalApiPages && totalApiPages > 1)) {
-                    break
+                is ResultWrapper.Success, is ResultWrapper.Empty -> {
+                    var mangaList = result.payload?.first ?: emptyList()
+                    val totalPages = result.payload?.second ?: 1
+
+                    if (filter == "") {
+                        mangaList = mangaList.sortedWith(
+                            compareByDescending<TopManga> { it.score }
+                                .thenByDescending { it.members }
+                        )
+                    }
+
+                    val finalPair = Pair(mangaList, totalPages)
+
+                    mangaCache[cacheKeyManga] = finalPair
+
+                    if (mangaList.isEmpty() || result is ResultWrapper.Empty) {
+                        _topMangaState.value = ResultWrapper.Empty(finalPair)
+                    } else {
+                        _topMangaState.value = ResultWrapper.Success(finalPair)
+                    }
                 }
 
-                delay(1000L)
+                    is ResultWrapper.Error -> {
+                        _topMangaState.value = ResultWrapper.Error(result.exception)
+                }
+                    is ResultWrapper.Idle -> {}
+                }
+
             }
-
-            val itemsToProcess: List<TopManga>
-
-            when (currentFilter) {
-                "", "publishing", "upcoming" -> {
-                    val comparator = compareByDescending<TopManga> { it.score ?: 0.0 }
-                        .thenByDescending { it.members ?: 0 }
-                    itemsToProcess = itemsForThisPage.sortedWith(comparator)
-                }
-
-                "bypopularity" -> {
-                    val comparator = compareByDescending<TopManga> { it.members ?: 0 }
-                    itemsToProcess = itemsForThisPage.sortedWith(comparator)
-                }
-
-                else -> {
-                    itemsToProcess = itemsForThisPage
-                }
-            }
-            // Item yang akan ditampilkan di halaman ini (ambil dari list yang sudah diurutkan)
-            val itemsToShow = itemsToProcess.take(uiPageSize)
-
-            // Sisanya, simpan di buffer untuk halaman berikutnya (juga dari list yang sudah diurutkan)
-            itemBuffer.clear() // Hapus sisa buffer lama
-            itemBuffer.addAll(itemsToProcess.drop(uiPageSize)) // Tambahkan buffer baru
-
-            // 4. Simpan hasil ke cache
-            if (itemsToShow.isNotEmpty()) {
-                val newCache = pageCache.value.toMutableMap()
-                newCache[uiPage] = itemsToShow
-                pageCache.value = newCache
-            }
-
-            isFetching = false
-            _isLoading.value = false
         }
-    }
-
-    private fun resetData(newFilter: String) {
-        currentFilter = newFilter
-        currentApiPage = 1
-        totalApiPages = 1
-        itemBuffer.clear()
-        pageCache.value = emptyMap()
-        _error.value = null
-        _totalPages.value = 1
     }
 }

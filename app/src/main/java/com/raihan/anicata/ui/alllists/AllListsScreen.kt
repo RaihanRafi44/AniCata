@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.raihan.anicata.ui.paging.PaginationControls
+import com.raihan.anicata.utils.ResultWrapper
 import com.raihan.anicata.utils.rememberPaginationState
 import org.koin.androidx.compose.koinViewModel
 
@@ -33,9 +34,15 @@ fun AllListsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val totalPages = when (val state = uiState.mediaState) {
+        is ResultWrapper.Success -> state.payload?.second ?: 1
+        is ResultWrapper.Empty -> state.payload?.second ?: 1
+        else -> 1
+    }
+
     val paginationState = rememberPaginationState(
         //initialPage = 1,
-        totalPages = uiState.totalPages,
+        totalPages = totalPages,
         visiblePages = 3
     )
 
@@ -51,9 +58,6 @@ fun AllListsScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,109 +65,70 @@ fun AllListsScreen(
         ) {
             // Item 1: Filter
             AllListsFilterGroup(
-                // --- Kategori ---
-                selectedCategory = uiState.selectedCategory,
-                onCategoryChanged = viewModel::updateCategory, // Gunakan method reference
-                categoryOptions = uiState.categoryOptions,
-
-                // --- Sort ---
-                selectedSort = uiState.selectedSort,
+                uiState = uiState,
+                onCategoryChanged = viewModel::updateCategory,
                 onSortChanged = viewModel::updateSortFilter,
-                sortOptions = uiState.sortOptions,
-
-                // --- Tipe ---
-                selectedType = uiState.selectedType,
                 onTypeChanged = viewModel::updateTypeFilter,
-                typeOptions = uiState.typeOptions, // Sekarang dinamis
-
-                // --- Genre ---
-                selectedGenre = uiState.selectedGenre,
                 onGenreChanged = viewModel::updateGenreFilter,
-                genreOptions = uiState.genreList.map { it.name },
-
-                // --- Tema ---
-                selectedTheme = uiState.selectedTheme,
                 onThemeChanged = viewModel::updateThemeFilter,
-                themeOptions = uiState.themeList.map { it.name },
-
-                // --- Target ---
-                selectedTarget = uiState.selectedTarget,
                 onTargetChanged = viewModel::updateTargetFilter,
-                targetOptions = uiState.demographicList.map { it.name },
-
-                // Tombol Update
                 onUpdateFilterClicked = viewModel::applyFilters
             )
 
-            // 3. Tampilkan list HANYA JIKA tidak loading dan tidak error
-            if (!uiState.isLoading && !uiState.isError) {
-                MediaListLayout( // GANTI: AnimeListLayout -> MediaListLayout
-                    mediaList = uiState.mediaList, // GANTI: animeList -> mediaList
-                    onMediaClick = { mediaId ->
-                        // 3. INI LOGIKA PENTINGNYA:
-                        // Cek state dari ViewModel. Hanya navigasi jika
-                        // kategori yang dipilih adalah "Anime".
-                        if (uiState.selectedCategory == "Anime") {
-                            onAnimeClick(mediaId) // Panggil navigasi
-                        }
-                        // Jika kategori "Manga" atau "Novel",
-                        if (uiState.selectedCategory == "Manga") {
-                            onMangaClick(mediaId) // Panggil navigasi
-                        }
+            when (val state = uiState.mediaState) {
+                is ResultWrapper.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(300.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
-                )
-
-                if (paginationState.totalPages > 1) {
-                    PaginationControls(
-                        currentPage = paginationState.currentPage,
-                        startPage = paginationState.startPage,
-                        totalPages = paginationState.totalPages,
-                        onPageChange = { newPage ->
-                            paginationState.onPageChange(newPage)
-                            viewModel.fetchMediaPage(newPage) // GANTI: fetchAnimePage -> fetchMediaPage
-                        },
-                        visiblePages = paginationState.visiblePages
+                }
+                is ResultWrapper.Error -> {
+                    ErrorStateContent(
+                        errorMessage = state.exception?.message ?: "Failed load data",
+                        modifier = Modifier.padding(top = 32.dp)
                     )
                 }
-            }
+                is ResultWrapper.Empty -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(300.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No data",
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
+                    }
+                }
+                is ResultWrapper.Success -> {
+                    val mediaList = state.payload?.first ?: emptyList()
 
+                    MediaListLayout(
+                        mediaList = mediaList,
+                        onMediaClick = { mediaId ->
+                            if (uiState.selectedCategory == "Anime") onAnimeClick(mediaId)
+                            if (uiState.selectedCategory == "Manga") onMangaClick(mediaId)
+                        }
+                    )
+
+                    if (paginationState.totalPages > 1) {
+                        PaginationControls(
+                            currentPage = paginationState.currentPage,
+                            startPage = paginationState.startPage,
+                            totalPages = paginationState.totalPages,
+                            onPageChange = { newPage ->
+                                paginationState.onPageChange(newPage)
+                                viewModel.fetchMediaPage(newPage)
+                            },
+                            visiblePages = paginationState.visiblePages
+                        )
+                    }
+                }
+                is ResultWrapper.Idle -> {}
+            }
             Spacer(modifier = Modifier.height(80.dp))
         }
-
-        // 4. Overlay Layer (Status Loading, Error, dan Empty)
-        when {
-            // KASUS 1: LOADING (ISI KEMBALI)
-            uiState.isLoading -> {
-                /*Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 100.dp), // Beri padding agar tidak menutupi filter
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }*/
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center) // <-- Hapus Box dan padding
-                )
-            }
-            // KASUS 2: ERROR (ISI KEMBALI)
-            uiState.isError -> {
-                ErrorStateContent(
-                    errorMessage = uiState.errorMessage,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            // KASUS 3: EMPTY (ISI KEMBALI)
-            uiState.mediaList.isEmpty() && !uiState.isLoading && !uiState.isError -> {
-                Text(
-                    text = "Tidak ada data.",
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 32.dp)
-                )
-            }
-        }
     }
-}

@@ -30,11 +30,7 @@ private val allGenreOption = MediaGenre(id = 0, name = "All")
 
 // Data class untuk menampung seluruh state UI
 data class AllListsUiState(
-    val mediaList: List<MediaItem> = emptyList(),
-    val isLoading: Boolean = false, // Default false
-    val isError: Boolean = false,
-    val errorMessage: String = "",
-    val totalPages: Int = 1,
+    val mediaState: ResultWrapper<Pair<List<MediaItem>, Int>> = ResultWrapper.Idle(),
     val currentPage: Int = 1,
 
     // --- State KATEGORI ---
@@ -126,8 +122,6 @@ class AllListsViewModel(
                     genreList = listOf(allGenreOption) + existingCache.genres,
                     themeList = listOf(allGenreOption) + existingCache.themes,
                     demographicList = listOf(allGenreOption) + existingCache.demographics,
-                    isError = false,
-                    errorMessage = ""
                 )
             }
             return true // Sukses dari cache
@@ -157,7 +151,7 @@ class AllListsViewModel(
                 }
                 is ResultWrapper.Error -> {
                     success = false
-                    _uiState.update { it.copy(isError = true, errorMessage = result.exception?.message ?: "Gagal memuat genre") }
+                    _uiState.update { it.copy(mediaState = ResultWrapper.Error(result.exception ?: Exception("Gagal memuat genre"))) }
                 }
                 else -> {}
             }
@@ -176,8 +170,7 @@ class AllListsViewModel(
                 }
                 is ResultWrapper.Error -> {
                     success = false
-                    _uiState.update { it.copy(isError = true, errorMessage = result.exception?.message ?: "Gagal memuat tema") }
-                }
+                    _uiState.update { it.copy(mediaState = ResultWrapper.Error(result.exception ?: Exception("Gagal memuat tema"))) }                }
                 else -> {}
             }
         }
@@ -195,8 +188,7 @@ class AllListsViewModel(
                 }
                 is ResultWrapper.Error -> {
                     success = false
-                    _uiState.update { it.copy(isError = true, errorMessage = result.exception?.message ?: "Gagal memuat demografi") }
-                }
+                    _uiState.update { it.copy(mediaState = ResultWrapper.Error(result.exception ?: Exception("Gagal memuat demografi"))) }                }
                 else -> {}
             }
         }
@@ -239,7 +231,7 @@ class AllListsViewModel(
                 selectedTheme = "All",
                 selectedTarget = "All",
                 selectedSort = "Score",
-                isError = false, errorMessage = ""
+                mediaState = ResultWrapper.Idle()
             )
         }
 
@@ -260,8 +252,7 @@ class AllListsViewModel(
      * Fungsi publik untuk menerapkan filter (Tombol "Update Filter").
      */
     fun applyFilters() {
-        _uiState.update { it.copy(isLoading = true, isError = false, errorMessage = "") }
-
+        _uiState.update { it.copy(mediaState = ResultWrapper.Loading()) }
         viewModelScope.launch {
             val filterSuccess = fetchFiltersSequentially(_uiState.value.selectedCategory)
 
@@ -269,8 +260,7 @@ class AllListsViewModel(
                 applyFiltersInternal()
                 fetchMediaPageInternal(1)
             } else {
-                _uiState.update { it.copy(isLoading = false) }
-            }
+                _uiState.update { it.copy(mediaState = ResultWrapper.Error(Exception("Gagal memuat filter"))) }            }
         }
     }
 
@@ -306,7 +296,7 @@ class AllListsViewModel(
                 appliedThemeId = if (newThemeId == 0) null else newThemeId,
                 appliedTargetId = if (newTargetId == 0) null else newTargetId,
                 currentPage = 1,
-                mediaList = emptyList()
+                mediaState = ResultWrapper.Idle()
             )
         }
     }
@@ -315,10 +305,9 @@ class AllListsViewModel(
      * Fungsi publik untuk mengambil halaman media (Paging).
      */
     fun fetchMediaPage(page: Int) {
-        if (_uiState.value.isLoading && _uiState.value.currentPage == page && page != 1) return
-
+        if (_uiState.value.mediaState is ResultWrapper.Loading && _uiState.value.currentPage == page && page != 1) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, isError = false, errorMessage = "") }
+            _uiState.update { it.copy(mediaState = ResultWrapper.Loading()) }
             fetchMediaPageInternal(page)
         }
     }
@@ -336,11 +325,7 @@ class AllListsViewModel(
         if (mediaCache.containsKey(cacheKey)) {
             _uiState.update {
                 it.copy(
-                    isLoading = false,
-                    isError = false,
-                    errorMessage = "",
-                    mediaList = mediaCache[cacheKey]!!,
-                    totalPages = totalPagesCache[cacheKey] ?: 1,
+                    mediaState = ResultWrapper.Success(Pair(mediaCache[cacheKey]!!, totalPagesCache[cacheKey] ?: 1)),
                     currentPage = page
                 )
             }
@@ -348,7 +333,7 @@ class AllListsViewModel(
         }
 
         // --- 3b. JIKA CACHE MISS, LANJUTKAN FETCH DATA ---
-        _uiState.update { it.copy(isLoading = true, isError = false, errorMessage = "") }
+        _uiState.update { it.copy(mediaState = ResultWrapper.Loading())}
 
         val category = currentState.selectedCategory
         val currentOrderBy = currentState.appliedOrderBy
@@ -372,60 +357,31 @@ class AllListsViewModel(
         ).collect { result ->
             when (result) {
                 is ResultWrapper.Loading -> {
-                    if (!_uiState.value.isLoading) {
-                        _uiState.update { it.copy(isLoading = true) }
+                    if (_uiState.value.mediaState !is ResultWrapper.Loading) {
+                        _uiState.update { it.copy(mediaState = ResultWrapper.Loading()) }
                     }
                 }
-                is ResultWrapper.Success -> {
+                is ResultWrapper.Success, is ResultWrapper.Empty -> {
                     val payload = result.payload
-                    val newMediaList = payload?.first ?: emptyList()
+                    val fetchedList = payload?.first ?: emptyList()
                     val totalPages = payload?.second ?: 1
                     // --- 3c. SIMPAN KE CACHE SAAT SUKSES ---
-                    mediaCache[cacheKey] = newMediaList
+                    mediaCache[cacheKey] = fetchedList
                     totalPagesCache[cacheKey] = totalPages
+
+                    val finalState = ResultWrapper.Success(Pair(fetchedList, totalPages))
 
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
-                            mediaList = newMediaList,
-                            totalPages = totalPages,
-                            currentPage = page,
-                            isError = false, errorMessage = ""
+                            mediaState = finalState,
+                            currentPage = if (result is ResultWrapper.Empty) 1 else page
                         )
                     }
                 }
                 is ResultWrapper.Error -> _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        isError = true,
-                        errorMessage = result.exception?.message ?: "Gagal mengambil data",
-                        currentPage = page,
-                        mediaList = emptyList()
-                    )
-                }
-                is ResultWrapper.Empty -> {
-                    val payload = result.payload
-                    val currentList = payload?.first ?: emptyList()
-                    val currentPages = payload?.second ?: 1
-
-                    // --- 3d. SIMPAN KE CACHE SAAT EMPTY ---
-                    mediaCache[cacheKey] = currentList
-                    totalPagesCache[cacheKey] = currentPages
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            mediaList = currentList,
-                            totalPages = currentPages,
-                            currentPage = 1,
-                            isError = false, errorMessage = ""
-                        )
-                    }
+                    it.copy(mediaState = ResultWrapper.Error(result.exception), currentPage = page)
                 }
                 is ResultWrapper.Idle -> {
-                    if (_uiState.value.isLoading) {
-                        _uiState.update { it.copy(isLoading = false) }
-                    }
                 }
             }
         }

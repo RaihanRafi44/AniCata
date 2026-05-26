@@ -18,7 +18,12 @@ class AnimeSeasonNowRepositoryImpl(private val dataSource: SeasonNowDataSource) 
         continuing: Boolean
     ): Flow<ResultWrapper<List<SeasonAnimeNow>>> {
         return proceedFlow {
-            dataSource.getSeasonNowList(filter, continuing).data.toSeasonNowAnimeList()
+            //dataSource.getSeasonNowList(filter, continuing).data.toSeasonNowAnimeList()
+            val responseList = dataSource.getSeasonNowList(filter, continuing).data.toSeasonNowAnimeList()
+
+            responseList
+                .sortedByDescending { it.members }
+                .take(10)
         }
     }
 }

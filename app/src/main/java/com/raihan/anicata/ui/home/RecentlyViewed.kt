@@ -63,10 +63,6 @@ fun RecentlyViewedSection(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 20.sp
             )
-            /*Icon(
-                imageVector = Icons.Default.ArrowForward,
-                contentDescription = "View All"
-            )*/
         }
 
         Spacer(modifier = Modifier.height(8.dp))

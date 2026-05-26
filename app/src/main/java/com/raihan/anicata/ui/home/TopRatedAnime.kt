@@ -40,19 +40,18 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.raihan.anicata.data.model.anime.top.TopAnime
+import com.raihan.anicata.utils.ResultWrapper
 import java.util.Locale
 
 @Composable
 fun TopRatedSection(
     modifier: Modifier = Modifier,
-    animeList: List<TopAnime>,
-    isLoading: Boolean,
-    error: String?,
+    state: ResultWrapper<List<TopAnime>>,
     onViewAllClick: () -> Unit,
     onAnimeClick: (Int) -> Unit
 ) {
     Column(modifier = modifier) {
-        // Baris untuk judul "Top Rated Anime" dan ikon panah
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,68 +77,54 @@ fun TopRatedSection(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Handle Loading, Error, dan Data
-        when {
-            // 1. Tampilkan loading
-            isLoading -> {
+        when (state) {
+            is ResultWrapper.Loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp), // Sama tingginya dengan card
+                    modifier = Modifier.fillMaxWidth().height(230.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
             }
-
-            // 2. Tampilkan error
-            error != null -> {
+            is ResultWrapper.Error -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp) // Sama tingginya dengan card
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(230.dp).padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Gagal memuat: $error",
+                        text = "Failed to load data. Please try again later.",
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
                 }
             }
-
-            // 3. Tampilkan data jika berhasil dan tidak kosong
-            animeList.isNotEmpty() -> {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp) // Jarak antar item
-                ) {
-                    items(animeList) { anime ->
-                        AnimeTopRatedCard(
-                            anime = anime,
-                            onAnimeClick = onAnimeClick // <-- Teruskan navigasi klik
-                        )
-                    }
-                }
-            }
-
-            // 4. Handle jika data kosong (tapi tidak error)
-            else -> {
+            is ResultWrapper.Empty -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp) // Sama tingginya dengan card
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(230.dp).padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Tidak ada data.",
-                        color = Color.Gray,
+                        text = "No available data",
+                        color = Color.DarkGray,
                         textAlign = TextAlign.Center
                     )
                 }
             }
+            is ResultWrapper.Success -> {
+                val animeList = state.payload ?: emptyList()
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(animeList) { anime ->
+                        AnimeTopRatedCard(
+                            anime = anime,
+                            onAnimeClick = onAnimeClick
+                        )
+                    }
+                }
+            }
+            else -> {}
         }
     }
 }
@@ -152,10 +137,10 @@ fun AnimeTopRatedCard(
 ) {
     Column(
         modifier = modifier
-            .width(130.dp) // Lebar setiap kartu
-            .height(230.dp) // TINGGI TETAP untuk setiap kartu
+            .width(130.dp)
+            .height(230.dp)
             //.clip(RoundedCornerShape(8.dp))
-            .clickable { onAnimeClick(anime.id) } // <-- NAVIGASI DETAIL
+            .clickable { onAnimeClick(anime.id) }
     ) {
         Box(
             modifier = Modifier
@@ -176,7 +161,6 @@ fun AnimeTopRatedCard(
                     .background(Color.DarkGray)
             )
 
-            // Badge Tipe (TV, ONA, Movie)
             anime.type?.let {
                 Text(
                     text = it,
@@ -191,7 +175,6 @@ fun AnimeTopRatedCard(
                 )
             }
 
-            // Badge Skor
             anime.score?.let { score ->
                 Row(
                     modifier = Modifier
@@ -223,7 +206,6 @@ fun AnimeTopRatedCard(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Judul anime di bawah gambar
         Text(
             text = anime.title,
             style = MaterialTheme.typography.bodyMedium,

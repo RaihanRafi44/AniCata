@@ -26,6 +26,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +44,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -50,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import coil.compose.AsyncImage
 import com.raihan.anicata.R
+import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -58,18 +62,19 @@ import kotlin.math.abs
 import kotlin.math.absoluteValue
 
 data class BannerData(
-    val id: Int, // <-- Tambahkan ID
-    val imageUrl: String?, // <-- Hapus nullable
+    val id: Int,
+    val imageUrl: String?,
     val title: String,
-    val genres: String, // <-- Ubah dari 'genre'
+    val genres: String,
     val synopsis: String,
-    val type: String // <-- Tambahkan Tipe (TV, Movie, dll)
+    val type: String
 )
 
 @Composable
 fun BannerSlider(
     // --- 2. UBAH PARAMETER ---
-    banners: List<BannerData>,
+    //banners: List<BannerData>,
+    state: ResultWrapper<List<BannerData>>,
     onBannerClick: (Int) -> Unit // <-- Ubah ke (Int)
 ) {
     // --- 3. HAPUS DUMMY DATA (val banners = ...) ---
@@ -90,7 +95,7 @@ fun BannerSlider(
                 .padding(bottom = 12.dp)
         )
 
-        // --- 4. TAMBAHKAN SAFETY CHECK ---
+        /*// --- 4. TAMBAHKAN SAFETY CHECK ---
         // Ini PENTING agar pager "tak terbatas" Anda tidak crash jika list kosong
         if (banners.isEmpty()) {
             // Tampilkan placeholder atau biarkan kosong
@@ -105,22 +110,76 @@ fun BannerSlider(
             initialPage = initialPage,
             pageCount = { Int.MAX_VALUE }
         )
-        val coroutineScope = rememberCoroutineScope()
+        val coroutineScope = rememberCoroutineScope()*/
 
-        // --- AUTO-SCROLL (Tidak Berubah) ---
-        LaunchedEffect(Unit) {
-            while (true) {
-                snapshotFlow { pagerState.isScrollInProgress }
-                    .filter { !it }
-                    .first()
-                delay(3000L)
-                if (!pagerState.isScrollInProgress) {
-                    val currentPage = pagerState.currentPage
-                    val nextPage = currentPage + 1
-                    pagerState.animateScrollToPage(nextPage)
+        when (state) {
+            is ResultWrapper.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(280.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
-        }
+            is ResultWrapper.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(280.dp).padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Failed to load banner. Please try again later.",
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            is ResultWrapper.Empty -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(280.dp).padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No trending anime right now.",
+                        color = Color.DarkGray,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            is ResultWrapper.Success -> {
+                val banners = state.payload ?: emptyList()
+
+                if (banners.isEmpty()) {
+                    Spacer(modifier = Modifier.height(280.dp))
+                    return
+                }
+
+                val pageCount = banners.size
+                val initialPage = Int.MAX_VALUE / 2
+                val pagerState = rememberPagerState(
+                    initialPage = initialPage,
+                    pageCount = { Int.MAX_VALUE }
+                )
+                val coroutineScope = rememberCoroutineScope()
+
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        snapshotFlow { pagerState.isScrollInProgress }
+                            .filter { !it }
+                            .first()
+                        delay(3000L)
+                        if (!pagerState.isScrollInProgress) {
+                            val currentPage = pagerState.currentPage
+                            val nextPage = currentPage + 1
+                            pagerState.animateScrollToPage(nextPage)
+                        }
+                    }
+                }
+
+
+
+        // --- AUTO-SCROLL (Tidak Berubah) ---
+
 
         HorizontalPager(
             state = pagerState,
@@ -153,14 +212,13 @@ fun BannerSlider(
                         scaleY = scale
                         this.alpha = alpha
                     }
-                    // --- 5. PERBARUI CLICKABLE ---
+
                     .clickable { onBannerClick(banners[pageIndex].id) }
             )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // --- INDIKATOR (Tidak Berubah, sudah dinamis) ---
         BannerIndicator(
             pageCount = pageCount,
             currentPage = (pagerState.currentPage - initialPage).mod(pageCount).let { if (it < 0) it + pageCount else it },
@@ -170,6 +228,9 @@ fun BannerSlider(
                 coroutineScope.launch { pagerState.animateScrollToPage(targetPage) }
             }
         )
+    }
+            else -> {}
+}
     }
 }
 
@@ -185,9 +246,9 @@ fun BannerItem(banner: BannerData, modifier: Modifier = Modifier) {
                 shape = RoundedCornerShape(10.dp)
             )
     ) {
-        // --- 6. HANYA GUNAKAN AsyncImage ---
+
         AsyncImage(
-            model = banner.imageUrl, // <-- Gunakan data
+            model = banner.imageUrl,
             contentDescription = banner.title,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -217,9 +278,9 @@ fun BannerItem(banner: BannerData, modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.Start
             ) {
-                // --- 7. GUNAKAN DATA DINAMIS ---
+
                 Text(
-                    text = banner.type.uppercase(), // <-- Gunakan type
+                    text = banner.type.uppercase(),
                     color = Color.Black,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
@@ -229,7 +290,7 @@ fun BannerItem(banner: BannerData, modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = banner.title, // <-- Gunakan title
+                    text = banner.title,
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
@@ -239,7 +300,7 @@ fun BannerItem(banner: BannerData, modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Genres : ${banner.genres}", // <-- Gunakan genres
+                    text = "Genres : ${banner.genres}",
                     color = Color.White,
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
@@ -262,7 +323,6 @@ fun BannerItem(banner: BannerData, modifier: Modifier = Modifier) {
     }
 }
 
-// Composable BannerIndicator tidak perlu diubah
 @Composable
 fun BannerIndicator(
     pageCount: Int,

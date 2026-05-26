@@ -21,32 +21,14 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun AllListsFilterGroup(
-    // --- Parameter Kategori ---
-    selectedCategory: String,
+    uiState: AllListsUiState, // <-- Hanya satu baris ini menggantikan belasan variabel!
     onCategoryChanged: (String) -> Unit,
-    categoryOptions: List<String>,
-
-    // --- Parameter Sort ---
-    selectedSort: String,
     onSortChanged: (String) -> Unit,
-    sortOptions: List<String>,
-
-    // --- Parameter Tipe ---
-    selectedType: String,
     onTypeChanged: (String) -> Unit,
-    typeOptions: List<String>,
-
-    // --- Parameter Genre, Tema, Target ---
-    onUpdateFilterClicked: () -> Unit,
-    selectedGenre: String,
     onGenreChanged: (String) -> Unit,
-    genreOptions: List<String>,
-    selectedTheme: String,
     onThemeChanged: (String) -> Unit,
-    themeOptions: List<String>,
-    selectedTarget: String,
     onTargetChanged: (String) -> Unit,
-    targetOptions: List<String>
+    onUpdateFilterClicked: () -> Unit
 ) {
     val buttonColor = Color(0xFF00BFFF)
     val dividerColor = Color.Gray.copy(alpha = 0.5f)
@@ -73,16 +55,16 @@ fun AllListsFilterGroup(
             ) {
                 FilterDropdownMenu(
                     label = "Category",
-                    options = categoryOptions, // Diambil dari ViewModel
-                    selectedValue = selectedCategory, // Diambil dari ViewModel
+                    options = uiState.categoryOptions, // Diambil dari ViewModel
+                    selectedValue = uiState.selectedCategory, // Diambil dari ViewModel
                     onSelectionChanged = onCategoryChanged, // Panggil lambda ViewModel
                     modifier = Modifier.weight(1f)
                 )
 
                 FilterDropdownMenu(
                     label = "Genre",
-                    options = genreOptions,
-                    selectedValue = selectedGenre,
+                    options = uiState.genreList.map { it.name },
+                    selectedValue = uiState.selectedGenre,
                     onSelectionChanged = onGenreChanged,
                     modifier = Modifier.weight(1f)
                 )
@@ -97,16 +79,16 @@ fun AllListsFilterGroup(
             ) {
                 FilterDropdownMenu(
                     label = "Sort by",
-                    options = sortOptions, // Diambil dari ViewModel
-                    selectedValue = selectedSort,
+                    options = uiState.sortOptions, // Diambil dari ViewModel
+                    selectedValue = uiState.selectedSort,
                     onSelectionChanged = onSortChanged,
                     modifier = Modifier.weight(1f)
                 )
 
                 FilterDropdownMenu(
                     label = "Type",
-                    options = typeOptions, // Diambil dari ViewModel (sudah dinamis)
-                    selectedValue = selectedType,
+                    options = uiState.typeOptions, // Diambil dari ViewModel (sudah dinamis)
+                    selectedValue = uiState.selectedType,
                     onSelectionChanged = onTypeChanged,
                     modifier = Modifier.weight(1f)
                 )
@@ -121,16 +103,16 @@ fun AllListsFilterGroup(
             ) {
                 FilterDropdownMenu(
                     label = "Target",
-                    options = targetOptions,
-                    selectedValue = selectedTarget,
+                    options = uiState.demographicList.map { it.name },
+                    selectedValue = uiState.selectedTarget,
                     onSelectionChanged = onTargetChanged,
                     modifier = Modifier.weight(1f)
                 )
 
                 FilterDropdownMenu(
                     label = "Themes",
-                    options = themeOptions,
-                    selectedValue = selectedTheme,
+                    options = uiState.themeList.map { it.name },
+                    selectedValue = uiState.selectedTheme,
                     onSelectionChanged = onThemeChanged,
                     modifier = Modifier.weight(1f)
                 )
