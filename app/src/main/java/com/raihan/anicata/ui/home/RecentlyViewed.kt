@@ -69,9 +69,7 @@ fun RecentlyViewedSection(
 
         when (state) {
             is ResultWrapper.Loading -> {
-                Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                HomeSectionShimmer()
             }
             is ResultWrapper.Error -> {
                 Text(

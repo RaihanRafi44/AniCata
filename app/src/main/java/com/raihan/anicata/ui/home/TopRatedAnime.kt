@@ -79,12 +79,7 @@ fun TopRatedSection(
 
         when (state) {
             is ResultWrapper.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(230.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                HomeSectionShimmer()
             }
             is ResultWrapper.Error -> {
                 Box(
