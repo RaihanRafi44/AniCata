@@ -114,12 +114,7 @@ fun BannerSlider(
 
         when (state) {
             is ResultWrapper.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(280.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                BannerShimmer()
             }
             is ResultWrapper.Error -> {
                 Box(

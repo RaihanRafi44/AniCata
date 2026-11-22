@@ -1,17 +1,14 @@
 package com.raihan.anicata.ui.top.anime
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -49,16 +46,32 @@ fun TopAnimeScreen(
     var selectedFilter by rememberSaveable { mutableStateOf("") }
     var currentPage by rememberSaveable { mutableIntStateOf(1) }
 
-    val totalPages = when (val state = topAnimeState) {
-        is ResultWrapper.Success -> state.payload?.second ?: 1
-        is ResultWrapper.Empty -> state.payload?.second ?: 1
-        else -> 1
+    var totalPages by rememberSaveable { mutableIntStateOf(1) }
+
+    LaunchedEffect(topAnimeState) {
+        when (val state = topAnimeState) {
+            is ResultWrapper.Success -> totalPages = state.payload?.second ?: totalPages
+            is ResultWrapper.Empty -> totalPages = state.payload?.second ?: totalPages
+            else -> {}
+        }
     }
 
     val paginationState = rememberPaginationState(
         totalPages = totalPages,
         visiblePages = 3
     )
+
+    val listState = rememberLazyListState()
+    var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(topAnimeState) {
+        if (topAnimeState is ResultWrapper.Loading) {
+            isNewPageLoading = true
+        } else if (topAnimeState is ResultWrapper.Success && isNewPageLoading) {
+            isNewPageLoading = false
+            listState.scrollToItem(0, 0)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.getTopAnimeData(
@@ -69,7 +82,7 @@ fun TopAnimeScreen(
         )
     }
 
-    var isRefreshing by remember { mutableStateOf(false)}
+    var isRefreshing by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullToRefreshState()
 
     LaunchedEffect(topAnimeState) {
@@ -79,7 +92,6 @@ fun TopAnimeScreen(
         }
     }
 
-    //Box(modifier = Modifier.fillMaxSize()) {
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = {
@@ -104,46 +116,45 @@ fun TopAnimeScreen(
             )
         }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            item(key = "filter_header") {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            FilterTopAnime(
-                selectedFilterApiValue = selectedFilter,
-                onFilterSelected = { newApiValue ->
-                    selectedFilter = newApiValue
-                    paginationState.onPageChange(1)
-                    viewModel.getTopAnimeData(
-                        page = 1,
-                        type = "",
-                        filter = newApiValue,
-                        limit = 25
-                    )
-                }
-            )
-
-            Crossfade(
-                targetState = topAnimeState,
-                animationSpec = tween(durationMillis = 400),
-                label = "StateTransition"
-            ) { animatedState ->
-
-                when (animatedState) {
-                    is ResultWrapper.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(300.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                FilterTopAnime(
+                    selectedFilterApiValue = selectedFilter,
+                    onFilterSelected = { newApiValue ->
+                        selectedFilter = newApiValue
+                        paginationState.onPageChange(1)
+                        viewModel.getTopAnimeData(
+                            page = 1,
+                            type = "",
+                            filter = newApiValue,
+                            limit = 25
+                        )
                     }
+                )
 
-                    is ResultWrapper.Error -> {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            when (val animatedState = topAnimeState) {
+                is ResultWrapper.Loading, is ResultWrapper.Idle -> {
+                    item(key = "shimmer_loading") {
+                        TopAnimeShimmerLoading()
+                    }
+                }
+
+                is ResultWrapper.Error -> {
+                    item(key = "error_state") {
                         Box(
-                            modifier = Modifier.fillMaxWidth().height(300.dp).padding(32.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                                .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -154,10 +165,15 @@ fun TopAnimeScreen(
                             )
                         }
                     }
+                }
 
-                    is ResultWrapper.Empty -> {
+                is ResultWrapper.Empty -> {
+                    item(key = "empty_state") {
                         Box(
-                            modifier = Modifier.fillMaxWidth().height(300.dp).padding(32.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                                .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -167,48 +183,52 @@ fun TopAnimeScreen(
                             )
                         }
                     }
+                }
 
-                    is ResultWrapper.Success -> {
-                        val animeList = animatedState.payload?.first ?: emptyList()
+                is ResultWrapper.Success -> {
+                    val animeList = animatedState.payload?.first ?: emptyList()
+                    val pageSize = 25
+                    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
 
-                        Column {
-
-                            AnimeListTopLayout(
-                                animeList = animeList,
-                                currentPage = paginationState.currentPage,
-                                pageSize = 25,
-                                modifier = Modifier,
-                                onAnimeClick = onAnimeClick
+                    items(
+                        count = animeList.size,
+                        key = { index -> animeList[index].id }
+                    ) { index ->
+                        val anime = animeList[index]
+                        val rankedAnime = remember(anime, offset, index) {
+                            anime.copy(rank = offset + index + 1)
+                        }
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            AnimeCard(
+                                item = rankedAnime,
+                                onCLick = { onAnimeClick(rankedAnime.id) }
                             )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            if (paginationState.totalPages > 1) {
-                                PaginationControls(
-                                    currentPage = paginationState.currentPage,
-                                    startPage = paginationState.startPage,
-                                    totalPages = paginationState.totalPages,
-                                    visiblePages = paginationState.visiblePages,
-                                    onPageChange = { newPage ->
-                                        currentPage = newPage
-                                        paginationState.onPageChange(newPage)
-                                        viewModel.getTopAnimeData(
-                                            page = newPage,
-                                            type = "",
-                                            filter = selectedFilter,
-                                            limit = 25
-                                        )
-                                    }
-                                )
-                            }
                         }
                     }
 
-                    else -> {}
+                    if (paginationState.totalPages > 1) {
+                        item(key = "pagination_controls") {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            PaginationControls(
+                                currentPage = paginationState.currentPage,
+                                startPage = paginationState.startPage,
+                                totalPages = paginationState.totalPages,
+                                visiblePages = paginationState.visiblePages,
+                                onPageChange = { newPage ->
+                                    currentPage = newPage
+                                    paginationState.onPageChange(newPage)
+                                    viewModel.getTopAnimeData(
+                                        page = newPage,
+                                        type = "",
+                                        filter = selectedFilter,
+                                        limit = 25
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }

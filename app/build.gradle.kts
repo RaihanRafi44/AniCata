@@ -51,14 +51,14 @@ android {
             buildConfigField(
                 type = "String",
                 name = "BASE_URL",
-                value = "\"https://api.jikan.moe/v4/\""
+                value = "\"https://api.tenrai.org/v1/\""
             )
         }
         create("integration") {
             buildConfigField(
                 type = "String",
                 name = "BASE_URL",
-                value = "\"https://api.jikan.moe/v4/\""
+                value = "\"https://api.tenrai.org/v1/\""
             )
         }
     }

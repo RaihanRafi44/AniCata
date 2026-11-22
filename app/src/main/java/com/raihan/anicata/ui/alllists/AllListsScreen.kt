@@ -1,25 +1,28 @@
 package com.raihan.anicata.ui.alllists
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.raihan.anicata.ui.paging.PaginationControls
 import com.raihan.anicata.utils.ResultWrapper
@@ -34,21 +37,36 @@ fun AllListsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    val totalPages = when (val state = uiState.mediaState) {
-        is ResultWrapper.Success -> state.payload?.second ?: 1
-        is ResultWrapper.Empty -> state.payload?.second ?: 1
-        else -> 1
+    var totalPages by rememberSaveable { mutableIntStateOf(1) }
+
+    LaunchedEffect(uiState.mediaState) {
+        when (val state = uiState.mediaState) {
+            is ResultWrapper.Success -> totalPages = state.payload?.second ?: totalPages
+            is ResultWrapper.Empty -> totalPages = state.payload?.second ?: totalPages
+            else -> {}
+        }
     }
 
     val paginationState = rememberPaginationState(
-        //initialPage = 1,
         totalPages = totalPages,
         visiblePages = 3
     )
 
+    val listState = rememberLazyListState()
+    var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.mediaState) {
+        if (uiState.mediaState is ResultWrapper.Loading) {
+            isNewPageLoading = true
+        } else if (uiState.mediaState is ResultWrapper.Success && isNewPageLoading) {
+            isNewPageLoading = false
+            listState.scrollToItem(0, 0)
+        }
+    }
+
     LaunchedEffect(paginationState.currentPage) {
         if (paginationState.currentPage != uiState.currentPage && uiState.currentPage != 1) {
-            viewModel.fetchMediaPage(paginationState.currentPage) // GANTI: fetchAnimePage -> fetchMediaPage
+            viewModel.fetchMediaPage(paginationState.currentPage)
         }
     }
 
@@ -58,12 +76,12 @@ fun AllListsScreen(
         }
     }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Item 1: Filter
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 80.dp)
+    ) {
+        item(key = "filter_header") {
             AllListsFilterGroup(
                 uiState = uiState,
                 onCategoryChanged = viewModel::updateCategory,
@@ -74,25 +92,31 @@ fun AllListsScreen(
                 onTargetChanged = viewModel::updateTargetFilter,
                 onUpdateFilterClicked = viewModel::applyFilters
             )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
-            when (val state = uiState.mediaState) {
-                is ResultWrapper.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().height(300.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+        when (val state = uiState.mediaState) {
+            is ResultWrapper.Loading, is ResultWrapper.Idle -> {
+                item(key = "shimmer_loading") {
+                    AllListsShimmerLoading()
                 }
-                is ResultWrapper.Error -> {
+            }
+
+            is ResultWrapper.Error -> {
+                item(key = "error_state") {
                     ErrorStateContent(
                         errorMessage = state.exception?.message ?: "Failed load data",
                         modifier = Modifier.padding(top = 32.dp)
                     )
                 }
-                is ResultWrapper.Empty -> {
+            }
+
+            is ResultWrapper.Empty -> {
+                item(key = "empty_state") {
                     Box(
-                        modifier = Modifier.fillMaxWidth().height(300.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -103,18 +127,30 @@ fun AllListsScreen(
                         )
                     }
                 }
-                is ResultWrapper.Success -> {
-                    val mediaList = state.payload?.first ?: emptyList()
+            }
 
-                    MediaListLayout(
-                        mediaList = mediaList,
-                        onMediaClick = { mediaId ->
-                            if (uiState.selectedCategory == "Anime") onAnimeClick(mediaId)
-                            if (uiState.selectedCategory == "Manga") onMangaClick(mediaId)
-                        }
-                    )
+            is ResultWrapper.Success -> {
+                val mediaList = state.payload?.first ?: emptyList()
 
-                    if (paginationState.totalPages > 1) {
+                items(
+                    count = mediaList.size,
+                    key = { index -> mediaList[index].id }
+                ) { index ->
+                    val media = mediaList[index]
+                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        MediaItemCard(
+                            item = media,
+                            onClick = {
+                                if (uiState.selectedCategory == "Anime") onAnimeClick(media.id)
+                                if (uiState.selectedCategory == "Manga") onMangaClick(media.id)
+                            }
+                        )
+                    }
+                }
+
+                if (paginationState.totalPages > 1) {
+                    item(key = "pagination_controls") {
+                        Spacer(modifier = Modifier.height(16.dp))
                         PaginationControls(
                             currentPage = paginationState.currentPage,
                             startPage = paginationState.startPage,
@@ -127,8 +163,7 @@ fun AllListsScreen(
                         )
                     }
                 }
-                is ResultWrapper.Idle -> {}
             }
-            Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}

@@ -1,17 +1,14 @@
 package com.raihan.anicata.ui.top.manga
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -49,16 +46,32 @@ fun TopMangaScreen(
     var selectedFilter by rememberSaveable { mutableStateOf("") }
     var currentPage by rememberSaveable { mutableIntStateOf(1) }
 
-    val totalPages = when (val state = topMangaState) {
-        is ResultWrapper.Success -> state.payload?.second ?: 1
-        is ResultWrapper.Empty -> state.payload?.second ?: 1
-        else -> 1
+    var totalPages by rememberSaveable { mutableIntStateOf(1) }
+
+    LaunchedEffect(topMangaState) {
+        when (val state = topMangaState) {
+            is ResultWrapper.Success -> totalPages = state.payload?.second ?: totalPages
+            is ResultWrapper.Empty -> totalPages = state.payload?.second ?: totalPages
+            else -> {}
+        }
     }
 
     val paginationState = rememberPaginationState(
         totalPages = totalPages,
         visiblePages = 3
     )
+
+    val listState = rememberLazyListState()
+    var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(topMangaState) {
+        if (topMangaState is ResultWrapper.Loading) {
+            isNewPageLoading = true
+        } else if (topMangaState is ResultWrapper.Success && isNewPageLoading) {
+            isNewPageLoading = false
+            listState.scrollToItem(0, 0)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.getTopMangaData(
@@ -69,10 +82,9 @@ fun TopMangaScreen(
         )
     }
 
-    var isRefreshingManga by remember { mutableStateOf(false)}
+    var isRefreshingManga by remember { mutableStateOf(false) }
     val pullRefreshStateManga = rememberPullToRefreshState()
 
-    // Deactivate refresh indicator if data finish loaded
     LaunchedEffect(topMangaState) {
         if (topMangaState !is ResultWrapper.Loading) {
             delay(250)
@@ -80,8 +92,6 @@ fun TopMangaScreen(
         }
     }
 
-
-        //Box(modifier = Modifier.fillMaxSize()) {
     PullToRefreshBox(
         isRefreshing = isRefreshingManga,
         onRefresh = {
@@ -106,11 +116,12 @@ fun TopMangaScreen(
             )
         }
     ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 80.dp)
+        ) {
+            item(key = "filter_header") {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 FilterTopManga(
@@ -127,25 +138,23 @@ fun TopMangaScreen(
                     }
                 )
 
-                Crossfade(
-                    targetState = topMangaState,
-                    animationSpec = tween(durationMillis = 400),
-                    label = "StateTransitionTopManga"
-                ) { animatedStateTopManga ->
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
-                when (animatedStateTopManga) {
-                    is ResultWrapper.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(300.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+            when (val animatedStateTopManga = topMangaState) {
+                is ResultWrapper.Loading, is ResultWrapper.Idle -> {
+                    item(key = "shimmer_loading") {
+                        TopMangaShimmerLoading()
                     }
+                }
 
-                    is ResultWrapper.Error -> {
+                is ResultWrapper.Error -> {
+                    item(key = "error_state") {
                         Box(
-                            modifier = Modifier.fillMaxWidth().height(300.dp).padding(32.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                                .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -156,48 +165,71 @@ fun TopMangaScreen(
                             )
                         }
                     }
+                }
 
-                    is ResultWrapper.Success -> {
-                        val mangaList = animatedStateTopManga.payload?.first ?: emptyList()
-
-                        Column {
-                            MangaListTopLayout(
-                                mangaList = mangaList,
-                                currentPage = paginationState.currentPage,
-                                pageSize = 25,
-                                modifier = Modifier,
-                                onMangaClick = onMangaClick
+                is ResultWrapper.Empty -> {
+                    item(key = "empty_state") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No data",
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
                             )
+                        }
+                    }
+                }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                is ResultWrapper.Success -> {
+                    val mangaList = animatedStateTopManga.payload?.first ?: emptyList()
+                    val pageSize = 25
+                    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
 
-                            if (paginationState.totalPages > 1) {
-                                PaginationControls(
-                                    currentPage = paginationState.currentPage,
-                                    startPage = paginationState.startPage,
-                                    totalPages = paginationState.totalPages,
-                                    visiblePages = paginationState.visiblePages,
-                                    onPageChange = { newPage ->
-                                        currentPage = newPage
-                                        paginationState.onPageChange(newPage)
-                                        viewModel.getTopMangaData(
-                                            page = newPage,
-                                            type = "",
-                                            filter = selectedFilter,
-                                            limit = 25
-                                        )
-                                    }
-                                )
-                            }
+                    items(
+                        count = mangaList.size,
+                        key = { index -> mangaList[index].id }
+                    ) { index ->
+                        val manga = mangaList[index]
+                        val rankedManga = remember(manga, offset, index) {
+                            manga.copy(rank = offset + index + 1)
+                        }
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            MangaCard(
+                                item = rankedManga,
+                                onClick = { onMangaClick(rankedManga.id) }
+                            )
                         }
                     }
 
-                    else -> {}
-
+                    if (paginationState.totalPages > 1) {
+                        item(key = "pagination_controls") {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            PaginationControls(
+                                currentPage = paginationState.currentPage,
+                                startPage = paginationState.startPage,
+                                totalPages = paginationState.totalPages,
+                                visiblePages = paginationState.visiblePages,
+                                onPageChange = { newPage ->
+                                    currentPage = newPage
+                                    paginationState.onPageChange(newPage)
+                                    viewModel.getTopMangaData(
+                                        page = newPage,
+                                        type = "",
+                                        filter = selectedFilter,
+                                        limit = 25
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(80.dp))
             }
         }
+    }
 }
 

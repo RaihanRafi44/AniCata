@@ -1,12 +1,13 @@
 package com.raihan.anicata.data.repository.manga
 
 import com.raihan.anicata.data.datasource.manga.TopMangaDataSource
-import com.raihan.anicata.data.mapper.anime.toTopAnimeList
 import com.raihan.anicata.data.mapper.manga.toTopMangaList
 import com.raihan.anicata.data.model.manga.top.TopManga
 import com.raihan.anicata.utils.ResultWrapper
 import com.raihan.anicata.utils.proceedFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 
 interface MangaTopRepository {
     fun getTopMangaList(
@@ -35,6 +36,6 @@ class MangaTopRepositoryImpl(private val dataSource: TopMangaDataSource) : Manga
             val mangaList = response.data.toTopMangaList()
             val totalPages = response.pagination?.lastVisiblePage
             Pair(mangaList, totalPages)
-        }
+        }.flowOn(Dispatchers.IO)
     }
 }
