@@ -5,16 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.raihan.anicata.data.model.anime.top.TopAnime
 import com.raihan.anicata.data.repository.anime.AnimeTopRepository
 import com.raihan.anicata.utils.ResultWrapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class TopAnimeViewModel(private val repository: AnimeTopRepository) : ViewModel() {
 
     private val _topAnimeState = MutableStateFlow<ResultWrapper<Pair<List<TopAnime>, Int>>>(
-        ResultWrapper.Idle())
+        ResultWrapper.Loading()
+    )
     val topAnimeState: StateFlow<ResultWrapper<Pair<List<TopAnime>, Int>>> = _topAnimeState
 
     private val animeCache = mutableMapOf<String, Pair<List<TopAnime>, Int>>()
@@ -33,18 +35,13 @@ class TopAnimeViewModel(private val repository: AnimeTopRepository) : ViewModel(
         val cacheKey = getCacheKey(filter, page)
 
         if (forceRefresh) {
-            animeCache.remove(cacheKey)
+            animeCache.clear()
         } else if (animeCache.containsKey(cacheKey)) {
             _topAnimeState.value = ResultWrapper.Success(animeCache[cacheKey]!!)
             return
         }
 
-        /*if (animeCache.containsKey(cacheKey)) {
-            _topAnimeState.value = ResultWrapper.Success(animeCache[cacheKey]!!)
-            return
-        }*/
-
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _topAnimeState.value = ResultWrapper.Loading()
 
             repository.getTopAnimeList(type, filter, page, limit).collectLatest { result ->
@@ -60,10 +57,12 @@ class TopAnimeViewModel(private val repository: AnimeTopRepository) : ViewModel(
                         val totalPages = result.payload?.second ?: 1
 
                         if (filter == "") {
-                            animeList = animeList.sortedWith(
-                                compareByDescending<TopAnime> { it.score }
-                                    .thenByDescending { it.members }
-                            )
+                            animeList = withContext(Dispatchers.Default) {
+                                animeList.sortedWith(
+                                    compareByDescending<TopAnime> { it.score }
+                                        .thenByDescending { it.members }
+                                )
+                            }
                         }
 
                         val finalPair = Pair(animeList, totalPages)
@@ -75,7 +74,6 @@ class TopAnimeViewModel(private val repository: AnimeTopRepository) : ViewModel(
                         } else {
                             _topAnimeState.value = ResultWrapper.Success(finalPair)
                         }
-
                     }
 
                     is ResultWrapper.Error -> {

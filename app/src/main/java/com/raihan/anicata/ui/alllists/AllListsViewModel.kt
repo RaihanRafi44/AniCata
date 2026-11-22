@@ -252,15 +252,18 @@ class AllListsViewModel(
      * Fungsi publik untuk menerapkan filter (Tombol "Update Filter").
      */
     fun applyFilters() {
+        mediaCache.clear()
+        totalPagesCache.clear()
         _uiState.update { it.copy(mediaState = ResultWrapper.Loading()) }
         viewModelScope.launch {
             val filterSuccess = fetchFiltersSequentially(_uiState.value.selectedCategory)
 
             if (filterSuccess) {
                 applyFiltersInternal()
-                fetchMediaPageInternal(1)
+                fetchMediaPageInternal(1, forceRefresh = true)
             } else {
-                _uiState.update { it.copy(mediaState = ResultWrapper.Error(Exception("Gagal memuat filter"))) }            }
+                _uiState.update { it.copy(mediaState = ResultWrapper.Error(Exception("Gagal memuat filter"))) }
+            }
         }
     }
 
@@ -296,7 +299,7 @@ class AllListsViewModel(
                 appliedThemeId = if (newThemeId == 0) null else newThemeId,
                 appliedTargetId = if (newTargetId == 0) null else newTargetId,
                 currentPage = 1,
-                mediaState = ResultWrapper.Idle()
+                mediaState = ResultWrapper.Loading()
             )
         }
     }
@@ -316,13 +319,16 @@ class AllListsViewModel(
     /**
      * Mengambil data media untuk halaman yang diberikan.
      */
-    private suspend fun fetchMediaPageInternal(page: Int) {
+    private suspend fun fetchMediaPageInternal(page: Int, forceRefresh: Boolean = false) {
         val currentState = _uiState.value
 
         // --- 3a. CEK CACHE DI AWAL ---
         val cacheKey = getCacheKey(currentState, page)
 
-        if (mediaCache.containsKey(cacheKey)) {
+        if (forceRefresh) {
+            mediaCache.clear()
+            totalPagesCache.clear()
+        } else if (mediaCache.containsKey(cacheKey)) {
             _uiState.update {
                 it.copy(
                     mediaState = ResultWrapper.Success(Pair(mediaCache[cacheKey]!!, totalPagesCache[cacheKey] ?: 1)),

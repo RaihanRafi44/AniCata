@@ -5,7 +5,9 @@ import com.raihan.anicata.data.mapper.anime.toTopAnimeList
 import com.raihan.anicata.data.model.anime.top.TopAnime
 import com.raihan.anicata.utils.ResultWrapper
 import com.raihan.anicata.utils.proceedFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 
 interface AnimeTopRepository {
     fun getTopAnimeList(
@@ -34,7 +36,7 @@ class AnimeTopRepositoryImpl(private val dataSource: TopAnimeDataSource) : Anime
             val animeList = response.data.toTopAnimeList()
             val totalPages = response.pagination?.lastVisiblePage
             Pair(animeList, totalPages)
-        }
+        }.flowOn(Dispatchers.IO)
     }
 
 }
