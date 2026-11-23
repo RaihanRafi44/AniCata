@@ -38,10 +38,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlin.math.abs
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -92,6 +98,49 @@ fun MainScreen(
     // State untuk mengontrol visibilitas search screen
     var isSearchVisible by remember { mutableStateOf(false) }
 
+    var isCollapsed by remember { mutableStateOf(false) }
+    var expandJob by remember { mutableStateOf<Job?>(null) }
+
+    val bottomBarNestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                if (delta < -0.1f) { // Scroll KE BAWAH -> Mengecil (Collapse)
+                    isCollapsed = true
+                    expandJob?.cancel()
+                    expandJob = scope.launch {
+                        delay(800)
+                        isCollapsed = false
+                    }
+                } else if (delta > 0.1f) { // Scroll KE ATAS -> Mengembang (Expand)
+                    isCollapsed = false
+                    expandJob?.cancel()
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                val delta = consumed.y
+                if (delta < -0.1f) { // Scroll KE BAWAH -> Mengecil (Collapse)
+                    isCollapsed = true
+                    expandJob?.cancel()
+                    expandJob = scope.launch {
+                        delay(800)
+                        isCollapsed = false
+                    }
+                } else if (delta > 0.1f) { // Scroll KE ATAS -> Mengembang (Expand)
+                    isCollapsed = false
+                    expandJob?.cancel()
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         systemUiController.setStatusBarColor(
             color = topBarColor,
@@ -131,7 +180,10 @@ fun MainScreen(
         ) {
 
             Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                containerColor = Color.White,
+                modifier = Modifier
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .nestedScroll(bottomBarNestedScrollConnection),
                 topBar = {
                     TopNavBar(
                         onMenuClick = {
@@ -340,6 +392,10 @@ fun MainScreen(
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 24.dp),
                         selectedItem = selectedItem,
+                        isCollapsed = isCollapsed,
+                        containerColor = Color(0xFFFCFCFC),
+                        accentColor = Color(0xFF2F5CEF),
+                        inactiveColor = Color(0xFF8E8E93),
                         onItemSelected = { index ->
                             //selectedItem = index
                             val route = when (index) {

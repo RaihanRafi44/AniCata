@@ -1,10 +1,30 @@
 package com.raihan.anicata.ui.main
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,97 +32,260 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+data class NavItemData(
+    val label: String,
+    val activeIcon: ImageVector,
+    val inactiveIcon: ImageVector = activeIcon,
+)
+
+val defaultNavItems = listOf(
+    NavItemData(
+        label = "Home",
+        activeIcon = Icons.Default.Home,
+    ),
+    NavItemData(
+        label = "Archive",
+        activeIcon = Icons.Default.Bookmark,
+    ),
+    NavItemData(
+        label = "Profile",
+        activeIcon = Icons.Default.Person,
+    ),
+)
 
 @Composable
 fun FloatingBottomNavBar(
     selectedItem: Int,
     onItemSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier // Terima modifier dari luar
+    modifier: Modifier = Modifier,
+    items: List<NavItemData> = defaultNavItems,
+    isCollapsed: Boolean = false,
+    accentColor: Color = Color.Blue,
+    inactiveColor: Color = Color.Gray,
+    containerColor: Color = Color.White,
+    borderColor: Color = Color(0xFFE0E0E0),
+    borderWidth: Dp = 0.5.dp,
 ) {
-    // Hapus Box terluar, gunakan Surface sebagai root component
-    // Terapkan modifier yang diterima ke Surface ini
-    Surface(
-        modifier = modifier, // Terapkan modifier di sini
-        shape = RoundedCornerShape(12.dp),
-        shadowElevation = 8.dp,
-        tonalElevation = 2.dp,
-        color = Color.White
+    val selectedNavItem = items.getOrElse(selectedItem) { items.first() }
+    val shape = RoundedCornerShape(40.dp)
+
+    Box(
+        modifier = modifier
+            .padding(horizontal = 24.dp)
+            .background(containerColor, shape = shape)
+            .border(
+                width = borderWidth,
+                color = borderColor,
+                shape = shape,
+            )
+            .clip(shape)
+            .animateContentSize(
+                alignment = Alignment.Center,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessHigh,
+                ),
+            ),
     ) {
-        Row(
-            modifier = Modifier
-                .width(180.dp)
-                .height(48.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Item Home
-            NavBarItem(
-                icon = Icons.Default.Home,
-                contentDescription = "Home",
-                selected = selectedItem == 0,
-                onClick = { onItemSelected(0) },
-                modifier = Modifier.weight(1f)
-            )
-
-            // Item Settings (Archive di kode Anda)
-            NavBarItem(
-                icon = Icons.Default.Settings,
-                contentDescription = "Settings",
-                selected = selectedItem == 1,
-                onClick = { onItemSelected(1) },
-                modifier = Modifier.weight(1f)
-            )
-
-            // Item Profile
-            NavBarItem(
-                icon = Icons.Default.Person,
-                contentDescription = "Profile",
-                selected = selectedItem == 2,
-                onClick = { onItemSelected(2) },
-                modifier = Modifier.weight(1f)
-            )
+        AnimatedContent(
+            targetState = isCollapsed,
+            contentAlignment = Alignment.Center,
+            transitionSpec = {
+                val duration = if (targetState) 60 else 150
+                (fadeIn(animationSpec = tween(duration, easing = FastOutLinearInEasing)) +
+                    scaleIn(initialScale = 0.9f, transformOrigin = TransformOrigin.Center) +
+                    expandHorizontally(expandFrom = Alignment.CenterHorizontally, animationSpec = tween(duration, easing = FastOutLinearInEasing))) togetherWith
+                (fadeOut(animationSpec = tween(duration, easing = FastOutLinearInEasing)) +
+                    scaleOut(targetScale = 0.9f, transformOrigin = TransformOrigin.Center) +
+                    shrinkHorizontally(shrinkTowards = Alignment.CenterHorizontally, animationSpec = tween(duration, easing = FastOutLinearInEasing)))
+            },
+            label = "NavBarCollapseTransition",
+        ) { collapsed ->
+            if (collapsed) {
+                // Collapsed UI: Single active item in horizontal layout
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp, horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Icon(
+                        imageVector = selectedNavItem.activeIcon,
+                        contentDescription = selectedNavItem.label,
+                        modifier = Modifier.size(20.dp),
+                        tint = accentColor,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = selectedNavItem.label,
+                        color = Color.Black,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            } else {
+                // Expanded UI: All navigation items in vertical layout
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .padding(vertical = 8.dp, horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    items.forEachIndexed { index, item ->
+                        NavBarItem(
+                            item = item,
+                            selected = selectedItem == index,
+                            onClick = { onItemSelected(index) },
+                            modifier = Modifier.weight(1f),
+                            accentColor = accentColor,
+                            inactiveColor = inactiveColor,
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
 fun NavBarItem(
-    icon: ImageVector,
-    contentDescription: String,
+    item: NavItemData,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accentColor: Color = Color.Blue,
+    inactiveColor: Color = Color.Gray,
 ) {
-    Box(
+    val animatedIconColor by animateColorAsState(
+        targetValue = if (selected) accentColor else inactiveColor,
+        animationSpec = tween(durationMillis = 200),
+        label = "iconColor",
+    )
+
+    val animatedTextColor by animateColorAsState(
+        targetValue = if (selected) Color.Black else inactiveColor,
+        animationSpec = tween(durationMillis = 200),
+        label = "textColor",
+    )
+
+    val animatedIndicatorColor by animateColorAsState(
+        targetValue = if (selected) accentColor else Color.Transparent,
+        animationSpec = tween(durationMillis = 200),
+        label = "indicatorColor",
+    )
+
+    val animatedIndicatorWidth by animateDpAsState(
+        targetValue = if (selected) 16.dp else 0.dp,
+        animationSpec = tween(durationMillis = 200),
+        label = "indicatorWidth",
+    )
+
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Column(
         modifier = modifier
-            .fillMaxHeight()
-            .background(if (selected) Color(0xFFE0E0FF) else Color.Transparent)
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(if (selected) 28.dp else 24.dp),
-            tint = if (selected) Color.Blue else Color.Gray
+            imageVector = if (selected) item.activeIcon else item.inactiveIcon,
+            contentDescription = item.label,
+            modifier = Modifier.size(24.dp),
+            tint = animatedIconColor,
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = item.label,
+            color = animatedTextColor,
+            fontSize = 12.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box(
+            modifier = Modifier
+                .width(18.dp)
+                .height(3.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(animatedIndicatorWidth)
+                    .height(3.dp)
+                    .background(
+                        color = animatedIndicatorColor,
+                        shape = RoundedCornerShape(1.5.dp),
+                    ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
+@Composable
+fun FloatingBottomNavBarExpandedPreview() {
+    var selected by remember { mutableIntStateOf(0) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF0F0F0)),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        FloatingBottomNavBar(
+            selectedItem = selected,
+            onItemSelected = { selected = it },
+            isCollapsed = false,
+            modifier = Modifier.padding(bottom = 24.dp),
         )
     }
 }
 
-
-
-
-
-
-
-
+@Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
+@Composable
+fun FloatingBottomNavBarCollapsedPreview() {
+    var selected by remember { mutableIntStateOf(0) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF0F0F0)),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        FloatingBottomNavBar(
+            selectedItem = selected,
+            onItemSelected = { selected = it },
+            isCollapsed = true,
+            modifier = Modifier.padding(bottom = 24.dp),
+        )
+    }
+}
