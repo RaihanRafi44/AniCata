@@ -6,14 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
 import com.raihan.anicata.data.model.anime.season.upcoming.SeasonAnimeUpcoming
 import com.raihan.anicata.data.model.anime.top.TopAnime
+import com.raihan.anicata.data.model.manga.top.TopManga
 import com.raihan.anicata.data.repository.anime.AnimeSeasonNowRepository
 import com.raihan.anicata.data.repository.anime.AnimeSeasonUpcomingRepository
 import com.raihan.anicata.data.repository.anime.AnimeTopRepository
+import com.raihan.anicata.data.repository.manga.MangaTopRepository
 import com.raihan.anicata.data.repository.user.RecentlyViewedRepository
 import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(
     private val topAnimeRepository: AnimeTopRepository,
+    private val topMangaRepository: MangaTopRepository,
     private val seasonNowRepository: AnimeSeasonNowRepository,
     private val seasonUpcomingRepository: AnimeSeasonUpcomingRepository,
     private val recentlyViewedRepository: RecentlyViewedRepository
@@ -41,6 +43,30 @@ class HomeViewModel(
                     val animeList = result.payload?.first ?: emptyList()
                     val sortedList = animeList.sortedWith(
                         compareByDescending<TopAnime> { it.score }.thenByDescending { it.members }
+                    )
+                    if (sortedList.isEmpty()) ResultWrapper.Empty() else ResultWrapper.Success(sortedList)
+                }
+                is ResultWrapper.Loading -> ResultWrapper.Loading()
+                is ResultWrapper.Error -> ResultWrapper.Error(result.exception)
+                is ResultWrapper.Empty -> ResultWrapper.Empty()
+                is ResultWrapper.Idle -> ResultWrapper.Idle()
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ResultWrapper.Loading()
+        )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val topRatedMangaState: StateFlow<ResultWrapper<List<TopManga>>> = refreshTrigger
+        .flatMapLatest { topMangaRepository.getTopMangaList(type = "", filter = "", page = 1, limit = 10) }
+        .map { result ->
+            when (result) {
+                is ResultWrapper.Success -> {
+                    val mangaList = result.payload?.first ?: emptyList()
+                    val sortedList = mangaList.sortedWith(
+                        compareByDescending<TopManga> { it.score }.thenByDescending { it.members }
                     )
                     if (sortedList.isEmpty()) ResultWrapper.Empty() else ResultWrapper.Success(sortedList)
                 }

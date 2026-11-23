@@ -21,7 +21,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.raihan.anicata.ui.archive.ArchiveShimmerLoading
 import com.raihan.anicata.utils.ResultWrapper
@@ -43,7 +41,6 @@ fun ArchiveMangaScreenFavorite(
     onNavigateBack: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
-
     LaunchedEffect(Unit) {
         viewModel.getFavoritesManga()
     }
@@ -58,7 +55,7 @@ fun ArchiveMangaScreenFavorite(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text= if (isSelectionMode) "${selectedIds.size} Dipilih" else "Favorite",
+                        text = if (isSelectionMode) "${selectedIds.size} Selected" else "Favorite",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -71,14 +68,13 @@ fun ArchiveMangaScreenFavorite(
                         } else {
                             onNavigateBack()
                         }
-                }
-            ) {
+                    }) {
                         Icon(
                             imageVector = if (isSelectionMode) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = if (isSelectionMode) "Batal" else "Kembali"
+                            contentDescription = if (isSelectionMode) "Cancel" else "Back"
                         )
                     }
-        },
+                },
                 actions = {
                     if (isSelectionMode && selectedIds.isNotEmpty()) {
                         IconButton(onClick = {
@@ -86,14 +82,14 @@ fun ArchiveMangaScreenFavorite(
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Hapus",
+                                contentDescription = "Delete",
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
                 }
-    )
-}
+            )
+        }
     ) { paddingValues ->
 
         Column(
@@ -113,7 +109,7 @@ fun ArchiveMangaScreenFavorite(
                         modifier = Modifier.fillMaxWidth().height(300.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Gagal memuat data: ${state.exception?.message}")
+                        Text(text = "Failed to load data: ${state.exception?.message}")
                     }
                 }
                 is ResultWrapper.Success -> {
@@ -124,7 +120,7 @@ fun ArchiveMangaScreenFavorite(
                             modifier = Modifier.fillMaxWidth().height(300.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "Belum ada manga di favorite")
+                            Text(text = "No favorite manga yet")
                         }
                     } else {
                         ArchiveMangaListFavoriteLayout(
@@ -140,7 +136,6 @@ fun ArchiveMangaScreenFavorite(
                                 }
                             },
                             onMangaLongClick = { idString ->
-                                // Jika belum mode seleksi, mulai seleksi
                                 if (!isSelectionMode) {
                                     viewModel.startSelection(idString)
                                 }

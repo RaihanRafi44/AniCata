@@ -147,7 +147,7 @@ fun DetailMangaScreen(
             }
             is ResultWrapper.Error -> {
                 Text(
-                    text = "Gagal memuat: ${detailResult.exception?.message}",
+                    text = "Failed to load data: ${detailResult.exception?.message}",
                     modifier = Modifier.align(Alignment.Center)
                 )
             }

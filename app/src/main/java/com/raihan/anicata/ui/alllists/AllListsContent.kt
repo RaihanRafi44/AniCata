@@ -190,7 +190,7 @@ fun ErrorStateContent(errorMessage: String, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Gagal memuat data",
+                text = "Failed to load data",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black

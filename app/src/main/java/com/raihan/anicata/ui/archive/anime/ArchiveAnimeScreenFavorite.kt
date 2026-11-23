@@ -21,7 +21,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.raihan.anicata.ui.archive.ArchiveShimmerLoading
 import com.raihan.anicata.utils.ResultWrapper
@@ -38,11 +36,9 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveAnimeScreenFavorite(
-
-    //animeList: List<DummyArchiveAnimeBookmark> = dummy_anime_archive_bookmark_data,
     viewModel: ArchiveAnimeViewModel = koinViewModel(),
     onAnimeClick: (Int) -> Unit,
-    onNavigateBack: () -> Unit ,
+    onNavigateBack: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
     LaunchedEffect(Unit) {
@@ -59,7 +55,7 @@ fun ArchiveAnimeScreenFavorite(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = if (isSelectionMode) "${selectedIds.size} Dipilih" else "Favorite",
+                        text = if (isSelectionMode) "${selectedIds.size} Selected" else "Favorite",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -67,7 +63,6 @@ fun ArchiveAnimeScreenFavorite(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 navigationIcon = {
                     IconButton(onClick = {
-
                         if (isSelectionMode) {
                             viewModel.clearSelection()
                         } else {
@@ -76,7 +71,7 @@ fun ArchiveAnimeScreenFavorite(
                     }) {
                         Icon(
                             imageVector = if (isSelectionMode) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = if (isSelectionMode) "Batal" else "Kembali"
+                            contentDescription = if (isSelectionMode) "Cancel" else "Back"
                         )
                     }
                 },
@@ -87,7 +82,7 @@ fun ArchiveAnimeScreenFavorite(
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Hapus",
+                                contentDescription = "Delete",
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -114,7 +109,7 @@ fun ArchiveAnimeScreenFavorite(
                         modifier = Modifier.fillMaxWidth().height(300.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Gagal memuat data: ${state.exception?.message}")
+                        Text(text = "Failed to load data: ${state.exception?.message}")
                     }
                 }
                 is ResultWrapper.Success -> {
@@ -125,7 +120,7 @@ fun ArchiveAnimeScreenFavorite(
                             modifier = Modifier.fillMaxWidth().height(300.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "Belum ada anime di favorite")
+                            Text(text = "No favorite anime yet")
                         }
                     } else {
                         ArchiveAnimeListFavoriteLayout(
@@ -141,7 +136,6 @@ fun ArchiveAnimeScreenFavorite(
                                 }
                             },
                             onAnimeLongClick = { idString ->
-                                // Jika belum mode seleksi, mulai seleksi
                                 if (!isSelectionMode) {
                                     viewModel.startSelection(idString)
                                 }

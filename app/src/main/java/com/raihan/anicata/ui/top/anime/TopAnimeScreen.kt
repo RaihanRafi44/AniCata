@@ -13,8 +13,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import com.raihan.anicata.ui.home.ModernPullToRefreshIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -107,12 +107,9 @@ fun TopAnimeScreen(
         modifier = Modifier.fillMaxSize(),
         state = pullRefreshState,
         indicator = {
-            PullToRefreshDefaults.Indicator(
-                modifier = Modifier.align(Alignment.TopCenter),
+            ModernPullToRefreshIndicator(
                 isRefreshing = isRefreshing,
-                state = pullRefreshState,
-                containerColor = Color(0xFF2C2C2C),
-                color = Color(0xFFFF9800)
+                state = pullRefreshState
             )
         }
     ) {

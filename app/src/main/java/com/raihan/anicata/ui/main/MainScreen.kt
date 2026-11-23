@@ -162,8 +162,8 @@ fun MainScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.fillMaxWidth(0.6f),
-                drawerContainerColor = Color(0xFFE0F2F1)
+                modifier = Modifier.fillMaxWidth(0.75f),
+                drawerContainerColor = Color(0xFFF7FAF9)
             ) {
                 AppDrawerContent(
                     userData = userData,
@@ -219,10 +219,11 @@ fun MainScreen(
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 },
                                 // ✅ 2. Sambungkan navigasi klik panah "View All"
-                                onViewAllTopRatedClick = {
-                                    // Gunakan NavController INTERNAL (dari MainScreen)
-                                    // untuk pindah ke rute Top Anime
+                                onViewAllTopRatedAnimeClick = {
                                     internalNavController.navigate("top_anime")
+                                },
+                                onViewAllTopRatedMangaClick = {
+                                    internalNavController.navigate("top_manga")
                                 },
                                 onViewAllSeasonalClick = {
                                     internalNavController.navigate("seasonal")

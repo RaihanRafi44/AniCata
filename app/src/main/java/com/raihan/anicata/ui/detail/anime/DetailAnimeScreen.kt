@@ -155,7 +155,7 @@ fun DetailAnimeScreen(
             is ResultWrapper.Error -> {
                 // Tampilkan pesan error
                 Text(
-                    text = "Gagal memuat data: ${detailResult.exception?.message}",
+                    text = "Failed to load data: ${detailResult.exception?.message}",
                     modifier = Modifier.align(Alignment.Center)
                 )
             }

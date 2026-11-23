@@ -33,7 +33,6 @@ import com.raihan.anicata.ui.archive.ArchiveShimmerLoading
 import com.raihan.anicata.utils.ResultWrapper
 import org.koin.androidx.compose.koinViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveMangaScreenBookmark(
@@ -56,12 +55,12 @@ fun ArchiveMangaScreenBookmark(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = if (isSelectionMode) "${selectedIds.size} Dipilih" else "Bookmark",
+                        text = if (isSelectionMode) "${selectedIds.size} Selected" else "Bookmark",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 },
-                windowInsets = WindowInsets(0,0,0,0),
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -74,7 +73,7 @@ fun ArchiveMangaScreenBookmark(
                     ) {
                         Icon(
                             imageVector = if (isSelectionMode) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = if (isSelectionMode) "Batal" else "Kembali"
+                            contentDescription = if (isSelectionMode) "Cancel" else "Back"
                         )
                     }
                 },
@@ -85,7 +84,7 @@ fun ArchiveMangaScreenBookmark(
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Hapus",
+                                contentDescription = "Delete",
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -112,7 +111,7 @@ fun ArchiveMangaScreenBookmark(
                         modifier = Modifier.fillMaxWidth().height(300.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Gagal memuat data: ${state.exception?.message}")
+                        Text(text = "Failed to load data: ${state.exception?.message}")
                     }
                 }
                 is ResultWrapper.Success -> {
@@ -121,9 +120,9 @@ fun ArchiveMangaScreenBookmark(
                     if (data.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxWidth().height(300.dp),
-                                contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "Belum ada manga di bookmark")
+                            Text(text = "No bookmarked manga yet")
                         }
                     } else {
                         ArchiveMangaListBookmarkLayout(
@@ -134,9 +133,8 @@ fun ArchiveMangaScreenBookmark(
                                 if (isSelectionMode) {
                                     viewModel.toggleSelection(idManga)
                                 } else {
-                                    val idInt = idManga.toIntOrNull()
-                                        ?: 0
-                                onMangaClick(idInt)
+                                    val idInt = idManga.toIntOrNull() ?: 0
+                                    onMangaClick(idInt)
                                 }
                             },
                             onMangaLongClick = { idManga ->
