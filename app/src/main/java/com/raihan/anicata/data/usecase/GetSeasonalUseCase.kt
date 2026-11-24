@@ -1,10 +1,8 @@
 package com.raihan.anicata.data.usecase
 
 import com.raihan.anicata.data.model.anime.season.list.SeasonAnimeList
-import com.raihan.anicata.data.model.anime.season.now.SeasonAnimeNow
-import com.raihan.anicata.data.model.anime.season.year.SeasonAnimeYear
+import com.raihan.anicata.data.model.anime.season.year.SeasonalResultData
 import com.raihan.anicata.data.repository.anime.AnimeSeasonListRepository
-import com.raihan.anicata.data.repository.anime.AnimeSeasonNowRepository
 import com.raihan.anicata.data.repository.anime.AnimeSeasonYearRepository
 import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.flow.Flow
@@ -18,25 +16,18 @@ class GetSeasonalUseCase(
 ) {
 
     /**
-     * Tugas 1: Mengambil data untuk filter (Tahun & Musim).
-     * Logika ini dipindahkan dari init ViewModel.
+     * Mengambil data untuk filter (Tahun & Musim).
      */
     fun getSeasonFilters(): Flow<ResultWrapper<SeasonFilterData>> {
         return seasonListRepository.getSeasonListAnime().map { result ->
             when (result) {
                 is ResultWrapper.Success -> {
-                    // 1. Ambil data asli (mungkin huruf kecil)
                     val originalSeasonData = result.payload ?: emptyList()
 
                     if (originalSeasonData.isNotEmpty()) {
-
-                        // Dapatkan tahun dan bulan saat ini
                         val calendar = Calendar.getInstance()
                         val currentYear = calendar.get(Calendar.YEAR)
                         val currentMonth = calendar.get(Calendar.MONTH)
-
-                        // Tentukan string musim (season) berdasarkan bulan saat ini
-                        // (Mengikuti standar musim anime: Winter: Jan-Mar, Spring: Apr-Jun, Summer: Jul-Sep, Fall: Okt-Des)
 
                         val currentSeasonString = when (currentMonth) {
                             Calendar.JANUARY, Calendar.FEBRUARY, Calendar.MARCH -> "Winter"
@@ -46,39 +37,27 @@ class GetSeasonalUseCase(
                             else -> "Unknown"
                         }
 
-                        // 2. Buat list BARU di mana semua string 'seasons' di dalamnya sudah dikapitalisasi
                         val capitalizedSeasonData = originalSeasonData.map { seasonList ->
-                            // 2a. Ubah list string ["fall", "summer"]
                             val capitalizedSeasons = seasonList.seasons.map { seasonName ->
                                 seasonName.replaceFirstChar { it.uppercase() }
                             }
-                            // 2b. Kembalikan data class yang disalin dengan list seasons yang baru
                             seasonList.copy(seasons = capitalizedSeasons)
                         }
 
-                        // 3. Mulai sekarang, gunakan 'capitalizedSeasonData' UNTUK SEMUANYA
                         val years = capitalizedSeasonData.map { it.year.toString() }
 
-
-                        // Cari data untuk TAHUN INI.
-                        // Jika tidak ada (misal API belum update), baru pakai data .first() (2026)
                         val defaultYearData = capitalizedSeasonData.find { it.year == currentYear }
-                            ?: capitalizedSeasonData.first() // Fallback ke logika lama
+                            ?: capitalizedSeasonData.first()
 
                         val defaultYear = defaultYearData.year.toString()
+                        val defaultSeasons = defaultYearData.seasons
 
-                        // 6. Ambil daftar musim untuk tahun yang dipilih
-                        val defaultSeasons = defaultYearData.seasons // Ini sudah dikapitalisasi
-
-                        // 7. Cari MUSIM SAAT INI (misal "Fall") di dalam daftar musim.
-                        // Jika tidak ada (misal API belum update), baru pakai .firstOrNull()
                         val defaultSeason = defaultSeasons.find { it.equals(currentSeasonString, ignoreCase = true) }
-                            ?: defaultSeasons.firstOrNull() // Fallback ke logika lama
-                            ?: "" // Fallback akhir
+                            ?: defaultSeasons.firstOrNull()
+                            ?: ""
 
                         ResultWrapper.Success(
                             SeasonFilterData(
-                                // 5. Simpan data yang SUDAH BERSIH (kapital)
                                 seasonListData = capitalizedSeasonData,
                                 yearOptions = years,
                                 selectedYear = defaultYear,
@@ -99,24 +78,28 @@ class GetSeasonalUseCase(
     }
 
     /**
-     * Tugas 2: Mengambil daftar anime berdasarkan filter.
-     * Logika ini dipindahkan dari onUpdateFilter ViewModel.
+     * Mengambil daftar anime berdasarkan filter, halaman, & order_by/sort Tenrai API.
      */
-    fun getSeasonalAnime(params: AnimeFilterParams): Flow<ResultWrapper<List<SeasonAnimeYear>>> {
+    fun getSeasonalAnime(params: AnimeFilterParams): Flow<ResultWrapper<SeasonalResultData>> {
 
         val year = params.year
         val season = params.season
         val filterType = params.filterType
         val filterStatus = params.filterStatus
+        val page = params.page
+        val orderBy = params.orderBy
+        val sort = params.sort
 
-        // Seluruh logika 'when' dan 'zip' dipindahkan ke sini
         return when (filterStatus) {
             "New" -> {
                 yearRepository.getSeasonAnimeYearList(
                     year = year,
                     season = season,
                     filter = filterType,
-                    continuing = false
+                    continuing = false,
+                    page = page,
+                    orderBy = orderBy,
+                    sort = sort
                 )
             }
             "All" -> {
@@ -124,7 +107,10 @@ class GetSeasonalUseCase(
                     year = year,
                     season = season,
                     filter = filterType,
-                    continuing = true
+                    continuing = true,
+                    page = page,
+                    orderBy = orderBy,
+                    sort = sort
                 )
             }
             "Continuing" -> {
@@ -132,24 +118,36 @@ class GetSeasonalUseCase(
                     year = year,
                     season = season,
                     filter = filterType,
-                    continuing = true
+                    continuing = true,
+                    page = page,
+                    orderBy = orderBy,
+                    sort = sort
                 )
                 val newFlow = yearRepository.getSeasonAnimeYearList(
                     year = year,
                     season = season,
                     filter = filterType,
-                    continuing = false
+                    continuing = false,
+                    page = page,
+                    orderBy = orderBy,
+                    sort = sort
                 )
 
                 allFlow.zip(newFlow) { allResult, newResult ->
                     if (allResult is ResultWrapper.Loading || newResult is ResultWrapper.Loading) {
                         ResultWrapper.Loading()
                     } else if (allResult is ResultWrapper.Success && newResult is ResultWrapper.Success) {
-                        val allList = allResult.payload ?: emptyList()
-                        val newList = newResult.payload ?: emptyList()
-                        val newIds = newList.map { it.id }.toSet()
-                        val continuingList = allList.filter { it.id !in newIds }
-                        ResultWrapper.Success(continuingList)
+                        val allData = allResult.payload ?: SeasonalResultData(emptyList())
+                        val newData = newResult.payload ?: SeasonalResultData(emptyList())
+                        val newIds = newData.animeList.map { it.id }.toSet()
+                        val continuingList = allData.animeList.filter { it.id !in newIds }
+                        ResultWrapper.Success(
+                            SeasonalResultData(
+                                animeList = continuingList,
+                                totalItems = allData.totalItems,
+                                hasNextPage = allData.hasNextPage
+                            )
+                        )
                     } else if (allResult is ResultWrapper.Error) {
                         allResult
                     } else if (newResult is ResultWrapper.Error) {
@@ -159,12 +157,14 @@ class GetSeasonalUseCase(
                     }
                 }
             }
-            // Fallback jika status tidak dikenali
             else -> yearRepository.getSeasonAnimeYearList(
                 year = year,
                 season = season,
                 filter = filterType,
-                continuing = false
+                continuing = false,
+                page = page,
+                orderBy = orderBy,
+                sort = sort
             )
         }
     }
@@ -177,8 +177,10 @@ data class AnimeFilterParams(
     val year: Int,
     val season: String,
     val filterType: String,
-    val filterStatus: String
-    // Anda bisa tambahkan year dan season di sini jika API-nya nanti mendukung
+    val filterStatus: String,
+    val page: Int = 1,
+    val orderBy: String? = null,
+    val sort: String? = null
 )
 
 /**

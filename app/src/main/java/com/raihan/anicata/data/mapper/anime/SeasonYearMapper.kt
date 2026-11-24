@@ -218,3 +218,14 @@ fun Collection<SeasonYearData>?.toSeasonYearAnimeList() =
     this?.map {
         it.toSeasonYearAnime()
     } ?: listOf()
+
+fun com.raihan.anicata.data.source.network.model.anime.seasons.year.SeasonYearResponse?.toSeasonalResultData(): com.raihan.anicata.data.model.anime.season.year.SeasonalResultData {
+    val list = this?.data?.toSeasonYearAnimeList() ?: emptyList()
+    val total = this?.pagination?.items?.total ?: list.size
+    val hasNext = this?.pagination?.hasNextPage ?: (list.size >= 25)
+    return com.raihan.anicata.data.model.anime.season.year.SeasonalResultData(
+        animeList = list,
+        totalItems = total,
+        hasNextPage = hasNext
+    )
+}

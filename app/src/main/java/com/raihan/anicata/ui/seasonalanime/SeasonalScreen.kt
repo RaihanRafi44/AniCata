@@ -25,7 +25,6 @@ fun SeasonalScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // --- 2. LAPISAN 1: Konten Scrollable ---
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -34,7 +33,6 @@ fun SeasonalScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             AnimeFilterGroup(
-                // Baris 1
                 selectedYear = uiState.selectedYear,
                 onYearChange = viewModel::onYearChange,
                 yearOptions = uiState.yearOptions,
@@ -42,7 +40,6 @@ fun SeasonalScreen(
                 onSeasonChange = viewModel::onSeasonChange,
                 seasonOptions = uiState.seasonOptions,
 
-                // Baris 2
                 selectedType = uiState.selectedType,
                 onTypeChange = viewModel::onTypeChange,
                 typeOptions = uiState.typeOptions,
@@ -50,14 +47,16 @@ fun SeasonalScreen(
                 onStatusChange = viewModel::onStatusChange,
                 statusOptions = uiState.statusOptions,
 
+                selectedSort = uiState.selectedSort,
+                onSortChange = viewModel::onSortChange,
+                sortOptions = uiState.sortOptions,
+
+                itemCount = uiState.totalShowsCount,
                 onUpdateClick = viewModel::onUpdateFilter
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // --- 3. HAPUS Box pembungkus 'when' ---
-            // 'when' sekarang akan meletakkan Composable-nya
-            // langsung di dalam Column.
             when (val apiResult = uiState.apiResult) {
                 is ResultWrapper.Loading -> {
                     SeasonalShimmerLoading()
@@ -67,7 +66,10 @@ fun SeasonalScreen(
                     if (animeList.isNotEmpty()) {
                         AnimeListLayout(
                             animeList = animeList,
-                            onAnimeClick = onAnimeClick
+                            onAnimeClick = onAnimeClick,
+                            hasNextPage = uiState.hasNextPage,
+                            isNextPageLoading = uiState.isNextPageLoading,
+                            onLoadMoreClick = viewModel::loadNextPage
                         )
                     } else {
                         SeasonalEmptyState()
