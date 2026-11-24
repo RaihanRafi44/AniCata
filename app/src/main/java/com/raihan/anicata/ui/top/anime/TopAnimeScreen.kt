@@ -92,6 +92,16 @@ fun TopAnimeScreen(
         }
     }
 
+    val animeList = (topAnimeState as? ResultWrapper.Success)?.payload?.first ?: emptyList()
+    val pageSize = 25
+    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
+
+    val rankedAnimeList = remember(animeList, offset) {
+        animeList.mapIndexed { index, anime ->
+            anime.copy(rank = offset + index + 1)
+        }
+    }
+
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = {
@@ -119,7 +129,7 @@ fun TopAnimeScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item(key = "filter_header") {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 FilterTopAnime(
                     selectedFilterApiValue = selectedFilter,
@@ -183,23 +193,41 @@ fun TopAnimeScreen(
                 }
 
                 is ResultWrapper.Success -> {
-                    val animeList = animatedState.payload?.first ?: emptyList()
-                    val pageSize = 25
-                    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
-
-                    items(
-                        count = animeList.size,
-                        key = { index -> animeList[index].id }
-                    ) { index ->
-                        val anime = animeList[index]
-                        val rankedAnime = remember(anime, offset, index) {
-                            anime.copy(rank = offset + index + 1)
+                    if (paginationState.currentPage == 1 && rankedAnimeList.size >= 3) {
+                        item(key = "top_3_podium") {
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                AnimeTop3PodiumShowcase(
+                                    top3AnimeList = rankedAnimeList.take(3),
+                                    onAnimeClick = onAnimeClick
+                                )
+                            }
                         }
-                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            AnimeCard(
-                                item = rankedAnime,
-                                onCLick = { onAnimeClick(rankedAnime.id) }
-                            )
+
+                        val remainingAnime = rankedAnimeList.drop(3)
+                        items(
+                            count = remainingAnime.size,
+                            key = { index -> remainingAnime[index].id }
+                        ) { index ->
+                            val anime = remainingAnime[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                AnimeCard(
+                                    item = anime,
+                                    onCLick = { onAnimeClick(anime.id) }
+                                )
+                            }
+                        }
+                    } else {
+                        items(
+                            count = rankedAnimeList.size,
+                            key = { index -> rankedAnimeList[index].id }
+                        ) { index ->
+                            val anime = rankedAnimeList[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                AnimeCard(
+                                    item = anime,
+                                    onCLick = { onAnimeClick(anime.id) }
+                                )
+                            }
                         }
                     }
 

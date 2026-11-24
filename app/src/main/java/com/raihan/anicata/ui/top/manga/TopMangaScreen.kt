@@ -92,6 +92,16 @@ fun TopMangaScreen(
         }
     }
 
+    val mangaList = (topMangaState as? ResultWrapper.Success)?.payload?.first ?: emptyList()
+    val pageSize = 25
+    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
+
+    val rankedMangaList = remember(mangaList, offset) {
+        mangaList.mapIndexed { index, manga ->
+            manga.copy(rank = offset + index + 1)
+        }
+    }
+
     PullToRefreshBox(
         isRefreshing = isRefreshingManga,
         onRefresh = {
@@ -119,7 +129,7 @@ fun TopMangaScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item(key = "filter_header") {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 FilterTopManga(
                     selectedFilterApiValue = selectedFilter,
@@ -183,23 +193,41 @@ fun TopMangaScreen(
                 }
 
                 is ResultWrapper.Success -> {
-                    val mangaList = animatedStateTopManga.payload?.first ?: emptyList()
-                    val pageSize = 25
-                    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
-
-                    items(
-                        count = mangaList.size,
-                        key = { index -> mangaList[index].id }
-                    ) { index ->
-                        val manga = mangaList[index]
-                        val rankedManga = remember(manga, offset, index) {
-                            manga.copy(rank = offset + index + 1)
+                    if (paginationState.currentPage == 1 && rankedMangaList.size >= 3) {
+                        item(key = "top_3_podium") {
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                MangaTop3PodiumShowcase(
+                                    top3MangaList = rankedMangaList.take(3),
+                                    onMangaClick = onMangaClick
+                                )
+                            }
                         }
-                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            MangaCard(
-                                item = rankedManga,
-                                onClick = { onMangaClick(rankedManga.id) }
-                            )
+
+                        val remainingManga = rankedMangaList.drop(3)
+                        items(
+                            count = remainingManga.size,
+                            key = { index -> remainingManga[index].id }
+                        ) { index ->
+                            val manga = remainingManga[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                MangaCard(
+                                    item = manga,
+                                    onClick = { onMangaClick(manga.id) }
+                                )
+                            }
+                        }
+                    } else {
+                        items(
+                            count = rankedMangaList.size,
+                            key = { index -> rankedMangaList[index].id }
+                        ) { index ->
+                            val manga = rankedMangaList[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                MangaCard(
+                                    item = manga,
+                                    onClick = { onMangaClick(manga.id) }
+                                )
+                            }
                         }
                     }
 
@@ -229,4 +257,3 @@ fun TopMangaScreen(
         }
     }
 }
-
