@@ -7,14 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
@@ -32,24 +29,30 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.raihan.anicata.data.model.anime.characters.CharacterAnime
-import com.raihan.anicata.data.source.network.model.anime.characters.Characters
 import com.raihan.anicata.utils.ResultWrapper
-import kotlin.compareTo
 
 @Composable
 fun CharacterListLayout(
     charactersResult: ResultWrapper<List<CharacterAnime>>,
     modifier: Modifier = Modifier
 ) {
-
     when (charactersResult) {
         is ResultWrapper.Loading -> {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    color = Color(0xFF006A60)
+                )
+            }
         }
         is ResultWrapper.Success -> {
             val characters = charactersResult.payload.orEmpty()
@@ -59,7 +62,9 @@ fun CharacterListLayout(
                 Text(
                     text = "No characters found.",
                     modifier = Modifier.padding(16.dp),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray,
+                    fontSize = 13.5.sp
                 )
             }
         }
@@ -67,19 +72,21 @@ fun CharacterListLayout(
             Text(
                 text = "Failed to load characters: ${charactersResult.exception?.message}",
                 modifier = modifier.padding(16.dp),
-                color = Color.Red
+                color = Color.Red,
+                fontSize = 13.sp
             )
         }
         is ResultWrapper.Empty -> {
             Text(
                 text = "No characters found.",
                 modifier = modifier.padding(16.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.Gray,
+                fontSize = 13.5.sp
             )
         }
-        is ResultWrapper.Idle -> { /* Tidak melakukan apa-apa */ }
+        is ResultWrapper.Idle -> {}
     }
-
 }
 
 @Composable
@@ -87,170 +94,154 @@ private fun CharacterListView(
     characters: List<CharacterAnime>,
     modifier: Modifier = Modifier
 ) {
-    // 1. State untuk melacak apakah daftar harus diperluas atau tidak.
-    // Defaultnya adalah false (tidak diperluas).
     var isExpanded by remember { mutableStateOf(false) }
 
-    // 2. Tentukan daftar item yang akan ditampilkan berdasarkan state isExpanded.
-    // Jika tidak diperluas, hanya tampilkan 4 item. Jika ya, tampilkan semua.
     val itemsToShow = if (isExpanded) characters else characters.take(4)
 
     Column(
-        modifier = modifier
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp)
+        modifier = modifier.padding(16.dp)
     ) {
-        Text(
-            text = "Characters and Voice Actors",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+        SectionHeaderTitle(
+            title = "Characters & Voice Actors",
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             itemsToShow.forEach { data ->
                 CharacterListItem(info = data)
             }
         }
 
-        // 3. Tampilkan tombol "View More / View Less" hanya jika jumlah
-        // total karakter lebih dari 4.
         if (characters.size > 4) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
-                // Teks berubah tergantung state
                 text = if (isExpanded) "View Less" else "View More",
-                color = Color.Gray,
+                color = Color(0xFF006A60),
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        // Saat diklik, ubah nilai state (dari true ke false atau sebaliknya)
-                        isExpanded = !isExpanded
-                    }
-                    .padding(vertical = 8.dp),
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(vertical = 6.dp),
                 textAlign = TextAlign.Center
             )
         }
     }
 }
 
-
-/**
- * Composable untuk menampilkan satu baris item dalam daftar.
- * (Tidak ada perubahan di sini)
- */
 @Composable
 fun CharacterListItem(info: CharacterAnime) {
-
+    val themeColor = Color(0xFF006A60)
     val japaneseVA = info.voiceActors.find { it.language == "Japanese" }
         ?: info.voiceActors.firstOrNull()
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFFF8F9FA),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        // Sisi Kiri: Info Karakter
         Row(
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.Top
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            AsyncImage(
-                model = info.character?.images?.jpg?.imageUrl,
-                contentDescription = info.character?.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE0E0E0))
-            )
-            /*Box(
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE0E0E0))
-            )*/
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(
-                modifier = Modifier.padding(top = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            // Sisi Kiri: Info Karakter
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = info.character?.name ?: "Unknown",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis)
-                Text(
-                    text = info.role ?: "N/A",
-                    color = Color.Gray,
-                    fontSize = 12.sp
+                AsyncImage(
+                    model = info.character?.images?.jpg?.imageUrl,
+                    contentDescription = info.character?.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .width(58.dp)
+                        .height(76.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFFE0E0E0))
                 )
-            }
-        }
-        Spacer(modifier = Modifier.width(8.dp)) // Spasi antar sisi
-        // Sisi Kanan: Info Pengisi Suara
-        Row(
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.End
-        ) {
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = japaneseVA?.person?.name ?: "Unknown",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.End
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = info.character?.name ?: "Unknown",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp,
+                        color = Color(0xFF191C1E),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
-                Text(
-                    text = japaneseVA?.language ?: "N/A",
-                    color = Color.Gray,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.End
-                )
+
+                    info.role?.let { role ->
+                        val isMain = role.equals("Main", ignoreCase = true)
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = if (isMain) Color(0xFFE0F2F1) else Color(0xFFF0F0F0),
+                            contentColor = if (isMain) themeColor else Color(0xFF616161)
+                        ) {
+                            Text(
+                                text = role.uppercase(),
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
             }
+
             Spacer(modifier = Modifier.width(8.dp))
-            AsyncImage(
-                model = japaneseVA?.person?.images?.jpg?.imageUrl,
-                contentDescription = japaneseVA?.person?.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE0E0E0))
-            )
-            /*Box(
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE0E0E0))
-            )*/
+
+            // Sisi Kanan: Info Pengisi Suara (Japanese VA)
+            if (japaneseVA != null) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f, fill = false)
+                    ) {
+                        Text(
+                            text = japaneseVA.person?.name ?: "Unknown",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp,
+                            color = Color(0xFF191C1E),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.End
+                        )
+                        Text(
+                            text = japaneseVA.language ?: "Japanese",
+                            color = Color.Gray,
+                            fontSize = 11.5.sp,
+                            textAlign = TextAlign.End
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    AsyncImage(
+                        model = japaneseVA.person?.images?.jpg?.imageUrl,
+                        contentDescription = japaneseVA.person?.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .width(58.dp)
+                            .height(76.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFE0E0E0))
+                    )
+                }
+            }
         }
-    }
-}
-
-
-// --- Preview untuk Pengecekan ---
-
-@Preview(showBackground = true)
-@Composable
-fun CharacterListLayoutPreview() {
-    Surface(color = Color(0xFFEBF5EE)) {
-        //CharacterListLayout(characters = characterDataList)
     }
 }

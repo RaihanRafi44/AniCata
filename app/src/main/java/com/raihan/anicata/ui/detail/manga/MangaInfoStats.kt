@@ -1,20 +1,18 @@
 package com.raihan.anicata.ui.detail.manga
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Tv
-import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,141 +22,133 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.raihan.anicata.data.model.anime.full.AnimeData
 import com.raihan.anicata.data.model.manga.full.MangaDetailFull
-import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
 fun MangaInfoStats(
-    mangaData: MangaDetailFull
+    mangaData: MangaDetailFull,
+    modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp, horizontal = 16.dp) // Memberi jarak di dalam komponen
+    val formattedMembers = try {
+        val num = mangaData.members ?: 0
+        if (num >= 1_000_000) String.format(Locale.US, "%.1fM", num / 1_000_000.0)
+        else if (num >= 1_000) String.format(Locale.US, "%.1fK", num / 1_000.0)
+        else num.toString()
+    } catch (e: Exception) {
+        mangaData.members?.toString() ?: "0"
+    }
+
+    val chText = if (mangaData.chapters == null || mangaData.chapters == 0) "?" else "${mangaData.chapters} ch"
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            // Mengatur item di dalam kolom agar berada di tengah secara horizontal
-            horizontalAlignment = Alignment.CenterHorizontally,
-            //modifier = Modifier.background(lightGreenBg)
+        // Row 1: Score & Rank
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Judul Anime
-            Text(
-                text = mangaData.title,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                lineHeight = 32.sp
+            MetricCardManga(
+                icon = Icons.Default.Star,
+                iconTint = Color(0xFFFFB300),
+                containerBg = Color(0xFFFFF8E1),
+                borderColor = Color(0xFFFFECB3),
+                valueColor = Color(0xFFE65100),
+                value = mangaData.score?.let { String.format(Locale.US, "%.2f", it) } ?: "?",
+                label = "Score",
+                modifier = Modifier.weight(1f)
             )
 
-            Spacer(modifier = Modifier.height(12.dp)) // Spasi vertikal
+            MetricCardManga(
+                icon = Icons.Default.EmojiEvents,
+                iconTint = Color(0xFFAB47BC),
+                containerBg = Color(0xFFF3E5F5),
+                borderColor = Color(0xFFE1BEE7),
+                valueColor = Color(0xFF6A1B9A),
+                value = mangaData.rank?.let { "#$it" } ?: "N/A",
+                label = "Rank",
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-            // Baris pertama berisi info: Musim, Rating, dan Tipe TV
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-                // Arrangement.SpaceBetween dihapus agar 'weight' yang mengatur
-            ) {
-                // Setiap item dibungkus Box dengan weight 1f agar lebarnya sama
+        // Row 2: Members & Chapters
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            MetricCardManga(
+                icon = Icons.Default.People,
+                iconTint = Color(0xFF0288D1),
+                containerBg = Color(0xFFE1F5FE),
+                borderColor = Color(0xFFB3E5FC),
+                valueColor = Color(0xFF01579B),
+                value = formattedMembers,
+                label = "Members",
+                modifier = Modifier.weight(1f)
+            )
 
-                // 1. Hitung nilainya di luar Box
-                //val seasonYear = "${animeData.season?.replaceFirstChar { it.titlecase() }} ${animeData.year ?: ""}".trim()
-                // 1. Ambil data mentahnya
-                //val season = mangaData.season.orEmpty()
-                val year = mangaData.published.prop.from?.year
-                if (year != null && year != 0) {
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        InfoItemManga(
-                            icon = Icons.Default.Schedule, //
-                            text = year.toString() // Tampilkan tahun rilis
-                        )
-                    }
-                }
-
-                // Rating
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    InfoItemManga(
-                        icon = Icons.Default.Star,
-                        //text = mangaData.score?.toString() ?: "N/A",
-                        text = mangaData.score?.toString() ?: "?",
-                        iconColor = Color(0xFFFFC107)
-                    )
-                }
-                // Type
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Menggunakan contoh teks "Special" seperti permintaan Anda
-                    InfoItemManga(
-                        icon = Icons.Default.Tv,
-                        //text = mangaData.type ?: "N/A"
-                        text = mangaData.type.takeIf { !it.isNullOrBlank() } ?: "?",
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp)) // Spasi vertikal
-
-            val formattedMembers = try {
-                NumberFormat.getNumberInstance(Locale.US).format(mangaData.members)
-            } catch (e: Exception) {
-                mangaData.members.toString()
-            }
-            InfoItemManga(
-                icon = Icons.Rounded.Group,
-                text = formattedMembers
+            MetricCardManga(
+                icon = Icons.Default.Book,
+                iconTint = Color(0xFF00897B),
+                containerBg = Color(0xFFE0F2F1),
+                borderColor = Color(0xFFB2DFDB),
+                valueColor = Color(0xFF004D40),
+                value = chText,
+                label = "Chapters",
+                modifier = Modifier.weight(1f)
             )
         }
     }
 }
 
-/**
- * Komponen kecil untuk menampilkan sebuah ikon dan teks.
- * @param icon Ikon yang akan ditampilkan.
- * @param text Teks yang akan ditampilkan di sebelah ikon.
- * @param iconColor Warna untuk ikon (opsional).
- */
 @Composable
-fun InfoItemManga(icon: ImageVector, text: String, iconColor: Color = Color.Black) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+private fun MetricCardManga(
+    icon: ImageVector,
+    iconTint: Color,
+    containerBg: Color,
+    borderColor: Color,
+    valueColor: Color,
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = containerBg,
+        border = BorderStroke(1.dp, borderColor)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null, // Deskripsi untuk aksesibilitas
-            modifier = Modifier.size(20.dp),
-            tint = iconColor
-        )
-        Spacer(modifier = Modifier.width(6.dp)) // Spasi antara ikon dan teks
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            color = Color.DarkGray,
-            fontWeight = FontWeight.Medium
-        )
+        Row(
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = iconTint,
+                modifier = Modifier.size(20.dp)
+            )
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = value,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = valueColor
+                )
+                Text(
+                    text = label,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = valueColor.copy(alpha = 0.7f)
+                )
+            }
+        }
     }
-}
-
-
-/**
- * Fungsi Preview untuk melihat tampilan komponen di Android Studio.
- */
-@Preview(showBackground = true)
-@Composable
-fun MangaInfoCardPreview() {
-    //AnimeInfoStats()
 }

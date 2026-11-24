@@ -9,25 +9,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.raihan.anicata.ui.theme.ChipBackground
-import com.raihan.anicata.ui.theme.TextOnChipColor
 
 @Composable
 fun InfoChip(text: String) {
+    val themeColor = Color(0xFF006A60)
+    val lightBackgroundColor = Color(0xFFE0F2F1)
+
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(ChipBackground)
-            .padding(horizontal = 10.dp, vertical = 5.dp),
+            .clip(RoundedCornerShape(6.dp))
+            .background(lightBackgroundColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = TextOnChipColor,
-            fontSize = 14.sp
+            color = themeColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
