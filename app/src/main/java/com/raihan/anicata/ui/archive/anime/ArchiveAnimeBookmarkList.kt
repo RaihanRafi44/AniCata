@@ -222,7 +222,7 @@ fun ArchiveAnimeListBookmarkLayout(
 }
 
 fun formatAiredDate(fromDate: String?, toDate: String?): String {
-    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec")
+    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
     fun parseDate(dateStr: String?): String? {
         if (dateStr.isNullOrBlank()) return null

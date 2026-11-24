@@ -18,7 +18,7 @@ private fun formatMediaDate(
         return string ?: "N/A"
     }
 
-    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des")
+    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
     val fromMonthName = monthNames[fromMonth - 1]
     val fromString = "$fromMonthName $fromYear"
 
