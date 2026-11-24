@@ -126,7 +126,7 @@ fun TopMangaScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp)
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
             item(key = "filter_header") {
                 Spacer(modifier = Modifier.height(12.dp))
