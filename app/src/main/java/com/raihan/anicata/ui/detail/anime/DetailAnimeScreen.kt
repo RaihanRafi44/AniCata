@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -62,94 +67,76 @@ fun DetailAnimeScreen(
     var showRemoveDialogFavoriteAnime by remember { mutableStateOf(false) }
 
     if (showAddDialogBookmarkAnime) {
-        AlertDialog(
-            onDismissRequest = { showAddDialogBookmarkAnime = false },
-            title = { Text(text = "Konfirmasi") },
-            text = { Text(text = "Apakah Anda yakin ingin menambahkan anime ini ke Bookmark?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
-                        if (animeData != null) {
-                            viewModel.saveToBookmark(animeData)
-                        }
-                        showAddDialogBookmarkAnime = false
-                    }
-                ) {
-                    Text("Ya, Simpan")
+        AniCataConfirmationDialog(
+            title = "Simpan Bookmark",
+            message = "Tambahkan anime ini ke daftar Bookmark Anda?",
+            confirmText = "Simpan",
+            icon = Icons.Filled.Bookmark,
+            iconTint = Color(0xFF006A60),
+            iconBgColor = Color(0xFFE0F2F1),
+            confirmButtonColor = Color(0xFF006A60),
+            onConfirm = {
+                val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
+                if (animeData != null) {
+                    viewModel.saveToBookmark(animeData)
                 }
+                showAddDialogBookmarkAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showAddDialogBookmarkAnime = false }) {
-                    Text("Batal")
-                }
-            }
+            onDismissRequest = { showAddDialogBookmarkAnime = false }
         )
     }
 
     if (showRemoveDialogBookmarkAnime) {
-        AlertDialog(
-            onDismissRequest = { showRemoveDialogBookmarkAnime = false },
-            title = { Text("Hapus Bookmark") },
-            text = { Text("Anda yakin ingin menghapus anime ini dari bookmark?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.removeFromBookmark(animeId.toString())
-                        showRemoveDialogBookmarkAnime = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Hapus") }
+        AniCataConfirmationDialog(
+            title = "Hapus Bookmark",
+            message = "Anda yakin ingin menghapus anime ini dari daftar Bookmark?",
+            confirmText = "Hapus",
+            icon = Icons.Outlined.BookmarkBorder,
+            iconTint = Color(0xFFDC2626),
+            iconBgColor = Color(0xFFFEE2E2),
+            confirmButtonColor = Color(0xFFDC2626),
+            onConfirm = {
+                viewModel.removeFromBookmark(animeId.toString())
+                showRemoveDialogBookmarkAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showRemoveDialogBookmarkAnime = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showRemoveDialogBookmarkAnime = false }
         )
     }
 
     if (showAddDialogFavoriteAnime) {
-        AlertDialog(
-            onDismissRequest = { showAddDialogFavoriteAnime = false },
-            title = { Text(text = "Konfirmasi") },
-            text = { Text(text = "Apakah Anda yakin ingin menambahkan anime ini ke Favorite?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
-                        if (animeData != null) {
-                            viewModel.saveToFavorite(animeData)
-                        }
-                        showAddDialogFavoriteAnime = false
-                    }
-                ) {
-                    Text("Ya, Simpan")
+        AniCataConfirmationDialog(
+            title = "Tambah Favorite",
+            message = "Tambahkan anime ini ke daftar Favorite Anda?",
+            confirmText = "Favoritkan",
+            icon = Icons.Filled.Favorite,
+            iconTint = Color(0xFFE11D48),
+            iconBgColor = Color(0xFFFFE4E6),
+            confirmButtonColor = Color(0xFF006A60),
+            onConfirm = {
+                val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
+                if (animeData != null) {
+                    viewModel.saveToFavorite(animeData)
                 }
+                showAddDialogFavoriteAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showAddDialogFavoriteAnime = false }) {
-                    Text("Batal")
-                }
-            }
+            onDismissRequest = { showAddDialogFavoriteAnime = false }
         )
     }
 
     if (showRemoveDialogFavoriteAnime) {
-        AlertDialog(
-            onDismissRequest = { showRemoveDialogFavoriteAnime = false },
-            title = { Text("Hapus Favorite") },
-            text = { Text("Anda yakin ingin menghapus anime ini dari favorite?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.removeFromFavorite(animeId.toString())
-                        showRemoveDialogFavoriteAnime = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Hapus") }
+        AniCataConfirmationDialog(
+            title = "Hapus Favorite",
+            message = "Anda yakin ingin menghapus anime ini dari daftar Favorite?",
+            confirmText = "Hapus",
+            icon = Icons.Outlined.FavoriteBorder,
+            iconTint = Color(0xFFDC2626),
+            iconBgColor = Color(0xFFFEE2E2),
+            confirmButtonColor = Color(0xFFDC2626),
+            onConfirm = {
+                viewModel.removeFromFavorite(animeId.toString())
+                showRemoveDialogFavoriteAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showRemoveDialogFavoriteAnime = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showRemoveDialogFavoriteAnime = false }
         )
     }
 

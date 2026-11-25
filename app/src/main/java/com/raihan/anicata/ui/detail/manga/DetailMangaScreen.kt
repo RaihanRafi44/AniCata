@@ -6,6 +6,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -32,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.raihan.anicata.ui.detail.anime.ActionButtonsGroup
+import com.raihan.anicata.ui.detail.anime.AniCataConfirmationDialog
 import com.raihan.anicata.ui.detail.anime.CharacterListLayout
 import com.raihan.anicata.ui.detail.anime.DetailShimmerLoading
 import com.raihan.anicata.ui.navigation.Screen
@@ -61,91 +67,76 @@ fun DetailMangaScreen(
     var showRemoveDialogFavoriteManga by remember { mutableStateOf(false) }
 
     if (showAddDialogBookmarkManga) {
-        AlertDialog(
-            onDismissRequest = { showAddDialogBookmarkManga = false },
-            title = { Text(text = "Konfirmasi") },
-            text = { Text(text = "Apakah Anda yakin ingin menambahkan manga ini ke Bookmark?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val mangaData = (uiState.mangaDetail as? ResultWrapper.Success)?.payload
-                        if (mangaData != null) {
-                            viewModel.saveToBookmark(mangaData)
-                        }
-                        showAddDialogBookmarkManga = false
-                    }
-                ) {
-                    Text("Ya, Simpan")
+        AniCataConfirmationDialog(
+            title = "Simpan Bookmark",
+            message = "Tambahkan manga ini ke daftar Bookmark Anda?",
+            confirmText = "Simpan",
+            icon = Icons.Filled.Bookmark,
+            iconTint = Color(0xFF006A60),
+            iconBgColor = Color(0xFFE0F2F1),
+            confirmButtonColor = Color(0xFF006A60),
+            onConfirm = {
+                val mangaData = (uiState.mangaDetail as? ResultWrapper.Success)?.payload
+                if (mangaData != null) {
+                    viewModel.saveToBookmark(mangaData)
                 }
+                showAddDialogBookmarkManga = false
             },
-            dismissButton = {
-                TextButton(onClick = { showAddDialogBookmarkManga = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showAddDialogBookmarkManga = false }
         )
     }
 
     if (showRemoveDialogBookmarkManga) {
-        AlertDialog(
-            onDismissRequest = { showRemoveDialogBookmarkManga = false },
-            title = { Text("Hapus Bookmark") },
-            text = { Text("Anda yakin ingin menghapus manga ini dari bookmark?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.removeFromBookmark(mangaId.toString())
-                        showRemoveDialogBookmarkManga = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Hapus") }
+        AniCataConfirmationDialog(
+            title = "Hapus Bookmark",
+            message = "Anda yakin ingin menghapus manga ini dari daftar Bookmark?",
+            confirmText = "Hapus",
+            icon = Icons.Outlined.BookmarkBorder,
+            iconTint = Color(0xFFDC2626),
+            iconBgColor = Color(0xFFFEE2E2),
+            confirmButtonColor = Color(0xFFDC2626),
+            onConfirm = {
+                viewModel.removeFromBookmark(mangaId.toString())
+                showRemoveDialogBookmarkManga = false
             },
-            dismissButton = {
-                TextButton(onClick = { showRemoveDialogBookmarkManga = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showRemoveDialogBookmarkManga = false }
         )
     }
 
     if (showAddDialogFavoriteManga) {
-        AlertDialog(
-            onDismissRequest = { showAddDialogFavoriteManga = false },
-            title = { Text("Konfirmasi") },
-            text = { Text("Apakah Anda yakin ingin menambahkan manga ini ke Favorite?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val mangaData = (uiState.mangaDetail as? ResultWrapper.Success)?.payload
-                        if (mangaData != null) {
-                            viewModel.saveToFavorite(mangaData)
-                        }
-                        showAddDialogFavoriteManga = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Ya, Simpan")
+        AniCataConfirmationDialog(
+            title = "Tambah Favorite",
+            message = "Tambahkan manga ini ke daftar Favorite Anda?",
+            confirmText = "Favoritkan",
+            icon = Icons.Filled.Favorite,
+            iconTint = Color(0xFFE11D48),
+            iconBgColor = Color(0xFFFFE4E6),
+            confirmButtonColor = Color(0xFF006A60),
+            onConfirm = {
+                val mangaData = (uiState.mangaDetail as? ResultWrapper.Success)?.payload
+                if (mangaData != null) {
+                    viewModel.saveToFavorite(mangaData)
                 }
+                showAddDialogFavoriteManga = false
             },
-            dismissButton = {
-                TextButton(onClick = { showAddDialogFavoriteManga = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showAddDialogFavoriteManga = false }
         )
     }
 
     if (showRemoveDialogFavoriteManga) {
-        AlertDialog(
-            onDismissRequest = { showRemoveDialogFavoriteManga = false },
-            title = { Text("Hapus Favorite") },
-            text = { Text("Anda yakin ingin menghapus manga ini dari favorite?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.removeFromFavorite(mangaId.toString())
-                        showRemoveDialogFavoriteManga = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Hapus") }
+        AniCataConfirmationDialog(
+            title = "Hapus Favorite",
+            message = "Anda yakin ingin menghapus manga ini dari daftar Favorite?",
+            confirmText = "Hapus",
+            icon = Icons.Outlined.FavoriteBorder,
+            iconTint = Color(0xFFDC2626),
+            iconBgColor = Color(0xFFFEE2E2),
+            confirmButtonColor = Color(0xFFDC2626),
+            onConfirm = {
+                viewModel.removeFromFavorite(mangaId.toString())
+                showRemoveDialogFavoriteManga = false
             },
-            dismissButton = {
-                TextButton(onClick = { showRemoveDialogFavoriteManga = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showRemoveDialogFavoriteManga = false }
         )
     }
 
