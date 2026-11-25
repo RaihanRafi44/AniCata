@@ -34,7 +34,8 @@ fun ActionButtonsGroup(
     onBookmarkClick: () -> Unit,
     onFavoriteClick: () -> Unit
 ) {
-    val themeColor = Color(0xFF006A60)
+    val bookmarkBlue = Color(0xFF2563EB)
+    val bookmarkLightBlue = Color(0xFFEFF6FF)
     val favoriteRed = Color(0xFFE53935)
 
     Row(
@@ -49,12 +50,12 @@ fun ActionButtonsGroup(
         val favoriteText = if (isFavorite) "Favorited" else "Favorite"
         val favoriteIcon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
 
-        // Bookmark Button (Teal Theme)
+        // Bookmark Button (Blue Theme)
         CustomActionButton(
             text = bookmarkText,
             icon = bookmarkIcon,
-            containerColor = if (isBookmarked) themeColor else Color(0xFFE0F2F1),
-            contentColor = if (isBookmarked) Color.White else themeColor,
+            containerColor = if (isBookmarked) bookmarkBlue else bookmarkLightBlue,
+            contentColor = if (isBookmarked) Color.White else bookmarkBlue,
             onClick = onBookmarkClick,
             modifier = Modifier.weight(1f)
         )

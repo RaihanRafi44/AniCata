@@ -272,7 +272,7 @@ fun UnifiedArchiveScreen(
                             columns = GridCells.Fixed(2),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
-                            contentPadding = PaddingValues(bottom = 80.dp),
+                            contentPadding = PaddingValues(bottom = 130.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(
@@ -305,7 +305,7 @@ fun UnifiedArchiveScreen(
                     } else {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(bottom = 80.dp),
+                            contentPadding = PaddingValues(bottom = 160.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(

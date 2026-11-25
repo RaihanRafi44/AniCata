@@ -68,13 +68,13 @@ fun DetailMangaScreen(
 
     if (showAddDialogBookmarkManga) {
         AniCataConfirmationDialog(
-            title = "Simpan Bookmark",
-            message = "Tambahkan manga ini ke daftar Bookmark Anda?",
-            confirmText = "Simpan",
+            title = "Save Bookmark",
+            message = "Add this manga to your bookmark list?",
+            confirmText = "Save",
             icon = Icons.Filled.Bookmark,
-            iconTint = Color(0xFF006A60),
-            iconBgColor = Color(0xFFE0F2F1),
-            confirmButtonColor = Color(0xFF006A60),
+            iconTint = Color(0xFF2563EB),
+            iconBgColor = Color(0xFFEFF6FF),
+            confirmButtonColor = Color(0xFF2563EB),
             onConfirm = {
                 val mangaData = (uiState.mangaDetail as? ResultWrapper.Success)?.payload
                 if (mangaData != null) {
@@ -88,9 +88,9 @@ fun DetailMangaScreen(
 
     if (showRemoveDialogBookmarkManga) {
         AniCataConfirmationDialog(
-            title = "Hapus Bookmark",
-            message = "Anda yakin ingin menghapus manga ini dari daftar Bookmark?",
-            confirmText = "Hapus",
+            title = "Delete Bookmark",
+            message = "Are you sure you want to remove this manga from your Bookmark list?",
+            confirmText = "Delete",
             icon = Icons.Outlined.BookmarkBorder,
             iconTint = Color(0xFFDC2626),
             iconBgColor = Color(0xFFFEE2E2),
@@ -105,9 +105,9 @@ fun DetailMangaScreen(
 
     if (showAddDialogFavoriteManga) {
         AniCataConfirmationDialog(
-            title = "Tambah Favorite",
-            message = "Tambahkan manga ini ke daftar Favorite Anda?",
-            confirmText = "Favoritkan",
+            title = "Add Favorite",
+            message = "Add this manga to your Favorites list?",
+            confirmText = "Add",
             icon = Icons.Filled.Favorite,
             iconTint = Color(0xFFE11D48),
             iconBgColor = Color(0xFFFFE4E6),
@@ -125,9 +125,9 @@ fun DetailMangaScreen(
 
     if (showRemoveDialogFavoriteManga) {
         AniCataConfirmationDialog(
-            title = "Hapus Favorite",
-            message = "Anda yakin ingin menghapus manga ini dari daftar Favorite?",
-            confirmText = "Hapus",
+            title = "Delete Favorite",
+            message = "Are you sure you want to remove this manga from your Favorites list?",
+            confirmText = "Delete",
             icon = Icons.Outlined.FavoriteBorder,
             iconTint = Color(0xFFDC2626),
             iconBgColor = Color(0xFFFEE2E2),

@@ -52,10 +52,10 @@ fun ArchiveMangaCardBookmark(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    val themeColor = Color(0xFF006A60)
+    val themeColor = Color(0xFF2563EB)
     val cardShape = RoundedCornerShape(16.dp)
 
-    val backgroundColor = if (isSelected) Color(0xFFE0F2F1) else Color.White
+    val backgroundColor = if (isSelected) Color(0xFFEFF6FF) else Color.White
     val borderStroke = if (isSelected) {
         BorderStroke(1.5.dp, themeColor)
     } else {
@@ -134,7 +134,7 @@ fun ArchiveMangaCardBookmark(
                             if (item.type.isNotBlank()) {
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = Color(0xFFE0F2F1),
+                                    color = Color(0xFFEFF6FF),
                                     contentColor = themeColor
                                 ) {
                                     Text(

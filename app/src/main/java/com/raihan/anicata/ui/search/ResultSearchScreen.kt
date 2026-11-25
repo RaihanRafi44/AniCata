@@ -62,6 +62,16 @@ fun ResultSearchScreen(
     )
 
     val listState = rememberLazyListState()
+    var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(result) {
+        if (result is ResultWrapper.Loading) {
+            isNewPageLoading = true
+        } else if (result is ResultWrapper.Success && isNewPageLoading) {
+            isNewPageLoading = false
+            listState.scrollToItem(0, 0)
+        }
+    }
 
     LaunchedEffect(key1 = searchQuery) {
         viewModel.searchMedia(searchQuery)
@@ -69,7 +79,6 @@ fun ResultSearchScreen(
 
     LaunchedEffect(key1 = paginationInfo.currentPage) {
         paginationState.onPageChange(paginationInfo.currentPage)
-        listState.scrollToItem(0, 0)
     }
 
     var isRefreshing by remember { mutableStateOf(false) }
@@ -91,7 +100,7 @@ fun ResultSearchScreen(
             isRefreshing = isRefreshing,
             onRefresh = {
                 isRefreshing = true
-                viewModel.searchMedia(searchQuery)
+                viewModel.searchMedia(searchQuery, forceRefresh = true)
             },
             modifier = Modifier.fillMaxSize(),
             state = pullRefreshState,

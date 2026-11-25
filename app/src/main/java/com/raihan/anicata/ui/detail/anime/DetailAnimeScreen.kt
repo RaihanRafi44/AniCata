@@ -68,13 +68,13 @@ fun DetailAnimeScreen(
 
     if (showAddDialogBookmarkAnime) {
         AniCataConfirmationDialog(
-            title = "Simpan Bookmark",
-            message = "Tambahkan anime ini ke daftar Bookmark Anda?",
-            confirmText = "Simpan",
+            title = "Save Bookmark",
+            message = "Add this anime to your bookmark list?",
+            confirmText = "Save",
             icon = Icons.Filled.Bookmark,
-            iconTint = Color(0xFF006A60),
-            iconBgColor = Color(0xFFE0F2F1),
-            confirmButtonColor = Color(0xFF006A60),
+            iconTint = Color(0xFF2563EB),
+            iconBgColor = Color(0xFFEFF6FF),
+            confirmButtonColor = Color(0xFF2563EB),
             onConfirm = {
                 val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
                 if (animeData != null) {
@@ -88,9 +88,9 @@ fun DetailAnimeScreen(
 
     if (showRemoveDialogBookmarkAnime) {
         AniCataConfirmationDialog(
-            title = "Hapus Bookmark",
-            message = "Anda yakin ingin menghapus anime ini dari daftar Bookmark?",
-            confirmText = "Hapus",
+            title = "Delete Bookmark",
+            message = "Are you sure you want to remove this anime from your bookmark list?",
+            confirmText = "Delete",
             icon = Icons.Outlined.BookmarkBorder,
             iconTint = Color(0xFFDC2626),
             iconBgColor = Color(0xFFFEE2E2),
@@ -105,9 +105,9 @@ fun DetailAnimeScreen(
 
     if (showAddDialogFavoriteAnime) {
         AniCataConfirmationDialog(
-            title = "Tambah Favorite",
-            message = "Tambahkan anime ini ke daftar Favorite Anda?",
-            confirmText = "Favoritkan",
+            title = "Add Favorite",
+            message = "Add this anime to your Favorites list?",
+            confirmText = "Add",
             icon = Icons.Filled.Favorite,
             iconTint = Color(0xFFE11D48),
             iconBgColor = Color(0xFFFFE4E6),
@@ -125,9 +125,9 @@ fun DetailAnimeScreen(
 
     if (showRemoveDialogFavoriteAnime) {
         AniCataConfirmationDialog(
-            title = "Hapus Favorite",
-            message = "Anda yakin ingin menghapus anime ini dari daftar Favorite?",
-            confirmText = "Hapus",
+            title = "Delete Favorite",
+            message = "Are you sure you want to remove this anime from your Favorites list?",
+            confirmText = "Delete",
             icon = Icons.Outlined.FavoriteBorder,
             iconTint = Color(0xFFDC2626),
             iconBgColor = Color(0xFFFEE2E2),

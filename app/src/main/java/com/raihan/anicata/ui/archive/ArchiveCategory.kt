@@ -81,6 +81,8 @@ import java.util.Locale
 // AniCata Brand Theme Colors
 val AniCataTeal = Color(0xFF006A60)
 val AniCataLightTeal = Color(0xFFE0F2F1)
+val AniCataBlue = Color(0xFF2563EB)
+val AniCataLightBlue = Color(0xFFEFF6FF)
 val AniCataTextPrimary = Color(0xFF191C1E)
 val AniCataTextSecondary = Color(0xFF64748B)
 val AniCataRose = Color(0xFFE11D48)
@@ -412,9 +414,21 @@ fun ArchiveSearchAndFilterRow(
             items(categories.size) { index ->
                 val label = categories[index]
                 val isSelected = selectedCategoryIndex == index
-                val chipBg = if (isSelected) AniCataTeal else Color(0xFFF8FAFC)
+                val chipBg = if (isSelected) {
+                    when (index) {
+                        1 -> AniCataBlue
+                        2 -> AniCataRose
+                        else -> AniCataTeal
+                    }
+                } else Color(0xFFF8FAFC)
                 val chipTextColor = if (isSelected) Color.White else Color(0xFF475569)
-                val chipBorder = if (isSelected) AniCataTeal else Color(0xFFE2E8F0)
+                val chipBorder = if (isSelected) {
+                    when (index) {
+                        1 -> AniCataBlue
+                        2 -> AniCataRose
+                        else -> AniCataTeal
+                    }
+                } else Color(0xFFE2E8F0)
 
                 Surface(
                     shape = RoundedCornerShape(16.dp),
@@ -430,7 +444,7 @@ fun ArchiveSearchAndFilterRow(
                             Icon(
                                 imageVector = Icons.Default.Bookmark,
                                 contentDescription = null,
-                                tint = if (isSelected) Color.White else AniCataTeal,
+                                tint = if (isSelected) Color.White else AniCataBlue,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(5.dp))
@@ -629,7 +643,7 @@ fun ArchiveGridCard(
                     Icon(
                         imageVector = if (item.isFavorite) Icons.Default.Favorite else Icons.Default.Bookmark,
                         contentDescription = null,
-                        tint = if (item.isFavorite) AniCataRose else AniCataTeal,
+                        tint = if (item.isFavorite) AniCataRose else AniCataBlue,
                         modifier = Modifier.size(14.dp)
                     )
                 }
@@ -788,7 +802,7 @@ fun ArchiveListCard(
                             Icon(
                                 imageVector = if (item.isFavorite) Icons.Default.Favorite else Icons.Default.Bookmark,
                                 contentDescription = null,
-                                tint = if (item.isFavorite) AniCataRose else AniCataTeal,
+                                tint = if (item.isFavorite) AniCataRose else AniCataBlue,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -827,25 +841,6 @@ fun ArchiveListCard(
 }
 
 @Composable
-fun VaultSearchFilterBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    placeholderText: String = "Search in archive...",
-    itemCount: Int = 0,
-    modifier: Modifier = Modifier
-) {
-    ArchiveSearchAndFilterRow(
-        query = query,
-        onQueryChange = onQueryChange,
-        selectedCategoryIndex = 0,
-        onCategorySelected = {},
-        isGridView = true,
-        onToggleGridView = {},
-        modifier = modifier
-    )
-}
-
-@Composable
 fun EmptyArchiveBookmarkContent(
     title: String,
     message: String,
@@ -859,14 +854,14 @@ fun EmptyArchiveBookmarkContent(
     ) {
         Surface(
             shape = CircleShape,
-            color = AniCataLightTeal,
+            color = AniCataLightBlue,
             modifier = Modifier.size(56.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.BookmarkBorder,
                     contentDescription = null,
-                    tint = AniCataTeal,
+                    tint = AniCataBlue,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -938,195 +933,5 @@ fun EmptyArchiveFavoriteContent(
             textAlign = TextAlign.Center,
             lineHeight = 18.sp
         )
-    }
-}
-
-/* Legacy Bento Cards maintained for backward compatibility */
-
-@Composable
-fun ArchiveCategoryCard(
-    title: String,
-    modifier: Modifier = Modifier,
-    subtitle: String = "",
-    badgeText: String = "",
-    icon: ImageVector? = null,
-    @DrawableRes imageRes: Int,
-    onClick: () -> Unit
-) {
-    val isAnime = title.contains("Anime", ignoreCase = true)
-    val cardIcon = icon ?: if (isAnime) Icons.Default.Movie else Icons.AutoMirrored.Filled.MenuBook
-    val defaultSubtitle = if (subtitle.isNotBlank()) subtitle else if (isAnime) "Explore bookmarked & favorite anime series" else "Explore bookmarked & favorite manga series"
-    val defaultBadge = if (badgeText.isNotBlank()) badgeText else if (isAnime) "ANIME" else "MANGA"
-
-    ElevatedCard(
-        modifier = modifier
-            .height(180.dp)
-            .clickableSingle { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.8f)
-                            )
-                        )
-                    )
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = AniCataTeal,
-                    modifier = Modifier.padding(2.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = cardIcon,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = defaultBadge,
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = title,
-                            color = Color.White,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            text = defaultSubtitle,
-                            color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.White,
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                                contentDescription = "Open",
-                                tint = AniCataTeal,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ArchiveDetailCard(
-    title: String,
-    modifier: Modifier = Modifier,
-    subtitle: String = "",
-    icon: ImageVector? = null,
-    @DrawableRes imageRes: Int,
-    onClick: () -> Unit,
-    overlayColor: Color
-) {
-    ArchiveCategoryCard(
-        title = title,
-        subtitle = subtitle,
-        icon = icon,
-        imageRes = imageRes,
-        onClick = onClick,
-        modifier = modifier
-    )
-}
-
-@Composable
-fun SmallArchiveHeaderCard(
-    title: String,
-    modifier: Modifier = Modifier,
-    @DrawableRes imageRes: Int,
-    onClick: () -> Unit
-) {
-    ElevatedCard(
-        modifier = modifier
-            .height(64.dp)
-            .clickableSingle { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = AniCataLightTeal,
-                modifier = Modifier.size(34.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = AniCataTeal,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = title,
-                    color = AniCataTextPrimary,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Tap to switch category",
-                    color = AniCataTextSecondary,
-                    fontSize = 11.sp
-                )
-            }
-        }
     }
 }
