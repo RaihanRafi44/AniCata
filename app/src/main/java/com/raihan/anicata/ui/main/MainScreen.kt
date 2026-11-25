@@ -430,12 +430,12 @@ fun MainScreen(
                 }
             }
 
-            // --- BAGIAN BACKGROUND GELAP (Muncul Instan/Default) ---
+            // --- BAGIAN BACKGROUND GELAP MODAL (Scrim) ---
             if (isSearchVisible) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.9f))
+                        .background(Color.Black.copy(alpha = 0.55f))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -445,36 +445,27 @@ fun MainScreen(
                 )
             }
 
-            // --- BAGIAN ANIMASI KHUSUS KOLOM SEARCH & HASILNYA ---
+            // --- ANIMASI MODAL TERPUSAT DI TENGAH VERTIKAL ---
             AnimatedVisibility(
                 visible = isSearchVisible,
-                // Kombinasi: Fade In + Membesar dari 80% + Terbuka ke bawah dari arah atas
-                enter = fadeIn(animationSpec = tween(300)) +
+                enter = fadeIn(animationSpec = tween(250)) +
                         scaleIn(
-                            initialScale = 0.8f,
-                            transformOrigin = TransformOrigin(0.5f, 0f),
-                            animationSpec = tween(300)
-                        ) +
-                        expandVertically(
-                            expandFrom = Alignment.Top,
-                            animationSpec = tween(300)
+                            initialScale = 0.92f,
+                            transformOrigin = TransformOrigin(0.5f, 0.5f),
+                            animationSpec = tween(250)
                         ),
-                // Kombinasi: Fade Out + Mengecil ke 80% + Menutup ke arah atas
-                exit = fadeOut(animationSpec = tween(250)) +
+                exit = fadeOut(animationSpec = tween(200)) +
                         scaleOut(
-                            targetScale = 0.8f,
-                            transformOrigin = TransformOrigin(0.5f, 0f),
-                            animationSpec = tween(250)
-                        ) +
-                        shrinkVertically(
-                            shrinkTowards = Alignment.Top,
-                            animationSpec = tween(250)
+                            targetScale = 0.92f,
+                            transformOrigin = TransformOrigin(0.5f, 0.5f),
+                            animationSpec = tween(200)
                         )
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .statusBarsPadding()
+                        .statusBarsPadding(),
+                    contentAlignment = Alignment.Center
                 ) {
                     SearchScreenLayout(
                         onClose = { isSearchVisible = false },
