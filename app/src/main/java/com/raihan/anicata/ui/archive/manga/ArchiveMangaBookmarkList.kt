@@ -1,29 +1,29 @@
 package com.raihan.anicata.ui.archive.manga
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,10 +41,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.raihan.anicata.data.model.storage.UserBookmarkManga
-import com.raihan.anicata.ui.top.anime.Tag
 import java.text.NumberFormat
 import java.util.Locale
-
 
 @Composable
 fun ArchiveMangaCardBookmark(
@@ -54,150 +52,209 @@ fun ArchiveMangaCardBookmark(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    val typeTagColor = Color(0xFFF4842D)
-    val chpTagColor = Color(0xFF4CAF50)
-    val ratingColor = Color(0xFFFFC107)
+    val themeColor = Color(0xFF006A60)
+    val cardShape = RoundedCornerShape(16.dp)
 
-    val cardShape = RoundedCornerShape(8.dp)
-
-    val backgroundColor = if (isSelected) Color(0xFFE3F2FD) else MaterialTheme.colorScheme.surface
+    val backgroundColor = if (isSelected) Color(0xFFE0F2F1) else Color.White
+    val borderStroke = if (isSelected) {
+        BorderStroke(1.5.dp, themeColor)
+    } else {
+        BorderStroke(1.dp, Color(0xFFE2E8F0))
+    }
 
     val formattedAiredDate = remember(item.publishedFrom, item.publishedTo) {
         formatAiredDateMangaBookmark(item.publishedFrom, item.publishedTo)
     }
 
-    Surface(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 5.dp)
             .clip(cardShape)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-
         shape = cardShape,
-        color = backgroundColor,
-        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f)),
-
-        ) {
-
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 2.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        border = borderStroke
+    ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
-                    .padding(8.dp)
+                    .padding(10.dp)
                     .fillMaxWidth()
-                    .height(IntrinsicSize.Min)
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(item.imageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = item.title,
-                    contentScale = ContentScale.Crop,
+                // Poster Image (90dp x 130dp)
+                Box(
                     modifier = Modifier
-                        .width(80.dp)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(6.dp))
-                        .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
-                )
+                        .width(90.dp)
+                        .height(130.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE2E8F0))
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = item.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
+                // Info Column
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .fillMaxWidth()
+                        .height(130.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = item.title,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = 20.sp
-                    )
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "Aired Date",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.DarkGray
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-
+                    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        // Title
                         Text(
-                            text = formattedAiredDate,
-                            fontSize = 12.sp,
-                            color = Color.DarkGray,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.People,
-                            contentDescription = "Members",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        val formatter = NumberFormat.getInstance(Locale.US)
-                        Text(
-                            fontSize = 12.sp,
-                            text = formatter.format(item.members),
-                            color = Color.DarkGray
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Tag(text = item.type, backgroundColor = typeTagColor)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        val chapterCount = item.chapters
-                        val chapterText = if (chapterCount == null || chapterCount == 0) "? ch" else "$chapterCount ch"
-                        Tag(text = chapterText, backgroundColor = chpTagColor)
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Score",
-                            tint = ratingColor,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = String.format(Locale.US,"%.2f", item.score),
+                            text = item.title,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color.Black
+                            fontSize = 15.sp,
+                            color = Color(0xFF0F172A),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 19.sp
                         )
+
+                        // Badges Row (Type & Chapters)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if (item.type.isNotBlank()) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFFE0F2F1),
+                                    contentColor = themeColor
+                                ) {
+                                    Text(
+                                        text = item.type,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp)
+                                    )
+                                }
+                            }
+
+                            val chapterCount = item.chapters
+                            val chapterText = if (chapterCount == null || chapterCount == 0) "? ch" else "$chapterCount ch"
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFFDCFCE7),
+                                contentColor = Color(0xFF15803D)
+                            ) {
+                                Text(
+                                    text = chapterText,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp)
+                                )
+                            }
+                        }
+
+                        // Published Date Range
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 1.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.CalendarToday,
+                                contentDescription = "Published Date",
+                                modifier = Modifier.size(13.dp),
+                                tint = Color(0xFF64748B)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = formattedAiredDate,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF475569),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    // Footer Row: Members & Score Badge
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.People,
+                                contentDescription = "Members",
+                                modifier = Modifier.size(13.dp),
+                                tint = Color(0xFF64748B)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            val formatter = NumberFormat.getInstance(Locale.US)
+                            Text(
+                                text = "${formatter.format(item.members)} members",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .background(
+                                    color = Color(0xFFFEF3C7),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 7.dp, vertical = 3.5.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Score",
+                                tint = Color(0xFFD97706),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = String.format(Locale.US, "%.2f", item.score),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.5.sp,
+                                color = Color(0xFFB45309)
+                            )
+                        }
                     }
                 }
             }
 
-                if (isSelected) {
-
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Selected",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            . align(Alignment.TopEnd)
-                            .padding(8.dp)
-                    )
+            // Checkmark overlay when selected
+            if (isSelected) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(24.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Selected",
+                            tint = themeColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
+            }
         }
     }
 }
@@ -211,7 +268,10 @@ fun ArchiveMangaListBookmarkLayout(
     onMangaLongClick: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         mangaList.forEach { manga ->
             ArchiveMangaCardBookmark(
@@ -219,7 +279,7 @@ fun ArchiveMangaListBookmarkLayout(
                 isSelected = selectedIds.contains(manga.id),
                 isSelectionMode = isSelectionMode,
                 onClick = { onMangaClick(manga.id) },
-                onLongClick = { onMangaLongClick(manga.id)}
+                onLongClick = { onMangaLongClick(manga.id) }
             )
         }
     }
@@ -233,7 +293,7 @@ fun formatAiredDateMangaBookmark(fromDate: String?, toDate: String?): String {
         try {
             val datePart = dateStr.substringBefore("T")
             val parts = datePart.split("-")
-            if(parts.size >= 2) {
+            if (parts.size >= 2) {
                 val year = parts[0]
                 val month = parts[1].toIntOrNull()
                 if (month != null && month in 1..12) {
@@ -245,7 +305,6 @@ fun formatAiredDateMangaBookmark(fromDate: String?, toDate: String?): String {
             return null
         }
         return null
-
     }
 
     val fromStr = parseDate(fromDate)

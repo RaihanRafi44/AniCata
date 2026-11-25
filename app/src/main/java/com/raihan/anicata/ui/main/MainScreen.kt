@@ -235,35 +235,28 @@ fun MainScreen(
                         }
                         composable("archive") {
                             ArchiveMainScreen(
-                                onNavigateToAnime = {
-                                    internalNavController.navigate("archive_anime")
-                                },
-                                onNavigateToManga = {
-                                    internalNavController.navigate("archive_manga")
+                                onItemClick = { id, isManga ->
+                                    if (isManga) {
+                                        navController.navigate(Screen.MangaDetail.createRoute(id))
+                                    } else {
+                                        navController.navigate(Screen.Detail.createRoute(id))
+                                    }
                                 }
                             )
                         }
 
                         composable("archive_anime") {
                             ArchiveAnimeScreen(
-                                onNavigateBack = { internalNavController.popBackStack() },
-                                onBookmarkClicked = {
-                                    internalNavController.navigate("archive_anime_bookmark")
-                                },
-                                onFavoriteClicked = {
-                                    internalNavController.navigate("archive_anime_favorite")
+                                onAnimeClick = { animeId ->
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
                                 }
                             )
                         }
 
                         composable("archive_manga") {
                             ArchiveMangaScreen(
-                                onNavigateBack = { internalNavController.popBackStack() },
-                                onBookmarkClicked = {
-                                    internalNavController.navigate("archive_manga_bookmark")
-                                },
-                                onFavoriteClicked = {
-                                    internalNavController.navigate("archive_manga_favorite")
+                                onMangaClick = { mangaId ->
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 }
                             )
                         }
@@ -271,25 +264,21 @@ fun MainScreen(
                         composable("archive_anime_bookmark") {
                             ArchiveAnimeScreenBookmark(
                                 onAnimeClick = { animeId ->
-                                    navController.navigate("detail/$animeId")
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
                                 },
                                 onNavigateBack = {
                                     internalNavController.popBackStack()
                                 },
-                                onDeleteClick = {
-                                },
+                                onDeleteClick = {}
                             )
                         }
 
                         composable("archive_anime_favorite") {
                             ArchiveAnimeScreenFavorite(
-                                //animeList = dummyList,
                                 onAnimeClick = { animeId ->
-                                    // Navigasi ke Detail Anime
-                                    navController.navigate("detail/$animeId")
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
                                 },
                                 onNavigateBack = {
-                                    // Kembali ke Archive Anime (Rute B)
                                     internalNavController.popBackStack()
                                 },
                                 onDeleteClick = {}
@@ -297,12 +286,9 @@ fun MainScreen(
                         }
 
                         composable("archive_manga_bookmark") {
-                            // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
-
-
                             ArchiveMangaScreenBookmark(
                                 onMangaClick = { mangaId ->
-                                    navController.navigate("detail/$mangaId")
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 },
                                 onNavigateBack = {
                                     internalNavController.popBackStack()
@@ -312,10 +298,9 @@ fun MainScreen(
                         }
 
                         composable("archive_manga_favorite") {
-
                             ArchiveMangaScreenFavorite(
                                 onMangaClick = { mangaId ->
-                                    navController.navigate("detail/$mangaId")
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 },
                                 onNavigateBack = {
                                     internalNavController.popBackStack()
