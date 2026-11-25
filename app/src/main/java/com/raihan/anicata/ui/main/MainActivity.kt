@@ -81,35 +81,39 @@ class MainActivity : ComponentActivity() {
                                         )
                                         viewModel.onSignInResult(loginResult)
                                     }
+                                } else {
+                                    viewModel.onSignInCancelled()
                                 }
                             }
                         )
 
-                        LaunchedEffect(key1 = state.isSignInSuccessful) {
-                            if (state.isSignInSuccessful) {
-                                navController.navigate("main") {
-                                    popUpTo("login") { inclusive = true }
-                                }
-                                Toast.makeText(
-                                    applicationContext,
-                                    "Sign in successful",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                viewModel.resetState()
-                            }
-                        }
-
                         SignInScreen(
                             state = state,
                             onSignInClick = {
+                                viewModel.onSignInStarted()
                                 lifecycleScope.launch {
-                                    val signIntentSender = googleAuthUiClient.signIn()
-                                    launcher.launch(
-                                        IntentSenderRequest.Builder(
-                                            signIntentSender ?: return@launch
-                                        ).build()
-                                    )
+                                    try {
+                                        val signIntentSender = googleAuthUiClient.signIn()
+                                        if (signIntentSender != null) {
+                                            launcher.launch(
+                                                IntentSenderRequest.Builder(signIntentSender).build()
+                                            )
+                                        } else {
+                                            viewModel.onSignInCancelled()
+                                        }
+                                    } catch (e: Exception) {
+                                        viewModel.onSignInCancelled()
+                                    }
                                 }
+                            },
+                            onDismissError = {
+                                viewModel.onErrorDismissed()
+                            },
+                            onSuccessAnimationFinished = {
+                                navController.navigate("main") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                                viewModel.resetState()
                             }
                         )
                     }

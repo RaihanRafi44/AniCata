@@ -13,5 +13,8 @@ data class UserData(
 
 data class LoginState(
     val isSignInSuccessful: Boolean = false,
-    val signInError: String? = null
+    val signInError: String? = null,
+    val isLoading: Boolean = false,
+    val loadingMessage: String = "AUTHENTICATING...",
+    val username: String? = null
 )
