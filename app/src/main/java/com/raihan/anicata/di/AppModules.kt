@@ -198,7 +198,7 @@ object AppModules {
         module{
             single{ GetGenreListUseCase(get(),get())}
             single{ GetMediaListUseCase(get(), get()) }
-            single{ GetSeasonalUseCase(get(), get()) }
+            single{ GetSeasonalUseCase(get(), get(), get()) }
         }
 
     private val viewModel =

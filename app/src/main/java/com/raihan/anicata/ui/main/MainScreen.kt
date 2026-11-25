@@ -229,7 +229,7 @@ fun MainScreen(
                                     internalNavController.navigate("seasonal")
                                 },
                                 onViewAllUpcomingClick = {
-                                    internalNavController.navigate("seasonal")
+                                    internalNavController.navigate("seasonal?season=upcoming")
                                 }
                             )
                         }
@@ -316,8 +316,19 @@ fun MainScreen(
                             )
                         }
                         // ✅ 2. Tambahkan rute baru untuk SeasonalScreen
-                        composable("seasonal") {
+                        composable(
+                            route = "seasonal?season={season}",
+                            arguments = listOf(
+                                navArgument("season") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val seasonArg = backStackEntry.arguments?.getString("season")
                             SeasonalScreen(
+                                initialSeason = seasonArg,
                                 onAnimeClick = { animeId ->
                                     navController.navigate(Screen.Detail.createRoute(animeId))
                                 }

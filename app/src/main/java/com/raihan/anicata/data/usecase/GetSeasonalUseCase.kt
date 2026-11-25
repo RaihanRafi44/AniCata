@@ -3,6 +3,7 @@ package com.raihan.anicata.data.usecase
 import com.raihan.anicata.data.model.anime.season.list.SeasonAnimeList
 import com.raihan.anicata.data.model.anime.season.year.SeasonalResultData
 import com.raihan.anicata.data.repository.anime.AnimeSeasonListRepository
+import com.raihan.anicata.data.repository.anime.AnimeSeasonUpcomingRepository
 import com.raihan.anicata.data.repository.anime.AnimeSeasonYearRepository
 import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.flow.Flow
@@ -12,7 +13,8 @@ import java.util.Calendar
 
 class GetSeasonalUseCase(
     private val yearRepository: AnimeSeasonYearRepository,
-    private val seasonListRepository: AnimeSeasonListRepository
+    private val seasonListRepository: AnimeSeasonListRepository,
+    private val upcomingRepository: AnimeSeasonUpcomingRepository
 ) {
 
     /**
@@ -51,9 +53,14 @@ class GetSeasonalUseCase(
 
                         val defaultYear = defaultYearData.year.toString()
                         val defaultSeasons = defaultYearData.seasons
+                        val seasonsWithUpcoming = if (defaultSeasons.none { it.equals("Upcoming", ignoreCase = true) }) {
+                            defaultSeasons + "Upcoming"
+                        } else {
+                            defaultSeasons
+                        }
 
-                        val defaultSeason = defaultSeasons.find { it.equals(currentSeasonString, ignoreCase = true) }
-                            ?: defaultSeasons.firstOrNull()
+                        val defaultSeason = seasonsWithUpcoming.find { it.equals(currentSeasonString, ignoreCase = true) }
+                            ?: seasonsWithUpcoming.firstOrNull()
                             ?: ""
 
                         ResultWrapper.Success(
@@ -61,7 +68,7 @@ class GetSeasonalUseCase(
                                 seasonListData = capitalizedSeasonData,
                                 yearOptions = years,
                                 selectedYear = defaultYear,
-                                seasonOptions = defaultSeasons,
+                                seasonOptions = seasonsWithUpcoming,
                                 selectedSeason = defaultSeason
                             )
                         )
@@ -89,6 +96,15 @@ class GetSeasonalUseCase(
         val page = params.page
         val orderBy = params.orderBy
         val sort = params.sort
+
+        if (season.equals("upcoming", ignoreCase = true)) {
+            val isContinuing = filterStatus.equals("Continuing", ignoreCase = true) || filterStatus.equals("All", ignoreCase = true)
+            return upcomingRepository.getSeasonUpcomingSeasonalData(
+                filter = filterType,
+                continuing = isContinuing,
+                page = page
+            )
+        }
 
         return when (filterStatus) {
             "New" -> {

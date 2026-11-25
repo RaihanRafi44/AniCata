@@ -71,22 +71,39 @@ fun AnimeFilterGroup(
     itemCount: Int? = null
 ) {
     val themeColor = Color(0xFF006A60)
-    val defaultSeasons = listOf("Winter", "Spring", "Summer", "Fall")
-    val displaySeasons = seasonOptions.ifEmpty { defaultSeasons }
+    val defaultSeasons = listOf("Winter", "Spring", "Summer", "Fall", "Upcoming")
+    val displaySeasons = if (seasonOptions.isEmpty()) {
+        defaultSeasons
+    } else if (seasonOptions.none { it.equals("Upcoming", ignoreCase = true) }) {
+        seasonOptions + "Upcoming"
+    } else {
+        seasonOptions
+    }
 
+    val isUpcoming = selectedSeason.equals("upcoming", ignoreCase = true)
     val currentSeasonFormatted = selectedSeason.capitalizeFirstLetter()
-    val dynamicTitle = if (currentSeasonFormatted.isNotBlank() && selectedYear.isNotBlank()) {
+    val dynamicTitle = if (isUpcoming) {
+        "Upcoming Anime Lineup"
+    } else if (currentSeasonFormatted.isNotBlank() && selectedYear.isNotBlank()) {
         "$currentSeasonFormatted $selectedYear Anime"
     } else {
         "Seasonal Anime Explorer"
     }
 
-    val seasonIcon = when (selectedSeason.lowercase()) {
+    val seasonIcon = if (isUpcoming) {
+        "🔮"
+    } else when (selectedSeason.lowercase()) {
         "winter" -> "❄️"
         "spring" -> "🌸"
         "summer" -> "☀️"
         "fall" -> "🍂"
         else -> "📺"
+    }
+
+    val dynamicSubtitle = if (isUpcoming) {
+        "Exploring all upcoming & TBA announced releases"
+    } else {
+        "Exploring $currentSeasonFormatted $selectedYear releases & lineup"
     }
 
     Column(
@@ -131,7 +148,7 @@ fun AnimeFilterGroup(
                         )
                     }
                     Text(
-                        text = "Exploring $currentSeasonFormatted $selectedYear releases & lineup",
+                        text = dynamicSubtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray,
                         fontSize = 11.5.sp,
@@ -175,7 +192,9 @@ fun AnimeFilterGroup(
         ) {
             items(displaySeasons) { season ->
                 val isSelected = season.equals(selectedSeason, ignoreCase = true)
-                val icon = when (season.lowercase()) {
+                val icon = if (season.equals("upcoming", ignoreCase = true)) {
+                    "🔮"
+                } else when (season.lowercase()) {
                     "winter" -> "❄️"
                     "spring" -> "🌸"
                     "summer" -> "☀️"
@@ -217,16 +236,17 @@ fun AnimeFilterGroup(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Baris 1 Dropdowns: Year & Type (2 kolom seimbang agar lega di HP kecil)
+        // Baris 1 Dropdowns: Year & Type
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             FilterDropdownMenu(
                 label = "Year",
-                options = yearOptions,
-                selectedOption = selectedYear,
+                options = if (isUpcoming) listOf("TBA") else yearOptions,
+                selectedOption = if (isUpcoming) "TBA" else selectedYear,
                 onOptionSelected = onYearChange,
+                enabled = !isUpcoming,
                 modifier = Modifier.weight(1f)
             )
             FilterDropdownMenu(
@@ -240,7 +260,7 @@ fun AnimeFilterGroup(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Baris 2 Dropdowns: Status & Sort By (2 kolom seimbang)
+        // Baris 2 Dropdowns: Status & Sort By
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -263,7 +283,7 @@ fun AnimeFilterGroup(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Baris 3: Tombol Apply Filters (Full Width agar sangat mudah di-tap & tidak pernah terpotong)
+        // Baris 3: Tombol Apply Filters
         Button(
             onClick = onUpdateClick,
             modifier = Modifier
@@ -306,14 +326,15 @@ fun FilterDropdownMenu(
     options: List<String>,
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
     val themeColor = Color(0xFF006A60)
 
     ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
+        expanded = if (enabled) expanded else false,
+        onExpandedChange = { if (enabled) expanded = !expanded },
         modifier = modifier
     ) {
         Surface(
@@ -321,10 +342,10 @@ fun FilterDropdownMenu(
                 .menuAnchor()
                 .fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            color = Color(0xFFF5F5F5),
+            color = if (enabled) Color(0xFFF5F5F5) else Color(0xFFEEEEEE),
             border = androidx.compose.foundation.BorderStroke(
                 width = 1.dp,
-                color = if (expanded) themeColor else Color(0xFFE0E0E0)
+                color = if (expanded && enabled) themeColor else Color(0xFFE0E0E0)
             )
         ) {
             Row(
@@ -348,36 +369,40 @@ fun FilterDropdownMenu(
                         text = selectedOption.ifBlank { "All" },
                         fontSize = 12.5.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF191C1E),
+                        color = if (enabled) Color(0xFF191C1E) else Color.Gray,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                if (enabled) {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                }
             }
         }
 
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = option,
-                            fontSize = 12.sp,
-                            fontWeight = if (option == selectedOption) FontWeight.Bold else FontWeight.Normal,
-                            color = if (option == selectedOption) themeColor else Color.Unspecified
-                        )
-                    },
-                    onClick = {
-                        onOptionSelected(option)
-                        expanded = false
-                    },
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                )
+        if (enabled) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(Color.White)
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = option,
+                                fontSize = 12.sp,
+                                fontWeight = if (option == selectedOption) FontWeight.Bold else FontWeight.Normal,
+                                color = if (option == selectedOption) themeColor else Color.Unspecified
+                            )
+                        },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        },
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    )
+                }
             }
         }
     }
@@ -396,7 +421,7 @@ fun AnimeFilterGroupFinalPreview() {
         yearOptions = listOf("2025", "2024"),
         selectedSeason = "Fall",
         onSeasonChange = {},
-        seasonOptions = listOf("Winter", "Spring", "Summer", "Fall"),
+        seasonOptions = listOf("Winter", "Spring", "Summer", "Fall", "Upcoming"),
         selectedType = "TV",
         onTypeChange = {},
         typeOptions = listOf("TV", "Movie", "OVA"),

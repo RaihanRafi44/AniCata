@@ -43,6 +43,7 @@ class SeasonalViewModel(
     val uiState: StateFlow<SeasonalUiState> = _uiState.asStateFlow()
 
     private var fetchJob: Job? = null
+    private var pendingInitialSeason: String? = null
 
     init {
         val types = listOf("TV", "Movie", "OVA", "Special", "ONA", "Music")
@@ -63,12 +64,34 @@ class SeasonalViewModel(
         loadSeasonFilters()
     }
 
+    fun setInitialSeason(season: String) {
+        if (season.isBlank()) return
+        pendingInitialSeason = season
+        val currentSeasons = _uiState.value.seasonOptions
+        val matched = currentSeasons.find { it.equals(season, ignoreCase = true) }
+            ?: if (season.equals("upcoming", ignoreCase = true)) "Upcoming" else season
+
+        _uiState.update {
+            it.copy(selectedSeason = matched)
+        }
+        if (!_uiState.value.isLoadingFilters) {
+            onUpdateFilter()
+        }
+    }
+
     private fun loadSeasonFilters() {
         viewModelScope.launch {
             getSeasonalDataUseCase.getSeasonFilters().collect { result ->
                 when (result) {
                     is ResultWrapper.Success -> {
                         val filterData = result.payload!!
+                        val initialSeasonToUse = pendingInitialSeason
+                        val seasonToSet = if (!initialSeasonToUse.isNullOrBlank()) {
+                            filterData.seasonOptions.find { it.equals(initialSeasonToUse, ignoreCase = true) }
+                                ?: if (initialSeasonToUse.equals("upcoming", ignoreCase = true)) "Upcoming" else filterData.selectedSeason
+                        } else {
+                            filterData.selectedSeason
+                        }
 
                         _uiState.update {
                             it.copy(
@@ -77,7 +100,7 @@ class SeasonalViewModel(
                                 yearOptions = filterData.yearOptions,
                                 selectedYear = filterData.selectedYear,
                                 seasonOptions = filterData.seasonOptions,
-                                selectedSeason = filterData.selectedSeason
+                                selectedSeason = seasonToSet
                             )
                         }
 
@@ -100,11 +123,16 @@ class SeasonalViewModel(
         val newSeasons = _uiState.value.seasonListData
             .find { it.year.toString() == newYear }
             ?.seasons ?: emptyList()
-        val newSelectedSeason = newSeasons.firstOrNull() ?: ""
+        val seasonsWithUpcoming = if (newSeasons.none { it.equals("Upcoming", ignoreCase = true) }) {
+            newSeasons + "Upcoming"
+        } else {
+            newSeasons
+        }
+        val newSelectedSeason = seasonsWithUpcoming.firstOrNull() ?: ""
         _uiState.update {
             it.copy(
                 selectedYear = newYear,
-                seasonOptions = newSeasons,
+                seasonOptions = seasonsWithUpcoming,
                 selectedSeason = newSelectedSeason
             )
         }
@@ -134,11 +162,12 @@ class SeasonalViewModel(
         }
 
         val currentState = _uiState.value
+        val isUpcoming = currentState.selectedSeason.equals("upcoming", ignoreCase = true)
         val year = currentState.selectedYear.toIntOrNull()
         val season = currentState.selectedSeason
         val filterType = currentState.selectedType
 
-        if (year == null || season.isBlank()) {
+        if ((year == null && !isUpcoming) || season.isBlank()) {
             if (!_uiState.value.isLoadingFilters) {
                 _uiState.update { it.copy(apiResult = ResultWrapper.Error(Exception("Invalid year or season."))) }
             }
@@ -148,7 +177,7 @@ class SeasonalViewModel(
         val (orderBy, sort) = mapSortToOrderByAndSort(currentState.selectedSort)
 
         val params = AnimeFilterParams(
-            year = year,
+            year = year ?: 0,
             season = season.lowercase(),
             filterType = filterType.lowercase(),
             filterStatus = currentState.selectedStatus,
@@ -191,9 +220,10 @@ class SeasonalViewModel(
         val currentState = _uiState.value
         if (!currentState.hasNextPage || currentState.isNextPageLoading || currentState.apiResult !is ResultWrapper.Success) return
 
-        val year = currentState.selectedYear.toIntOrNull() ?: return
+        val isUpcoming = currentState.selectedSeason.equals("upcoming", ignoreCase = true)
+        val year = currentState.selectedYear.toIntOrNull()
         val season = currentState.selectedSeason
-        if (season.isBlank()) return
+        if ((year == null && !isUpcoming) || season.isBlank()) return
 
         val nextPage = currentState.currentPage + 1
         _uiState.update { it.copy(isNextPageLoading = true) }
@@ -201,7 +231,7 @@ class SeasonalViewModel(
         val (orderBy, sort) = mapSortToOrderByAndSort(currentState.selectedSort)
 
         val params = AnimeFilterParams(
-            year = year,
+            year = year ?: 0,
             season = season.lowercase(),
             filterType = currentState.selectedType.lowercase(),
             filterStatus = currentState.selectedStatus,

@@ -80,7 +80,8 @@ interface AniCataApiService {
     @GET("seasons/upcoming")
     suspend fun getSeasonUpcoming(
         @Query("filter") filter: String,
-        @Query("continuing") continuing: Boolean
+        @Query("continuing") continuing: Boolean,
+        @Query("page") page: Int = 1
     ): SeasonUpcomingResponse
 
     @GET("genres/anime")
