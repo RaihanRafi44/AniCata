@@ -204,7 +204,6 @@ fun MainScreen(
                             }
                         },
                         onSearchClick = { isSearchVisible = true },
-                        onSettingsClick = { /* TODO */ },
                         scrollBehavior = scrollBehavior
                     )
                 },

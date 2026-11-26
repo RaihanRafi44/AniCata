@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,7 +38,6 @@ import com.raihan.anicata.ui.theme.JimNightshade
 fun TopNavBar(
     onMenuClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     containerColor: Color = Color(0xFFE0F2F1),
@@ -107,21 +105,6 @@ fun TopNavBar(
                             modifier = Modifier.size(24.dp),
                         )
                     }
-
-                    // Circular Action Button: Settings
-                    IconButton(
-                        onClick = onSettingsClick,
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = contentColor,
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -141,7 +124,6 @@ fun TopNavBarPreview() {
         TopNavBar(
             onMenuClick = {},
             onSearchClick = {},
-            onSettingsClick = {},
         )
     }
 }
