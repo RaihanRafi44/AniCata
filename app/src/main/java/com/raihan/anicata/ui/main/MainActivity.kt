@@ -29,6 +29,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.android.gms.auth.api.identity.Identity
+import com.raihan.anicata.ui.chatbot.ChatbotScreen
 import com.raihan.anicata.ui.detail.anime.DetailAnimeScreen
 import com.raihan.anicata.ui.detail.manga.DetailMangaScreen
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
@@ -81,35 +82,39 @@ class MainActivity : ComponentActivity() {
                                         )
                                         viewModel.onSignInResult(loginResult)
                                     }
+                                } else {
+                                    viewModel.onSignInCancelled()
                                 }
                             }
                         )
 
-                        LaunchedEffect(key1 = state.isSignInSuccessful) {
-                            if (state.isSignInSuccessful) {
-                                navController.navigate("main") {
-                                    popUpTo("login") { inclusive = true }
-                                }
-                                Toast.makeText(
-                                    applicationContext,
-                                    "Sign in successful",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                viewModel.resetState()
-                            }
-                        }
-
                         SignInScreen(
                             state = state,
                             onSignInClick = {
+                                viewModel.onSignInStarted()
                                 lifecycleScope.launch {
-                                    val signIntentSender = googleAuthUiClient.signIn()
-                                    launcher.launch(
-                                        IntentSenderRequest.Builder(
-                                            signIntentSender ?: return@launch
-                                        ).build()
-                                    )
+                                    try {
+                                        val signIntentSender = googleAuthUiClient.signIn()
+                                        if (signIntentSender != null) {
+                                            launcher.launch(
+                                                IntentSenderRequest.Builder(signIntentSender).build()
+                                            )
+                                        } else {
+                                            viewModel.onSignInCancelled()
+                                        }
+                                    } catch (e: Exception) {
+                                        viewModel.onSignInCancelled()
+                                    }
                                 }
+                            },
+                            onDismissError = {
+                                viewModel.onErrorDismissed()
+                            },
+                            onSuccessAnimationFinished = {
+                                navController.navigate("main") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                                viewModel.resetState()
                             }
                         )
                     }
@@ -162,6 +167,14 @@ class MainActivity : ComponentActivity() {
                         DetailMangaScreen(
                             mangaId = mangaId,
                             navController = navController
+                        )
+                    }
+
+                    composable(Screen.Chatbot.route) {
+                        ChatbotScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
                         )
                     }
                 }

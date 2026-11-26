@@ -221,3 +221,69 @@ fun Collection<SeasonUpcomingData>?.toSeasonUpcomingAnimeList() =
     this?.map {
         it.toSeasonUpcomingAnime()
     } ?: listOf()
+
+fun SeasonUpcomingData?.toSeasonYearAnime(): com.raihan.anicata.data.model.anime.season.year.SeasonAnimeYear = com.raihan.anicata.data.model.anime.season.year.SeasonAnimeYear(
+    id = this?.malId ?: 0,
+    url = this?.url.orEmpty(),
+    images = com.raihan.anicata.data.model.anime.season.year.ImagesSeasonAnimeYear(
+        jpg = com.raihan.anicata.data.model.anime.season.year.ImageFormatJpg(
+            imageUrl = this?.images?.jpg?.imageUrl,
+            smallImageUrl = this?.images?.jpg?.smallImageUrl,
+            largeImageUrl = this?.images?.jpg?.largeImageUrl
+        ),
+        webp = com.raihan.anicata.data.model.anime.season.year.ImageFormatWebp(
+            imageUrl = this?.images?.webp?.imageUrl,
+            smallImageUrl = this?.images?.webp?.smallImageUrl,
+            largeImageUrl = this?.images?.webp?.largeImageUrl
+        )
+    ),
+    trailer = this?.trailer?.let {
+        com.raihan.anicata.data.model.anime.season.year.TrailerSeasonAnimeYear(
+            youtubeId = it.youtubeId,
+            url = it.url,
+            embedUrl = it.embedUrl
+        )
+    },
+    approved = this?.approved ?: false,
+    title = this?.title.orEmpty(),
+    titleEnglish = this?.titleEnglish,
+    titleJapanese = this?.titleJapanese,
+    titleSynonyms = this?.titleSynonyms.orEmpty(),
+    type = this?.type,
+    source = this?.source,
+    episodes = this?.episodes,
+    status = this?.status,
+    airing = this?.airing ?: false,
+    aired = null,
+    duration = this?.duration,
+    rating = this?.rating,
+    score = this?.score,
+    scoredBy = this?.scoredBy,
+    rank = this?.rank,
+    popularity = this?.popularity,
+    members = this?.members,
+    favorites = this?.favorites,
+    synopsis = this?.synopsis,
+    background = this?.background,
+    season = this?.season,
+    year = this?.year,
+    broadcast = null,
+    producers = this?.producers?.map { com.raihan.anicata.data.model.anime.season.year.SeasonYearDataProducers(it.malId ?: 0, it.type.orEmpty(), it.name.orEmpty(), it.url.orEmpty()) } ?: emptyList(),
+    licensors = emptyList(),
+    studios = this?.studios?.map { com.raihan.anicata.data.model.anime.season.year.SeasonYearDataStudios(it.malId ?: 0, it.type.orEmpty(), it.name.orEmpty(), it.url.orEmpty()) } ?: emptyList(),
+    genres = this?.genres?.map { com.raihan.anicata.data.model.anime.season.year.SeasonYearDataGenres(it.malId ?: 0, it.type.orEmpty(), it.name.orEmpty(), it.url.orEmpty()) } ?: emptyList(),
+    explicitGenres = emptyList(),
+    themes = emptyList(),
+    demographics = emptyList()
+)
+
+fun com.raihan.anicata.data.source.network.model.anime.seasons.upcoming.SeasonUpcomingResponse?.toSeasonalResultData(): com.raihan.anicata.data.model.anime.season.year.SeasonalResultData {
+    val list = this?.data?.map { it.toSeasonYearAnime() } ?: emptyList()
+    val total = this?.pagination?.items?.total ?: list.size
+    val hasNext = this?.pagination?.hasNextPage ?: (list.size >= 25)
+    return com.raihan.anicata.data.model.anime.season.year.SeasonalResultData(
+        animeList = list,
+        totalItems = total,
+        hasNextPage = hasNext
+    )
+}

@@ -13,8 +13,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import com.raihan.anicata.ui.home.ModernPullToRefreshIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +39,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun TopMangaScreen(
     viewModel: TopMangaViewModel = koinViewModel(),
-    onMangaClick: (Int) -> Unit
+    onMangaClick: (Int) -> Unit,
+    scrollToTopTrigger: Int = 0,
+    scrollToBottomTrigger: Int = 0
 ) {
     val topMangaState by viewModel.topMangaState.collectAsState()
 
@@ -63,6 +65,21 @@ fun TopMangaScreen(
 
     val listState = rememberLazyListState()
     var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.scrollToItem(0, 0)
+        }
+    }
+
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0) {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            if (totalItems > 0) {
+                listState.scrollToItem(totalItems - 1)
+            }
+        }
+    }
 
     LaunchedEffect(topMangaState) {
         if (topMangaState is ResultWrapper.Loading) {
@@ -92,6 +109,16 @@ fun TopMangaScreen(
         }
     }
 
+    val mangaList = (topMangaState as? ResultWrapper.Success)?.payload?.first ?: emptyList()
+    val pageSize = 25
+    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
+
+    val rankedMangaList = remember(mangaList, offset) {
+        mangaList.mapIndexed { index, manga ->
+            manga.copy(rank = offset + index + 1)
+        }
+    }
+
     PullToRefreshBox(
         isRefreshing = isRefreshingManga,
         onRefresh = {
@@ -107,22 +134,19 @@ fun TopMangaScreen(
         modifier = Modifier.fillMaxSize(),
         state = pullRefreshStateManga,
         indicator = {
-            PullToRefreshDefaults.Indicator(
-                modifier = Modifier.align(Alignment.TopCenter),
+            ModernPullToRefreshIndicator(
                 isRefreshing = isRefreshingManga,
-                state = pullRefreshStateManga,
-                containerColor = Color(0xFF2C2C2C),
-                color = Color(0xFFFF9800)
+                state = pullRefreshStateManga
             )
         }
     ) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp)
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
             item(key = "filter_header") {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 FilterTopManga(
                     selectedFilterApiValue = selectedFilter,
@@ -186,23 +210,41 @@ fun TopMangaScreen(
                 }
 
                 is ResultWrapper.Success -> {
-                    val mangaList = animatedStateTopManga.payload?.first ?: emptyList()
-                    val pageSize = 25
-                    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
-
-                    items(
-                        count = mangaList.size,
-                        key = { index -> mangaList[index].id }
-                    ) { index ->
-                        val manga = mangaList[index]
-                        val rankedManga = remember(manga, offset, index) {
-                            manga.copy(rank = offset + index + 1)
+                    if (paginationState.currentPage == 1 && rankedMangaList.size >= 3) {
+                        item(key = "top_3_podium") {
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                MangaTop3PodiumShowcase(
+                                    top3MangaList = rankedMangaList.take(3),
+                                    onMangaClick = onMangaClick
+                                )
+                            }
                         }
-                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            MangaCard(
-                                item = rankedManga,
-                                onClick = { onMangaClick(rankedManga.id) }
-                            )
+
+                        val remainingManga = rankedMangaList.drop(3)
+                        items(
+                            count = remainingManga.size,
+                            key = { index -> remainingManga[index].id }
+                        ) { index ->
+                            val manga = remainingManga[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                MangaCard(
+                                    item = manga,
+                                    onClick = { onMangaClick(manga.id) }
+                                )
+                            }
+                        }
+                    } else {
+                        items(
+                            count = rankedMangaList.size,
+                            key = { index -> rankedMangaList[index].id }
+                        ) { index ->
+                            val manga = rankedMangaList[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                MangaCard(
+                                    item = manga,
+                                    onClick = { onMangaClick(manga.id) }
+                                )
+                            }
                         }
                     }
 
@@ -232,4 +274,3 @@ fun TopMangaScreen(
         }
     }
 }
-

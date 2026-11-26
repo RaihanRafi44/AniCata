@@ -1,13 +1,10 @@
 package com.raihan.anicata.ui.home
 
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,13 +18,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,29 +31,25 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import coil.compose.AsyncImage
-import com.raihan.anicata.R
 import com.raihan.anicata.utils.ResultWrapper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 import kotlin.math.absoluteValue
 
 data class BannerData(
@@ -72,45 +63,36 @@ data class BannerData(
 
 @Composable
 fun BannerSlider(
-    // --- 2. UBAH PARAMETER ---
-    //banners: List<BannerData>,
     state: ResultWrapper<List<BannerData>>,
-    onBannerClick: (Int) -> Unit // <-- Ubah ke (Int)
+    onBannerClick: (Int) -> Unit
 ) {
-    // --- 3. HAPUS DUMMY DATA (val banners = ...) ---
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp, top = 24.dp),
+            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp, top = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Trending Season Now\uD83D\uDD25",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.Black,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
+                .align(Alignment.Start)
                 .padding(bottom = 12.dp)
-        )
-
-        /*// --- 4. TAMBAHKAN SAFETY CHECK ---
-        // Ini PENTING agar pager "tak terbatas" Anda tidak crash jika list kosong
-        if (banners.isEmpty()) {
-            // Tampilkan placeholder atau biarkan kosong
-            Spacer(modifier = Modifier.height(280.dp)) // Menjaga layout
-            return
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(4.dp, 18.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFF006A60))
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Trending Season Now 🔥",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF191C1E)
+            )
         }
-
-        // --- LOGIKA INFINITE PAGER (Tidak Berubah) ---
-        val pageCount = banners.size // Sekarang dinamis
-        val initialPage = Int.MAX_VALUE / 2
-        val pagerState = rememberPagerState(
-            initialPage = initialPage,
-            pageCount = { Int.MAX_VALUE }
-        )
-        val coroutineScope = rememberCoroutineScope()*/
 
         when (state) {
             is ResultWrapper.Loading -> {
@@ -118,7 +100,10 @@ fun BannerSlider(
             }
             is ResultWrapper.Error -> {
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(280.dp).padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                        .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -128,10 +113,12 @@ fun BannerSlider(
                     )
                 }
             }
-
             is ResultWrapper.Empty -> {
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(280.dp).padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                        .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -145,7 +132,7 @@ fun BannerSlider(
                 val banners = state.payload ?: emptyList()
 
                 if (banners.isEmpty()) {
-                    Spacer(modifier = Modifier.height(280.dp))
+                    Spacer(modifier = Modifier.height(260.dp))
                     return
                 }
 
@@ -162,7 +149,7 @@ fun BannerSlider(
                         snapshotFlow { pagerState.isScrollInProgress }
                             .filter { !it }
                             .first()
-                        delay(3000L)
+                        delay(3500L)
                         if (!pagerState.isScrollInProgress) {
                             val currentPage = pagerState.currentPage
                             val nextPage = currentPage + 1
@@ -171,148 +158,142 @@ fun BannerSlider(
                     }
                 }
 
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                ) { page ->
+                    val pageIndex = (page - initialPage).mod(pageCount).let { if (it < 0) it + pageCount else it }
 
+                    val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                    val scale = lerp(
+                        start = 0.90f,
+                        stop = 1f,
+                        fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
+                    )
+                    val alpha = lerp(
+                        start = 0.6f,
+                        stop = 1f,
+                        fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
+                    )
 
-        // --- AUTO-SCROLL (Tidak Berubah) ---
+                    BannerItem(
+                        banner = banners[pageIndex],
+                        modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                                this.alpha = alpha
+                            }
+                            .clickable { onBannerClick(banners[pageIndex].id) }
+                    )
+                }
 
+                Spacer(modifier = Modifier.height(12.dp))
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp)
-        ) { page ->
-            // Konversi (Tidak Berubah)
-            val pageIndex = (page - initialPage).mod(pageCount).let { if (it < 0) it + pageCount else it }
-
-            // Efek Carousel (Tidak Berubah)
-            val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-            val scale = lerp(
-                start = 0.85f,
-                stop = 1f,
-                fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
-            )
-            val alpha = lerp(
-                start = 0.5f,
-                stop = 1f,
-                fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
-            )
-
-            BannerItem(
-                banner = banners[pageIndex],
-                modifier = Modifier
-                    .padding(horizontal = 0.2.dp)
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        this.alpha = alpha
+                BannerIndicator(
+                    pageCount = pageCount,
+                    currentPage = (pagerState.currentPage - initialPage).mod(pageCount).let { if (it < 0) it + pageCount else it },
+                    onDotClick = { index ->
+                        val targetPageOffset = index - (pagerState.currentPage - initialPage).mod(pageCount)
+                        val targetPage = pagerState.currentPage + targetPageOffset
+                        coroutineScope.launch { pagerState.animateScrollToPage(targetPage) }
                     }
-
-                    .clickable { onBannerClick(banners[pageIndex].id) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        BannerIndicator(
-            pageCount = pageCount,
-            currentPage = (pagerState.currentPage - initialPage).mod(pageCount).let { if (it < 0) it + pageCount else it },
-            onDotClick = { index ->
-                val targetPageOffset = index - (pagerState.currentPage - initialPage).mod(pageCount)
-                val targetPage = pagerState.currentPage + targetPageOffset
-                coroutineScope.launch { pagerState.animateScrollToPage(targetPage) }
+                )
             }
-        )
-    }
             else -> {}
-}
+        }
     }
 }
 
 @Composable
 fun BannerItem(banner: BannerData, modifier: Modifier = Modifier) {
-    Box(
+    Surface(
         modifier = modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(10.dp))
-            .border(
-                width = 1.dp,
-                color = Color.Black,
-                shape = RoundedCornerShape(10.dp)
-            )
+            .shadow(4.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFF1E1E1E)
     ) {
-
-        AsyncImage(
-            model = banner.imageUrl,
-            contentDescription = banner.title,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 1.0f)),
-                        startY = 0f,
-                        endY = Float.POSITIVE_INFINITY
-                    )
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .fillMaxHeight(0.6f)
-                .padding(start = 16.dp, end = 16.dp, bottom = 20.dp)
-        ) {
-            Column(
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = banner.imageUrl,
+                contentDescription = banner.title,
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.Start
-            ) {
+                contentScale = ContentScale.Crop
+            )
 
-                Text(
-                    text = banner.type.uppercase(),
-                    color = Color.Black,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .background(Color(0xFFFF9800), shape = RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.4f),
+                                Color.Black.copy(alpha = 0.95f)
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFF006A60),
+                    contentColor = Color.White
+                ) {
+                    Text(
+                        text = banner.type.uppercase(),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(6.dp))
+
                 Text(
                     text = banner.title,
                     color = Color.White,
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 24.sp,
+                    lineHeight = 22.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Genres : ${banner.genres}",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Synopsis : ${banner.synopsis}", // <-- Gunakan synopsis
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    lineHeight = 16.sp,
-                    softWrap = true,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth()
-                )
+
+                if (banner.genres.isNotBlank() && banner.genres != "N/A") {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = banner.genres,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                if (banner.synopsis.isNotBlank() && banner.synopsis != "No synopsis available.") {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = banner.synopsis,
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
@@ -323,10 +304,10 @@ fun BannerIndicator(
     pageCount: Int,
     currentPage: Int,
     onDotClick: (Int) -> Unit,
-    indicatorHeight: Dp = 12.dp,
-    indicatorWidth: Dp = 12.dp,
-    indicatorSelectedWidth: Dp = 24.dp,
-    selectedColor: Color = Color(0xFFCE93D8),
+    indicatorHeight: Dp = 8.dp,
+    indicatorWidth: Dp = 8.dp,
+    indicatorSelectedWidth: Dp = 20.dp,
+    selectedColor: Color = Color(0xFF006A60),
     unselectedColor: Color = Color(0xFFDCDCDC)
 ) {
     Row(
@@ -352,7 +333,7 @@ fun BannerIndicator(
 
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 6.dp)
+                    .padding(horizontal = 4.dp)
                     .height(indicatorHeight)
                     .width(animatedWidth)
                     .clip(RoundedCornerShape(50))

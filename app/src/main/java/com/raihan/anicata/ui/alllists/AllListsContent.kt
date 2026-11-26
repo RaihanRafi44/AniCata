@@ -8,10 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,12 +21,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,92 +51,164 @@ import java.util.Locale
 @Composable
 fun MediaItemCard(
     item: MediaItem,
-    onClick: () -> Unit
-) { // GANTI: AnimeAllCard -> MediaItemCard, SearchAnime -> MediaItem
-    val tvTagColor = Color(0xFFF4842D)
-    val epsTagColor = Color(0xFF4CAF50)
-    val starColor = Color(0xFFFFC107)
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val themeColor = Color(0xFF006A60)
 
-    Surface(
-        modifier = Modifier
+    ElevatedCard(
+        modifier = modifier
             .fillMaxWidth()
-            .clickable{ onClick() },
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
+            .clickable { onClick() }
+            .padding(vertical = 5.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(10.dp)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min),
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.imageUrl) // GANTI: Pakai item.imageUrl
-                    .crossfade(true)
-                    .build(),
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
+            // Poster Gambar (95dp x 135dp)
+            Box(
                 modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
-            )
+                    .width(95.dp)
+                    .height(135.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFE0E0E0))
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Info Teks
+            // Kolom Informasi Kanan
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(135.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = item.title,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 20.sp,
-                )
-                Text(
-                    text = item.airedOrPublished, // GANTI: Pakai item.airedOrPublished
-                    fontSize = 12.sp,
-                    color = Color.DarkGray
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.People,
-                        contentDescription = "Members",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    val formatter = NumberFormat.getInstance(Locale.US)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    // Judul Media
                     Text(
-                        text = formatter.format(item.members ?: 0),
-                        fontSize = 12.sp, color = Color.DarkGray
+                        text = item.title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF191C1E),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 18.sp
                     )
+
+                    // Type & Details Pill Badges
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFFE0F2F1),
+                            contentColor = themeColor
+                        ) {
+                            Text(
+                                text = item.itemType,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFFF0F0F0),
+                            contentColor = Color(0xFF424242)
+                        ) {
+                            Text(
+                                text = item.itemDetails,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                            )
+                        }
+                    }
+
+                    // Aired / Published Date Row
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CalendarToday,
+                            contentDescription = "Aired",
+                            modifier = Modifier.size(11.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = item.airedOrPublished,
+                            fontSize = 11.sp,
+                            color = Color.Gray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
+
+                // Footer Row: Members & Score Pill
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Tag(text = item.itemType, backgroundColor = tvTagColor) // GANTI: Pakai item.itemType
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Tag(text = item.itemDetails, backgroundColor = epsTagColor) // GANTI: Pakai item.itemDetails
-                    Spacer(Modifier.weight(1f))
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Score",
-                        tint = starColor,
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = String.format(Locale.US, "%.2f", (item.score ?: 0.0).toFloat()),
-                        fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.People,
+                            contentDescription = "Members",
+                            modifier = Modifier.size(12.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        val formatter = NumberFormat.getInstance(Locale.US)
+                        Text(
+                            text = "${formatter.format(item.members ?: 0)} members",
+                            fontSize = 10.5.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(
+                                color = Color(0xFFE0F2F1),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Score",
+                            tint = Color(0xFFFFC107),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = String.format(Locale.US, "%.2f", (item.score ?: 0.0).toFloat()),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = themeColor
+                        )
+                    }
                 }
             }
         }
@@ -141,24 +216,8 @@ fun MediaItemCard(
 }
 
 @Composable
-fun Tag(text: String, backgroundColor: Color) {
-    Box(
-        modifier = Modifier
-            .background(backgroundColor, RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp)
-    ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-fun MediaListLayout( // GANTI: AnimeListLayout -> MediaListLayout
-    mediaList: List<MediaItem>, // GANTI: animeList -> mediaList
+fun MediaListLayout(
+    mediaList: List<MediaItem>,
     onMediaClick: (Int) -> Unit
 ) {
     Column(
@@ -167,12 +226,11 @@ fun MediaListLayout( // GANTI: AnimeListLayout -> MediaListLayout
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        mediaList.forEach { media -> // GANTI: anime -> media
+        mediaList.forEach { media ->
             MediaItemCard(
                 item = media,
-                // 5. Panggil callback dengan ID item
                 onClick = { onMediaClick(media.id) }
-            ) // GANTI: AnimeAllCard -> MediaItemCard
+            )
         }
     }
 }
@@ -190,10 +248,10 @@ fun ErrorStateContent(errorMessage: String, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Gagal memuat data",
+                text = "Failed to load data",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color(0xFF191C1E)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -235,8 +293,7 @@ fun AllListsShimmerLoading(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 16.dp)
     ) {
         repeat(6) {
             AllListsShimmerItem(brush = brush)
@@ -247,21 +304,23 @@ fun AllListsShimmerLoading(
 @Composable
 fun AllListsShimmerItem(brush: Brush) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, brush)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(10.dp)
                 .fillMaxWidth()
-                .height(115.dp)
+                .height(135.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .width(80.dp)
+                    .width(95.dp)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(brush)
             )
 
@@ -269,11 +328,11 @@ fun AllListsShimmerItem(brush: Brush) {
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.75f)
+                        .fillMaxWidth(0.8f)
                         .height(16.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
@@ -287,14 +346,6 @@ fun AllListsShimmerItem(brush: Brush) {
                         .background(brush)
                 )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.35f)
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
-
                 Spacer(modifier = Modifier.weight(1f))
 
                 Row(
@@ -303,17 +354,9 @@ fun AllListsShimmerItem(brush: Brush) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(36.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(brush)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .width(60.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
                             .background(brush)
                     )
 
@@ -321,9 +364,9 @@ fun AllListsShimmerItem(brush: Brush) {
 
                     Box(
                         modifier = Modifier
-                            .width(50.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .width(48.dp)
+                            .height(20.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(brush)
                     )
                 }

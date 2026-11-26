@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,113 +22,119 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.raihan.anicata.data.model.anime.full.RelationAnime
 
-// Warna yang mendekati gambar
-//val lightGreenishBackground = Color(0xFFE8F5E9)
 private val specialOrange = Color(0xFFF57C00)
 private val tvBrown = Color(0xFFBF360C)
-
-private val mangaBlue = Color(0xFF2DB8F4)
-private val animePink = Color(0xFFD81B60)
+private val mangaBlue = Color(0xFF0288D1)
 
 @Composable
 fun OtherAnimeInfo(
-    relations: List<RelationAnime>, // <-- Terima data relasi dari AnimeData
-    //onRelationClick: (Int) -> Unit, // <-- 2. TAMBAHKAN CALLBACK
+    relations: List<RelationAnime>,
     onRelationClick: (id: Int, type: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Cek jika relasi tidak kosong
     if (relations.isNotEmpty()) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
-                //.background(lightGreenishBackground)
                 .padding(16.dp)
-        ){
-            // Loop untuk setiap TIPE relasi (Adaptation, Prequel, etc)
-            relations.forEachIndexed { index, relation ->
-                // Tampilkan header untuk tipe relasi
-                SectionHeader(title = relation.relation)
-                Spacer(modifier = Modifier.height(8.dp))
+        ) {
+            SectionHeaderTitle(
+                title = "Related Media",
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
 
-                // Loop untuk setiap anime DI DALAM tipe relasi tsb
-                relation.entry.forEach { entry ->
-                    MediaItem(
-                        title = entry.name,
-                        tag = entry.type,
-                        // 3. Teruskan ID dan callback ke MediaItem
-                        //onClick = { onRelationClick(entry.malId) }
-                        onClick = { onRelationClick(entry.malId, entry.type) }
-                    )
+            relations.forEachIndexed { index, relation ->
+                SectionHeader(title = relation.relation)
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    relation.entry.forEach { entry ->
+                        MediaItem(
+                            title = entry.name,
+                            tag = entry.type,
+                            onClick = { onRelationClick(entry.malId, entry.type) }
+                        )
+                    }
                 }
 
-                // Beri spasi jika bukan item terakhir
                 if (index < relations.size - 1) {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
                 }
             }
         }
     } else {
-        // Tampilkan pesan jika tidak relasi
         Text(
-            text = "No related anime found.",
-            modifier = modifier.fillMaxWidth().padding(16.dp),
-            textAlign = TextAlign.Center
+            text = "No related media found.",
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            textAlign = TextAlign.Center,
+            color = Color.Gray,
+            fontSize = 13.5.sp
         )
     }
 }
 
 @Composable
-fun SectionHeader(title: String) {
+private fun SectionHeader(title: String) {
     Text(
         text = title,
         modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.titleLarge,
+        style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = Color.DarkGray,
-        fontSize = 16.sp
+        color = Color(0xFF006A60),
+        fontSize = 14.sp
     )
 }
 
 @Composable
-fun MediaItem(
+private fun MediaItem(
     title: String,
     tag: String,
-    onClick: () -> Unit // <-- 4. TAMBAHKAN PARAMETER ONCLICK
+    onClick: () -> Unit
 ) {
-    Row(
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = Color(0xFFF8F9FA),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { onClick() }, // <-- 5. BUAT ROW BISA DIKLIK
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .clickable { onClick() }
     ) {
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f), // Mendorong tag ke kanan
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Black,
-            fontSize = 13.sp
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        MediaTag(text = tag)
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF191C1E),
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            MediaTag(text = tag)
+        }
     }
 }
 
 @Composable
-fun MediaTag(text: String) {
+private fun MediaTag(text: String) {
     val backgroundColor = when (text.uppercase()) {
         "SPECIAL", "MOVIE", "TV", "OVA", "ONA", "MUSIC" -> specialOrange
         "MANGA", "NOVEL", "DOUJINSHI", "MANHWA", "MANHUA", "LIGHT NOVEL", "ONE-SHOT" -> mangaBlue
         "ANIME" -> tvBrown
-        else -> Color.Gray // Warna default jika ada tag lain
+        else -> Color.Gray
     }
 
     val displayText = text.replaceFirstChar {
@@ -138,20 +145,14 @@ fun MediaTag(text: String) {
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
             .background(backgroundColor)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 3.5.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = displayText,
             color = Color.White,
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FmaRelatedContentLayoutPreview() {
-    //OtherAnimeInfo()
 }

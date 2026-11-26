@@ -1,14 +1,34 @@
 package com.raihan.anicata.ui.seasonalanime
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Inbox
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -53,7 +73,26 @@ fun SeasonalShimmerLoading() {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        repeat(6) {
+        // Hero Spotlight Shimmer
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(210.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(210.dp)
+                    .background(brush)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // List Shimmer Items
+        repeat(4) {
             ShimmerItem(brush = brush)
         }
     }
@@ -61,86 +100,83 @@ fun SeasonalShimmerLoading() {
 
 @Composable
 fun ShimmerItem(brush: Brush) {
-    Surface(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, brush)
+            .padding(vertical = 5.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(10.dp)
                 .fillMaxWidth()
-                .height(115.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
+                    .width(95.dp)
+                    .height(135.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(brush)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(135.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.75f)
-                        .height(16.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.45f)
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .height(12.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.35f)
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        repeat(3) {
+                            Box(
+                                modifier = Modifier
+                                    .width(40.dp)
+                                    .height(14.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(brush)
+                            )
+                        }
+                    }
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(36.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .width(70.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
                             .background(brush)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(brush)
-                    )
-
-                    Spacer(modifier = Modifier.weight(1f))
 
                     Box(
                         modifier = Modifier
                             .width(50.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .height(20.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(brush)
                     )
                 }
@@ -155,39 +191,41 @@ fun SeasonalErrorState(
     message: String,
     onRetry: () -> Unit
 ) {
+    val themeColor = Color(0xFF006A60)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 64.dp, start = 32.dp, end = 32.dp),
+            .padding(top = 48.dp, start = 32.dp, end = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = Icons.Default.CloudOff,
             contentDescription = "Error",
-            modifier = Modifier.size(80.dp),
+            modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Oops! Connection Issue",
-            fontSize = 20.sp,
+            text = "Failed to Load Seasonal Data",
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = Color(0xFF191C1E)
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = message,
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             color = Color.Gray,
             textAlign = TextAlign.Center,
-            lineHeight = 20.sp
+            lineHeight = 18.sp
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = onRetry,
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = themeColor)
         ) {
             Text("Try Again", color = Color.White, fontWeight = FontWeight.Bold)
         }
@@ -200,27 +238,28 @@ fun SeasonalEmptyState() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 64.dp),
+            .padding(top = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = Icons.Default.Inbox,
             contentDescription = "Empty",
-            modifier = Modifier.size(80.dp),
+            modifier = Modifier.size(72.dp),
             tint = Color.LightGray
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
         Text(
             text = "No Anime Found",
             fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.Gray
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF191C1E)
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Try changing the year or season filter.",
-            fontSize = 14.sp,
-            color = Color.LightGray,
+            fontSize = 13.sp,
+            color = Color.Gray,
             textAlign = TextAlign.Center
         )
     }

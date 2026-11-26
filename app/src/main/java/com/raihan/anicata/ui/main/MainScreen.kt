@@ -38,10 +38,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlin.math.abs
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -59,6 +65,7 @@ import com.raihan.anicata.ui.archive.anime.ArchiveAnimeScreenFavorite
 import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreen
 import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreenBookmark
 import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreenFavorite
+import com.raihan.anicata.ui.chatbot.ChatbotScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.navigation.Screen
 import com.raihan.anicata.ui.profile.ProfileScreen
@@ -92,6 +99,61 @@ fun MainScreen(
     // State untuk mengontrol visibilitas search screen
     var isSearchVisible by remember { mutableStateOf(false) }
 
+    var isCollapsed by remember { mutableStateOf(false) }
+    var expandJob by remember { mutableStateOf<Job?>(null) }
+
+    var scrollToTopTrigger by remember { mutableIntStateOf(0) }
+    var scrollToBottomTrigger by remember { mutableIntStateOf(0) }
+
+    val specialPageTitle = when {
+        currentRoute?.startsWith("top_anime") == true -> "Top Anime"
+        currentRoute?.startsWith("top_manga") == true -> "Top Manga"
+        currentRoute?.startsWith("all_lists") == true -> "All Lists"
+        currentRoute?.startsWith("seasonal") == true -> "Seasonal Anime"
+        currentRoute?.startsWith("result_search") == true -> "Result Search"
+        else -> null
+    }
+
+    val bottomBarNestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                if (delta < -0.1f) { // Scroll KE BAWAH -> Mengecil (Collapse)
+                    isCollapsed = true
+                    expandJob?.cancel()
+                    expandJob = scope.launch {
+                        delay(800)
+                        isCollapsed = false
+                    }
+                } else if (delta > 0.1f) { // Scroll KE ATAS -> Mengembang (Expand)
+                    isCollapsed = false
+                    expandJob?.cancel()
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                val delta = consumed.y
+                if (delta < -0.1f) { // Scroll KE BAWAH -> Mengecil (Collapse)
+                    isCollapsed = true
+                    expandJob?.cancel()
+                    expandJob = scope.launch {
+                        delay(800)
+                        isCollapsed = false
+                    }
+                } else if (delta > 0.1f) { // Scroll KE ATAS -> Mengembang (Expand)
+                    isCollapsed = false
+                    expandJob?.cancel()
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         systemUiController.setStatusBarColor(
             color = topBarColor,
@@ -113,12 +175,13 @@ fun MainScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.fillMaxWidth(0.6f),
-                drawerContainerColor = Color(0xFFE0F2F1)
+                modifier = Modifier.fillMaxWidth(0.75f),
+                drawerContainerColor = Color(0xFFF7FAF9)
             ) {
                 AppDrawerContent(
                     userData = userData,
                     navController = internalNavController,
+                    rootNavController = navController,
                     scope = scope,
                     closeDrawer = { scope.launch { drawerState.close() } },
                     onSignOut = onSignOut
@@ -131,7 +194,10 @@ fun MainScreen(
         ) {
 
             Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                containerColor = Color.White,
+                modifier = Modifier
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .nestedScroll(bottomBarNestedScrollConnection),
                 topBar = {
                     TopNavBar(
                         onMenuClick = {
@@ -140,7 +206,6 @@ fun MainScreen(
                             }
                         },
                         onSearchClick = { isSearchVisible = true },
-                        onSettingsClick = { /* TODO */ },
                         scrollBehavior = scrollBehavior
                     )
                 },
@@ -167,50 +232,44 @@ fun MainScreen(
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 },
                                 // ✅ 2. Sambungkan navigasi klik panah "View All"
-                                onViewAllTopRatedClick = {
-                                    // Gunakan NavController INTERNAL (dari MainScreen)
-                                    // untuk pindah ke rute Top Anime
+                                onViewAllTopRatedAnimeClick = {
                                     internalNavController.navigate("top_anime")
+                                },
+                                onViewAllTopRatedMangaClick = {
+                                    internalNavController.navigate("top_manga")
                                 },
                                 onViewAllSeasonalClick = {
                                     internalNavController.navigate("seasonal")
                                 },
                                 onViewAllUpcomingClick = {
-                                    internalNavController.navigate("seasonal")
+                                    internalNavController.navigate("seasonal?season=upcoming")
                                 }
                             )
                         }
                         composable("archive") {
                             ArchiveMainScreen(
-                                onNavigateToAnime = {
-                                    internalNavController.navigate("archive_anime")
-                                },
-                                onNavigateToManga = {
-                                    internalNavController.navigate("archive_manga")
+                                onItemClick = { id, isManga ->
+                                    if (isManga) {
+                                        navController.navigate(Screen.MangaDetail.createRoute(id))
+                                    } else {
+                                        navController.navigate(Screen.Detail.createRoute(id))
+                                    }
                                 }
                             )
                         }
 
                         composable("archive_anime") {
                             ArchiveAnimeScreen(
-                                onNavigateBack = { internalNavController.popBackStack() },
-                                onBookmarkClicked = {
-                                    internalNavController.navigate("archive_anime_bookmark")
-                                },
-                                onFavoriteClicked = {
-                                    internalNavController.navigate("archive_anime_favorite")
+                                onAnimeClick = { animeId ->
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
                                 }
                             )
                         }
 
                         composable("archive_manga") {
                             ArchiveMangaScreen(
-                                onNavigateBack = { internalNavController.popBackStack() },
-                                onBookmarkClicked = {
-                                    internalNavController.navigate("archive_manga_bookmark")
-                                },
-                                onFavoriteClicked = {
-                                    internalNavController.navigate("archive_manga_favorite")
+                                onMangaClick = { mangaId ->
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 }
                             )
                         }
@@ -218,25 +277,21 @@ fun MainScreen(
                         composable("archive_anime_bookmark") {
                             ArchiveAnimeScreenBookmark(
                                 onAnimeClick = { animeId ->
-                                    navController.navigate("detail/$animeId")
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
                                 },
                                 onNavigateBack = {
                                     internalNavController.popBackStack()
                                 },
-                                onDeleteClick = {
-                                },
+                                onDeleteClick = {}
                             )
                         }
 
                         composable("archive_anime_favorite") {
                             ArchiveAnimeScreenFavorite(
-                                //animeList = dummyList,
                                 onAnimeClick = { animeId ->
-                                    // Navigasi ke Detail Anime
-                                    navController.navigate("detail/$animeId")
+                                    navController.navigate(Screen.Detail.createRoute(animeId))
                                 },
                                 onNavigateBack = {
-                                    // Kembali ke Archive Anime (Rute B)
                                     internalNavController.popBackStack()
                                 },
                                 onDeleteClick = {}
@@ -244,12 +299,9 @@ fun MainScreen(
                         }
 
                         composable("archive_manga_bookmark") {
-                            // *** CATATAN: Ganti dummyList dengan data nyata dari ViewModel Anda ***
-
-
                             ArchiveMangaScreenBookmark(
                                 onMangaClick = { mangaId ->
-                                    navController.navigate("detail/$mangaId")
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 },
                                 onNavigateBack = {
                                     internalNavController.popBackStack()
@@ -259,10 +311,9 @@ fun MainScreen(
                         }
 
                         composable("archive_manga_favorite") {
-
                             ArchiveMangaScreenFavorite(
                                 onMangaClick = { mangaId ->
-                                    navController.navigate("detail/$mangaId")
+                                    navController.navigate(Screen.MangaDetail.createRoute(mangaId))
                                 },
                                 onNavigateBack = {
                                     internalNavController.popBackStack()
@@ -278,43 +329,60 @@ fun MainScreen(
                             )
                         }
                         // ✅ 2. Tambahkan rute baru untuk SeasonalScreen
-                        composable("seasonal") {
+                        composable(
+                            route = "seasonal?season={season}",
+                            arguments = listOf(
+                                navArgument("season") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val seasonArg = backStackEntry.arguments?.getString("season")
                             SeasonalScreen(
+                                initialSeason = seasonArg,
                                 onAnimeClick = { animeId ->
                                     navController.navigate(Screen.Detail.createRoute(animeId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
 
                         composable("top_anime") {
                             TopAnimeScreen(
-                                // Tambahkan parameter onAnimeClick
                                 onAnimeClick = { animeId ->
-                                    // Saat item diklik, gunakan NavController UTAMA
-                                    // untuk pindah ke rute Detail
                                     navController.navigate(Screen.Detail.createRoute(animeId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
                         composable("top_manga") {
                             TopMangaScreen(
                                 onMangaClick = { mangaId ->
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
 
                         composable("all_lists") {
-                            //AllListsScreen()
                             AllListsScreen(
                                 onAnimeClick = { animeId ->
                                     navController.navigate(Screen.Detail.createRoute(animeId))
                                 },
                                 onMangaClick = { mangaId ->
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
+
+
 
                         // --- 1. TAMBAHKAN RUTE BARU DI SINI ---
                         composable(
@@ -329,36 +397,25 @@ fun MainScreen(
                                 },
                                 onMangaClick = { mangaId ->
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
 
                     }
 
-                    FloatingBottomNavBar(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 24.dp),
-                        selectedItem = selectedItem,
-                        onItemSelected = { index ->
-                            //selectedItem = index
-                            val route = when (index) {
-                                0 -> "home"
-                                1 -> "archive"
-                                2 -> "profile"
-                                else -> "home"
-                            }
-                            /*internalNavController.navigate(route) {
-                            popUpTo(internalNavController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }*/
-                            if (selectedItem == index) {
-                                internalNavController.popBackStack(route, inclusive = false)
-                            } else {
-                                selectedItem = index
+                    if (specialPageTitle != null) {
+                        SpecialPageFloatingNavBar(
+                            onScrollToTop = { scrollToTopTrigger++ },
+                            onScrollToBottom = { scrollToBottomTrigger++ },
+                            onNavigateTo = { route ->
+                                selectedItem = when (route) {
+                                    "home" -> 0
+                                    "archive" -> 1
+                                    "profile" -> 2
+                                    else -> 0
+                                }
                                 internalNavController.navigate(route) {
                                     popUpTo(internalNavController.graph.findStartDestination().id) {
                                         saveState = true
@@ -366,19 +423,51 @@ fun MainScreen(
                                     launchSingleTop = true
                                     restoreState = true
                                 }
+                            },
+                            accentColor = Color(0xFF006A60),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        FloatingBottomNavBar(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 24.dp),
+                            selectedItem = selectedItem,
+                            isCollapsed = isCollapsed,
+                            containerColor = Color(0xFFFCFCFC),
+                            accentColor = Color(0xFF006A60),
+                            inactiveColor = Color(0xFF8E8E93),
+                            onItemSelected = { index ->
+                                val route = when (index) {
+                                    0 -> "home"
+                                    1 -> "archive"
+                                    2 -> "profile"
+                                    else -> "home"
+                                }
+                                if (selectedItem == index) {
+                                    internalNavController.popBackStack(route, inclusive = false)
+                                } else {
+                                    selectedItem = index
+                                    internalNavController.navigate(route) {
+                                        popUpTo(internalNavController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
                             }
-
-                        }
-                    )
+                        )
+                    }
                 }
             }
 
-            // --- BAGIAN BACKGROUND GELAP (Muncul Instan/Default) ---
+            // --- BAGIAN BACKGROUND GELAP MODAL (Scrim) ---
             if (isSearchVisible) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.9f))
+                        .background(Color.Black.copy(alpha = 0.55f))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -388,36 +477,27 @@ fun MainScreen(
                 )
             }
 
-            // --- BAGIAN ANIMASI KHUSUS KOLOM SEARCH & HASILNYA ---
+            // --- ANIMASI MODAL TERPUSAT DI TENGAH VERTIKAL ---
             AnimatedVisibility(
                 visible = isSearchVisible,
-                // Kombinasi: Fade In + Membesar dari 80% + Terbuka ke bawah dari arah atas
-                enter = fadeIn(animationSpec = tween(300)) +
+                enter = fadeIn(animationSpec = tween(250)) +
                         scaleIn(
-                            initialScale = 0.8f,
-                            transformOrigin = TransformOrigin(0.5f, 0f),
-                            animationSpec = tween(300)
-                        ) +
-                        expandVertically(
-                            expandFrom = Alignment.Top,
-                            animationSpec = tween(300)
+                            initialScale = 0.92f,
+                            transformOrigin = TransformOrigin(0.5f, 0.5f),
+                            animationSpec = tween(250)
                         ),
-                // Kombinasi: Fade Out + Mengecil ke 80% + Menutup ke arah atas
-                exit = fadeOut(animationSpec = tween(250)) +
+                exit = fadeOut(animationSpec = tween(200)) +
                         scaleOut(
-                            targetScale = 0.8f,
-                            transformOrigin = TransformOrigin(0.5f, 0f),
-                            animationSpec = tween(250)
-                        ) +
-                        shrinkVertically(
-                            shrinkTowards = Alignment.Top,
-                            animationSpec = tween(250)
+                            targetScale = 0.92f,
+                            transformOrigin = TransformOrigin(0.5f, 0.5f),
+                            animationSpec = tween(200)
                         )
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .statusBarsPadding()
+                        .statusBarsPadding(),
+                    contentAlignment = Alignment.Center
                 ) {
                     SearchScreenLayout(
                         onClose = { isSearchVisible = false },

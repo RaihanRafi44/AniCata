@@ -13,13 +13,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -35,9 +35,9 @@ fun ArchiveShimmerLoading(
     modifier: Modifier = Modifier
 ) {
     val shimmerColors = listOf(
-        Color(0xFFF0F0F0),
-        Color(0xFFFAFAFA),
-        Color(0xFFF0F0F0),
+        Color(0xFFF1F5F9),
+        Color(0xFFF8FAFC),
+        Color(0xFFF1F5F9),
     )
 
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -60,9 +60,10 @@ fun ArchiveShimmerLoading(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        repeat(6) {
+        repeat(5) {
             ArchiveShimmerItem(brush = brush)
         }
     }
@@ -70,99 +71,95 @@ fun ArchiveShimmerLoading(
 
 @Composable
 fun ArchiveShimmerItem(brush: Brush) {
-    Surface(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, brush)
+            .padding(vertical = 5.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(10.dp)
                 .fillMaxWidth()
-                .height(115.dp)
         ) {
+            // Poster placeholder
             Box(
                 modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
+                    .width(90.dp)
+                    .height(130.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(brush)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.75f)
-                        .height(16.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.45f)
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Title line 1
                     Box(
                         modifier = Modifier
-                            .width(65.dp)
-                            .height(12.dp)
+                            .fillMaxWidth(0.85f)
+                            .height(16.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .background(brush)
                     )
-                    Spacer(modifier = Modifier.weight(1f))
+                    // Title line 2
                     Box(
                         modifier = Modifier
-                            .width(45.dp)
+                            .fillMaxWidth(0.55f)
                             .height(14.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .background(brush)
                     )
+
+                    // Badges row
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(36.dp)
+                                .height(20.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(brush)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(20.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(brush)
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
+                // Bottom row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(36.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(brush)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(brush)
-                    )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Box(
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(22.dp)
+                            .width(80.dp)
+                            .height(14.dp)
                             .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(44.dp)
+                            .height(22.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(brush)
                     )
                 }

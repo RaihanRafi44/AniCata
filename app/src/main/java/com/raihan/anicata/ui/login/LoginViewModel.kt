@@ -12,24 +12,68 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val userRepository: UserRepository
-): ViewModel() {
+) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginState())
     val state = _state.asStateFlow()
 
-    fun onSignInResult(result: LoginResult) {
-        _state.update { it.copy(
-            isSignInSuccessful = result.data != null,
-            signInError = result.errorMessage
+    fun onSignInStarted() {
+        _state.update {
+            it.copy(
+                isLoading = true,
+                signInError = null,
+                loadingMessage = "AUTHENTICATING..."
             )
         }
+    }
 
+    fun onSignInCancelled() {
+        _state.update {
+            it.copy(
+                isLoading = false,
+                loadingMessage = "AUTHENTICATING..."
+            )
+        }
+    }
+
+    fun onErrorDismissed() {
+        _state.update {
+            it.copy(signInError = null)
+        }
+    }
+
+    fun onSignInResult(result: LoginResult) {
         val userData = result.data
         if (userData != null) {
+            _state.update {
+                it.copy(
+                    isLoading = true,
+                    signInError = null,
+                    loadingMessage = "SYNCING ARCHIVE...",
+                    username = userData.username
+                )
+            }
             viewModelScope.launch {
-                userRepository.syncUser(userData).collect { syncResult ->
-                    println("Sync Result: $syncResult")
+                userRepository.syncUser(userData).collect { _ ->
+                    _state.update {
+                        it.copy(
+                            isSignInSuccessful = true,
+                            isLoading = false,
+                            loadingMessage = "AUTHENTICATING...",
+                            username = userData.username
+                        )
+                    }
                 }
+            }
+        } else {
+            _state.update {
+                it.copy(
+                    isSignInSuccessful = false,
+                    signInError = result.errorMessage ?: "Authentication failed. Please try again.",
+                    isLoading = false,
+                    loadingMessage = "AUTHENTICATING...",
+                    username = null
+                )
             }
         }
     }
@@ -37,5 +81,4 @@ class LoginViewModel(
     fun resetState() {
         _state.update { LoginState() }
     }
-
 }

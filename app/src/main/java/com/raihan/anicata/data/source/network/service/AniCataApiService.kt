@@ -68,7 +68,10 @@ interface AniCataApiService {
         @Path("year") year: Int,
         @Path("season") season: String,
         @Query("filter") filter: String,
-        @Query("continuing") continuing: Boolean
+        @Query("continuing") continuing: Boolean,
+        @Query("page") page: Int = 1,
+        @Query("order_by") orderBy: String? = null,
+        @Query("sort") sort: String? = null
     ): SeasonYearResponse
 
     @GET("seasons")
@@ -77,7 +80,8 @@ interface AniCataApiService {
     @GET("seasons/upcoming")
     suspend fun getSeasonUpcoming(
         @Query("filter") filter: String,
-        @Query("continuing") continuing: Boolean
+        @Query("continuing") continuing: Boolean,
+        @Query("page") page: Int = 1
     ): SeasonUpcomingResponse
 
     @GET("genres/anime")

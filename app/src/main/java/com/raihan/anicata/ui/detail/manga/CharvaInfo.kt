@@ -100,11 +100,9 @@ private fun CharacterListView(
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp)
     ) {
-        Text(
-            text = "Characters",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+        MangaSectionHeaderTitle(
+            title = "Characters",
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
         Column(

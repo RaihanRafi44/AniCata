@@ -1,22 +1,20 @@
 package com.raihan.anicata.ui.paging
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,122 +24,103 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
+/**
+ * Minimal & Clean Pagination Controls
+ */
 @Composable
 fun PaginationControls(
     modifier: Modifier = Modifier,
     currentPage: Int,
-    startPage: Int, // <-- State baru dari pemanggil
+    startPage: Int = 1,
     totalPages: Int,
     onPageChange: (Int) -> Unit,
     visiblePages: Int = 3
 ) {
-    val activeColor = Color(0xFFD0BCFF)
-    val inactiveColor = Color(0xFFE0E0E0)
-
-    // Logika window sekarang HANYA menggunakan startPage yang diberikan
+    val themeColor = Color(0xFF006A60)
     val endPage = (startPage + visiblePages - 1).coerceAtMost(totalPages)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            //.background(backgroundColor)
-            .padding(vertical = 16.dp),
+            .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val isLeftEnabled = currentPage > 1
-            val isRightEnabled = currentPage < totalPages
             // Tombol "Sebelumnya"
-            OutlinedButton(
-                onClick = {
-                    if (currentPage > 1) {
-                        onPageChange(currentPage - 1)
-                    }
-                },
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(0.dp),
-                // Border warna ungu saat aktif, abu-abu saat inactive
-                border = BorderStroke(
-                    width = 2.dp,
-                    color = if (isLeftEnabled) activeColor else inactiveColor
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    // Background transparan agar menyatu dengan background halaman
-                    containerColor = Color.Transparent,
-                    // Ikon panah warna ungu saat aktif
-                    contentColor = activeColor,
-                    // Background tetap transparan saat inactive
-                    disabledContainerColor = Color.Transparent,
-                    // Ikon panah warna abu-abu saat inactive
-                    disabledContentColor = inactiveColor
-                ),
-                enabled = currentPage > 1
+            IconButton(
+                onClick = { if (currentPage > 1) onPageChange(currentPage - 1) },
+                enabled = currentPage > 1,
+                modifier = Modifier.size(38.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color(0xFFE0F2F1),
+                    contentColor = themeColor,
+                    disabledContainerColor = Color(0xFFF5F5F5),
+                    disabledContentColor = Color.LightGray
+                )
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Halaman Sebelumnya")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Halaman Sebelumnya",
+                    modifier = Modifier.size(18.dp)
+                )
             }
 
-            // Tombol Nomor Halaman
-            // Loop dari startPage ke endPage
+            // Nomor Halaman
             for (page in startPage..endPage) {
-                Button(
+                val isCurrent = page == currentPage
+                Surface(
                     onClick = { onPageChange(page) },
-                    modifier = Modifier.size(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (page == currentPage) activeColor else inactiveColor,
-                        contentColor = Color.Black
-                    )
+                    modifier = Modifier.size(38.dp),
+                    shape = CircleShape,
+                    color = if (isCurrent) themeColor else Color(0xFFF5F5F5),
+                    contentColor = if (isCurrent) Color.White else Color(0xFF191C1E)
                 ) {
-                    Text(text = "$page", style = MaterialTheme.typography.bodyLarge)
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Text(
+                            text = "$page",
+                            fontSize = 13.sp,
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium
+                        )
+                    }
                 }
             }
 
             // Tombol "Berikutnya"
-            OutlinedButton(
-                onClick = {
-                    if (currentPage < totalPages) {
-                        onPageChange(currentPage + 1)
-                    }
-                },
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(0.dp),
-                // Border warna ungu saat aktif, abu-abu saat inactive
-                border = BorderStroke(
-                    width = 2.dp,
-                    color = if (isRightEnabled) activeColor else inactiveColor
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    // Background transparan agar menyatu dengan background halaman
-                    containerColor = Color.Transparent,
-                    // Ikon panah warna ungu saat aktif
-                    contentColor = activeColor,
-                    // Background tetap transparan saat inactive
-                    disabledContainerColor = Color.Transparent,
-                    // Ikon panah warna abu-abu saat inactive
-                    disabledContentColor = inactiveColor
-                ),
-                enabled = currentPage < totalPages
+            IconButton(
+                onClick = { if (currentPage < totalPages) onPageChange(currentPage + 1) },
+                enabled = currentPage < totalPages,
+                modifier = Modifier.size(38.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color(0xFFE0F2F1),
+                    contentColor = themeColor,
+                    disabledContainerColor = Color(0xFFF5F5F5),
+                    disabledContentColor = Color.LightGray
+                )
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Halaman Berikutnya")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Halaman Berikutnya",
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun PaginationControlsPreview() {
-    // State lokal ini HANYA untuk kebutuhan preview
     var previewCurrentPage by remember { mutableStateOf(1) }
     var previewStartPage by remember { mutableStateOf(1) }
     val totalPages = 10
@@ -155,7 +134,6 @@ fun PaginationControlsPreview() {
         visiblePages = visiblePages,
         onPageChange = { newPage ->
             previewCurrentPage = newPage
-            // Logika baru juga diterapkan di preview
             if (newPage < previewStartPage) {
                 previewStartPage = newPage.coerceIn(1, maxStartPage)
             } else if (newPage > previewStartPage + (visiblePages - 1)) {

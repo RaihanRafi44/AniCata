@@ -13,8 +13,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import com.raihan.anicata.ui.home.ModernPullToRefreshIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +39,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun TopAnimeScreen(
     viewModel: TopAnimeViewModel = koinViewModel(),
-    onAnimeClick: (Int) -> Unit
+    onAnimeClick: (Int) -> Unit,
+    scrollToTopTrigger: Int = 0,
+    scrollToBottomTrigger: Int = 0
 ) {
     val topAnimeState by viewModel.topAnimeState.collectAsState()
 
@@ -63,6 +65,21 @@ fun TopAnimeScreen(
 
     val listState = rememberLazyListState()
     var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.scrollToItem(0, 0)
+        }
+    }
+
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0) {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            if (totalItems > 0) {
+                listState.scrollToItem(totalItems - 1)
+            }
+        }
+    }
 
     LaunchedEffect(topAnimeState) {
         if (topAnimeState is ResultWrapper.Loading) {
@@ -92,6 +109,16 @@ fun TopAnimeScreen(
         }
     }
 
+    val animeList = (topAnimeState as? ResultWrapper.Success)?.payload?.first ?: emptyList()
+    val pageSize = 25
+    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
+
+    val rankedAnimeList = remember(animeList, offset) {
+        animeList.mapIndexed { index, anime ->
+            anime.copy(rank = offset + index + 1)
+        }
+    }
+
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = {
@@ -107,22 +134,19 @@ fun TopAnimeScreen(
         modifier = Modifier.fillMaxSize(),
         state = pullRefreshState,
         indicator = {
-            PullToRefreshDefaults.Indicator(
-                modifier = Modifier.align(Alignment.TopCenter),
+            ModernPullToRefreshIndicator(
                 isRefreshing = isRefreshing,
-                state = pullRefreshState,
-                containerColor = Color(0xFF2C2C2C),
-                color = Color(0xFFFF9800)
+                state = pullRefreshState
             )
         }
     ) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp)
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
             item(key = "filter_header") {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 FilterTopAnime(
                     selectedFilterApiValue = selectedFilter,
@@ -186,23 +210,41 @@ fun TopAnimeScreen(
                 }
 
                 is ResultWrapper.Success -> {
-                    val animeList = animatedState.payload?.first ?: emptyList()
-                    val pageSize = 25
-                    val offset = ((paginationState.currentPage - 1).coerceAtLeast(0)) * pageSize
-
-                    items(
-                        count = animeList.size,
-                        key = { index -> animeList[index].id }
-                    ) { index ->
-                        val anime = animeList[index]
-                        val rankedAnime = remember(anime, offset, index) {
-                            anime.copy(rank = offset + index + 1)
+                    if (paginationState.currentPage == 1 && rankedAnimeList.size >= 3) {
+                        item(key = "top_3_podium") {
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                AnimeTop3PodiumShowcase(
+                                    top3AnimeList = rankedAnimeList.take(3),
+                                    onAnimeClick = onAnimeClick
+                                )
+                            }
                         }
-                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            AnimeCard(
-                                item = rankedAnime,
-                                onCLick = { onAnimeClick(rankedAnime.id) }
-                            )
+
+                        val remainingAnime = rankedAnimeList.drop(3)
+                        items(
+                            count = remainingAnime.size,
+                            key = { index -> remainingAnime[index].id }
+                        ) { index ->
+                            val anime = remainingAnime[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                AnimeCard(
+                                    item = anime,
+                                    onCLick = { onAnimeClick(anime.id) }
+                                )
+                            }
+                        }
+                    } else {
+                        items(
+                            count = rankedAnimeList.size,
+                            key = { index -> rankedAnimeList[index].id }
+                        ) { index ->
+                            val anime = rankedAnimeList[index]
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                AnimeCard(
+                                    item = anime,
+                                    onCLick = { onAnimeClick(anime.id) }
+                                )
+                            }
                         }
                     }
 

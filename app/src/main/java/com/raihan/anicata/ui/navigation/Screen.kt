@@ -19,4 +19,6 @@ sealed class Screen(val route: String) {
     object MangaDetail : Screen("manga_detail/{$NAV_ARG_MANGA_ID}") {
         fun createRoute(mangaId: Int) = "manga_detail/$mangaId"
     }
+
+    object Chatbot : Screen("chatbot")
 }

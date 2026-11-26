@@ -1,16 +1,12 @@
 package com.raihan.anicata.ui.search
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,9 +17,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,155 +29,197 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.raihan.anicata.data.model.media.MediaItem
-import com.raihan.anicata.utils.ResultWrapper
 import java.text.NumberFormat
 import java.util.Locale
 
-// Composable SearchResultCard tidak berubah, sudah benar
 @Composable
 fun SearchResultCard(
     item: MediaItem,
     onClick: () -> Unit
 ) {
-    // Tentukan warna tag berdasarkan itemType
-    val typeTagColor = when (item.itemType.lowercase()) {
-        //"anime" -> Color(0xFFF4842D)
-        "manga" -> Color(0xFF2DB8F4)
-        "manhwa" -> Color(0xFF2DB8F4)
-        "manhua" -> Color(0xFF2DB8F4)
-        "novel" -> Color(0xFF2DB8F4)
-        "light novel" -> Color(0xFF2DB8F4)
-        "doujin" -> Color(0xFF2DB8F4)
-        "oneshot" -> Color(0xFF2DB8F4)
-        //"movie" -> Color(0xFF8B2DF4)
-        else -> Color(0xFFF4842D)
-    }
-    val epsTagColor = Color(0xFF4CAF50)
-    val starColor = Color(0xFFFFC107)
+    val themeColor = Color(0xFF006A60)
 
-    Surface(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f))
+            .clickable { onClick() }
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(10.dp)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min),
         ) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = item.title,
+            // Poster Image (95dp x 135dp)
+            Box(
                 modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .width(95.dp)
+                    .height(135.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFE2E8F0))
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Bagian Kanan: Informasi Teks
+            // Right Information Column
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(135.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = item.title,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 20.sp,
-                )
-                Text(
-                    text = item.airedOrPublished,
-                    fontSize = 12.sp,
-                    color = Color.DarkGray
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.People,
-                        contentDescription = "Members",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    val formatter = NumberFormat.getInstance(Locale.US)
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    // Title
                     Text(
-                        text = formatter.format(item.members ?: 0),
-                        fontSize = 12.sp,
-                        color = Color.DarkGray
+                        text = item.title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Color(0xFF0F172A),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 19.sp
                     )
+
+                    // Type & Details Badges
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFFE0F2F1),
+                            contentColor = themeColor
+                        ) {
+                            Text(
+                                text = item.itemType,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp)
+                            )
+                        }
+
+                        if (item.itemDetails.isNotBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFFF1F5F9),
+                                contentColor = Color(0xFF334155)
+                            ) {
+                                Text(
+                                    text = item.itemDetails,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Aired / Published Date
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CalendarToday,
+                            contentDescription = "Aired",
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFF64748B)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = item.airedOrPublished,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF475569),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
+
+                // Footer Row: Members & Score Badge
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Tag(text = item.itemType, backgroundColor = typeTagColor)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Tag(text = item.itemDetails, backgroundColor = epsTagColor)
-                    Spacer(Modifier.weight(1f))
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Score",
-                        tint = starColor,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = String.format(Locale.US, "%.2f", item.score ?: 0.0),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.People,
+                            contentDescription = "Members",
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFF64748B)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        val formatter = NumberFormat.getInstance(Locale.US)
+                        Text(
+                            text = "${formatter.format(item.members ?: 0)} members",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(
+                                color = Color(0xFFE0F2F1),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 7.dp, vertical = 3.5.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Score",
+                            tint = Color(0xFFFFC107),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = String.format(Locale.US, "%.2f", (item.score ?: 0.0).toFloat()),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.5.sp,
+                            color = themeColor
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-// Composable Tag tidak berubah
-@Composable
-fun Tag(text: String, backgroundColor: Color) {
-    Box(
-        modifier = Modifier
-            .background(backgroundColor, RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp)
-    ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
 @Composable
 fun SearchResultListLayout(
-    items: List<MediaItem>, // <-- Terima HANYA list-nya
+    items: List<MediaItem>,
     onItemClick: (MediaItem) -> Unit
 ) {
-    // Langsung Column untuk me-render list
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp) // Jarak antar item
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items.forEach { item ->
             SearchResultCard(
@@ -190,4 +229,3 @@ fun SearchResultListLayout(
         }
     }
 }
-

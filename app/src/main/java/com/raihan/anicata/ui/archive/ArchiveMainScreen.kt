@@ -5,22 +5,21 @@ import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ArchiveMainScreen(
-    onNavigateToAnime: () -> Unit,
-    onNavigateToManga: () -> Unit
+    onNavigateToAnime: () -> Unit = {},
+    onNavigateToManga: () -> Unit = {},
+    onItemClick: (id: Int, isManga: Boolean) -> Unit = { _, _ -> },
+    initialIsManga: Boolean = false,
+    initialCategoryIndex: Int = 0
 ) {
-
-    ArchiveMainLayout(
-        onAnimeClicked = onNavigateToAnime,
-        onMangaClicked = onNavigateToManga
+    UnifiedArchiveScreen(
+        onItemClick = onItemClick,
+        initialIsManga = initialIsManga,
+        initialCategoryIndex = initialCategoryIndex
     )
-
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ArchiveScreenPreview() {
-    ArchiveMainScreen(
-        onNavigateToAnime = {},
-        onNavigateToManga = {}
-    )
+    ArchiveMainScreen()
 }

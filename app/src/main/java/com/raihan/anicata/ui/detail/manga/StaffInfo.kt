@@ -94,14 +94,10 @@ private fun StaffListView(
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp)
     ) {
-        // ... (Header "Staff" dan logic chunked/Row tetap sama) ...
-        Text(
-            text = "Staff",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+        MangaSectionHeaderTitle(
+            title = "Staff",
+            modifier = Modifier.padding(bottom = 12.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp)) //
         itemsToShow.chunked(2).forEach { rowItems -> //
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -2,7 +2,9 @@ package com.raihan.anicata.data.repository.anime
 
 import com.raihan.anicata.data.datasource.anime.SeasonUpcomingDataSource
 import com.raihan.anicata.data.mapper.anime.toSeasonUpcomingAnimeList
+import com.raihan.anicata.data.mapper.anime.toSeasonalResultData
 import com.raihan.anicata.data.model.anime.season.upcoming.SeasonAnimeUpcoming
+import com.raihan.anicata.data.model.anime.season.year.SeasonalResultData
 import com.raihan.anicata.utils.ResultWrapper
 import com.raihan.anicata.utils.proceedFlow
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +14,12 @@ interface AnimeSeasonUpcomingRepository {
         filter: String,
         continuing: Boolean
     ) : Flow<ResultWrapper<List<SeasonAnimeUpcoming>>>
+
+    fun getSeasonUpcomingSeasonalData(
+        filter: String = "",
+        continuing: Boolean = false,
+        page: Int = 1
+    ) : Flow<ResultWrapper<SeasonalResultData>>
 }
 
 class AnimeSeasonUpcomingRepositoryImpl(private val dataSource: SeasonUpcomingDataSource) : AnimeSeasonUpcomingRepository {
@@ -20,12 +28,21 @@ class AnimeSeasonUpcomingRepositoryImpl(private val dataSource: SeasonUpcomingDa
         continuing: Boolean
     ): Flow<ResultWrapper<List<SeasonAnimeUpcoming>>> {
         return proceedFlow {
-            //dataSource.getSeasonUpcomingList(filter, continuing).data.toSeasonUpcomingAnimeList()
-            val responseList = dataSource.getSeasonUpcomingList(filter, continuing).data.toSeasonUpcomingAnimeList()
+            val responseList = dataSource.getSeasonUpcomingList(filter, continuing, 1).data.toSeasonUpcomingAnimeList()
 
             responseList
                 .sortedByDescending { it.members }
                 .take(10)
+        }
+    }
+
+    override fun getSeasonUpcomingSeasonalData(
+        filter: String,
+        continuing: Boolean,
+        page: Int
+    ): Flow<ResultWrapper<SeasonalResultData>> {
+        return proceedFlow {
+            dataSource.getSeasonUpcomingList(filter, continuing, page).toSeasonalResultData()
         }
     }
 }

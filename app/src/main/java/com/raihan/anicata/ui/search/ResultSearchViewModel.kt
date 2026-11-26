@@ -59,9 +59,13 @@ class ResultSearchViewModel(
      * Dipanggil oleh UI saat pertama kali mencari (dari SearchScreen).
      * Akan me-reset halaman ke 1.
      */
-    fun searchMedia(query: String) {
-        if (query == _currentQuery.value && _uiState.value.result !is ResultWrapper.Idle) return
+    fun searchMedia(query: String, forceRefresh: Boolean = false) {
+        if (!forceRefresh && query == _currentQuery.value && _uiState.value.result !is ResultWrapper.Idle) return
 
+        if (forceRefresh || query != _currentQuery.value) {
+            mediaCache.clear()
+            paginationCache.clear()
+        }
         _currentQuery.value = query
         fetchPage(query, 1)
     }

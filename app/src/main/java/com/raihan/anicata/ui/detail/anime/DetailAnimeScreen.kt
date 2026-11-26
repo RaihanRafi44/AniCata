@@ -1,25 +1,44 @@
 package com.raihan.anicata.ui.detail.anime
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.raihan.anicata.ui.navigation.Screen
 import com.raihan.anicata.utils.ResultWrapper
@@ -27,22 +46,19 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun DetailAnimeScreen(
-    animeId: Int, // Terima ID dari Navigasi
+    animeId: Int,
     viewModel: DetailAnimeViewModel = koinViewModel(),
-    navController: NavController // <-- 2. AMBIL NAVCONTROLLER DARI SCREEN YANG MEMANGGIL
+    navController: NavController
 ) {
-
-    // Panggil API saat screen pertama kali dibuka
     LaunchedEffect(key1 = animeId) {
         viewModel.getAnimeDetails(animeId)
     }
 
-    // Observasi state dari ViewModel
     val uiState by viewModel.uiState.collectAsState()
+    val isBookmarked by viewModel.isBookmarked.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
 
-    val isBookmarked by viewModel.isBookmarked.collectAsState() // Observasi status bookmark
-
-    val isFavorite by viewModel.isFavorite.collectAsState() // Observasi status favorite
+    var selectedTab by remember { mutableIntStateOf(0) } // 0: Overview, 1: Cast & Crew, 2: Related
 
     var showAddDialogBookmarkAnime by remember { mutableStateOf(false) }
     var showRemoveDialogBookmarkAnime by remember { mutableStateOf(false) }
@@ -51,116 +67,97 @@ fun DetailAnimeScreen(
     var showRemoveDialogFavoriteAnime by remember { mutableStateOf(false) }
 
     if (showAddDialogBookmarkAnime) {
-        AlertDialog(
-            onDismissRequest = { showAddDialogBookmarkAnime = false },
-            title = { Text(text = "Konfirmasi") },
-            text = { Text(text = "Apakah Anda yakin ingin menambahkan anime ini ke Bookmark?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // Ambil data anime dari state (jika sukses) untuk disimpan
-                        val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
-                        if (animeData != null) {
-                            viewModel.saveToBookmark(animeData)
-                        }
-                        showAddDialogBookmarkAnime = false
-                    }
-                ) {
-                    Text("Ya, Simpan")
+        AniCataConfirmationDialog(
+            title = "Save Bookmark",
+            message = "Add this anime to your bookmark list?",
+            confirmText = "Save",
+            icon = Icons.Filled.Bookmark,
+            iconTint = Color(0xFF2563EB),
+            iconBgColor = Color(0xFFEFF6FF),
+            confirmButtonColor = Color(0xFF2563EB),
+            onConfirm = {
+                val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
+                if (animeData != null) {
+                    viewModel.saveToBookmark(animeData)
                 }
+                showAddDialogBookmarkAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showAddDialogBookmarkAnime = false }) {
-                    Text("Batal")
-                }
-            }
+            onDismissRequest = { showAddDialogBookmarkAnime = false }
         )
     }
 
     if (showRemoveDialogBookmarkAnime) {
-        AlertDialog(
-            onDismissRequest = { showRemoveDialogBookmarkAnime = false },
-            title = { Text("Hapus Bookmark") },
-            text = { Text("Anda yakin ingin menghapus anime ini dari bookmark?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // Panggil fungsi Hapus di ViewModel
-                        viewModel.removeFromBookmark(animeId.toString())
-                        showRemoveDialogBookmarkAnime = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Hapus") }
+        AniCataConfirmationDialog(
+            title = "Delete Bookmark",
+            message = "Are you sure you want to remove this anime from your bookmark list?",
+            confirmText = "Delete",
+            icon = Icons.Outlined.BookmarkBorder,
+            iconTint = Color(0xFFDC2626),
+            iconBgColor = Color(0xFFFEE2E2),
+            confirmButtonColor = Color(0xFFDC2626),
+            onConfirm = {
+                viewModel.removeFromBookmark(animeId.toString())
+                showRemoveDialogBookmarkAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showRemoveDialogBookmarkAnime = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showRemoveDialogBookmarkAnime = false }
         )
     }
 
     if (showAddDialogFavoriteAnime) {
-        AlertDialog(
-            onDismissRequest = { showAddDialogFavoriteAnime = false },
-            title = { Text(text = "Konfirmasi") },
-            text = { Text(text = "Apakah Anda yakin ingin menambahkan anime ini ke Favorite?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // Ambil data anime dari state (jika sukses) untuk disimpan
-                        val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
-                        if (animeData != null) {
-                            viewModel.saveToFavorite(animeData)
-                        }
-                        showAddDialogFavoriteAnime = false
-                    }
-                ) {
-                    Text("Ya, Simpan")
+        AniCataConfirmationDialog(
+            title = "Add Favorite",
+            message = "Add this anime to your Favorites list?",
+            confirmText = "Add",
+            icon = Icons.Filled.Favorite,
+            iconTint = Color(0xFFE11D48),
+            iconBgColor = Color(0xFFFFE4E6),
+            confirmButtonColor = Color(0xFF006A60),
+            onConfirm = {
+                val animeData = (uiState.animeDetail as? ResultWrapper.Success)?.payload
+                if (animeData != null) {
+                    viewModel.saveToFavorite(animeData)
                 }
+                showAddDialogFavoriteAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showAddDialogFavoriteAnime = false }) {
-                    Text("Batal")
-                }
-            }
+            onDismissRequest = { showAddDialogFavoriteAnime = false }
         )
     }
 
     if (showRemoveDialogFavoriteAnime) {
-        AlertDialog(
-            onDismissRequest = { showRemoveDialogFavoriteAnime = false },
-            title = { Text("Hapus Favorite") },
-            text = { Text("Anda yakin ingin menghapus anime ini dari favorite?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.removeFromFavorite(animeId.toString())
-                        showRemoveDialogFavoriteAnime = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Hapus") }
+        AniCataConfirmationDialog(
+            title = "Delete Favorite",
+            message = "Are you sure you want to remove this anime from your Favorites list?",
+            confirmText = "Delete",
+            icon = Icons.Outlined.FavoriteBorder,
+            iconTint = Color(0xFFDC2626),
+            iconBgColor = Color(0xFFFEE2E2),
+            confirmButtonColor = Color(0xFFDC2626),
+            onConfirm = {
+                viewModel.removeFromFavorite(animeId.toString())
+                showRemoveDialogFavoriteAnime = false
             },
-            dismissButton = {
-                TextButton(onClick = { showRemoveDialogFavoriteAnime = false }) { Text("Batal") }
-            }
+            onDismissRequest = { showRemoveDialogFavoriteAnime = false }
         )
     }
 
+    val canvasBg = Color(0xFFF4F6F6)
+
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(canvasBg)
     ) {
         when (val detailResult = uiState.animeDetail) {
             is ResultWrapper.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                DetailShimmerLoading()
             }
             is ResultWrapper.Error -> {
-                // Tampilkan pesan error
                 Text(
-                    text = "Gagal memuat data: ${detailResult.exception?.message}",
+                    text = "Failed to load data: ${detailResult.exception?.message}",
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
             is ResultWrapper.Success -> {
-
                 val animeData = detailResult.payload!!
 
                 Column(
@@ -169,13 +166,15 @@ fun DetailAnimeScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // 1. Hero Header Showcase
+                    HeaderSection(
+                        animeData = animeData,
+                        onBackClick = { navController.popBackStack() }
+                    )
 
-                    HeaderSection(animeData = animeData)
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    AnimeInfoStats(animeData = animeData)
-
+                    // 2. Action Buttons Group (Bookmark & Favorite)
                     ActionButtonsGroup(
                         isBookmarked = isBookmarked,
                         isFavorite = isFavorite,
@@ -195,29 +194,115 @@ fun DetailAnimeScreen(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    AnimeInfoDetail(animeData = animeData)
+                    // 3. Segmented Custom Tab Bar
+                    DetailTabBar(
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    )
 
-                    SynopsisInfo(animeData = animeData)
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    CharacterListLayout(charactersResult = uiState.animeCharacters)
+                    // 4. Tab Contents with Crossfade Animation
+                    Crossfade(targetState = selectedTab, label = "tab_crossfade") { tab ->
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            when (tab) {
+                                0 -> {
+                                    // OVERVIEW TAB
+                                    ElevatedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                                        shape = RoundedCornerShape(20.dp),
+                                        colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(14.dp)) {
+                                            AnimeInfoStats(animeData = animeData)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            AnimeInfoDetail(animeData = animeData)
+                                        }
+                                    }
 
-                    StaffInfo(staffResult = uiState.animeStaff)
+                                    ElevatedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                                        shape = RoundedCornerShape(20.dp),
+                                        colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        SynopsisInfo(animeData = animeData)
+                                    }
 
-                    VideoPromoSection(trailer = animeData.trailer)
+                                    if (!animeData.trailer?.youtubeId.isNullOrBlank()) {
+                                        ElevatedCard(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                                            shape = RoundedCornerShape(20.dp),
+                                            colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+                                            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                                        ) {
+                                            VideoPromoSection(trailer = animeData.trailer)
+                                        }
+                                    }
+                                }
 
-                    OtherAnimeInfo(
-                        relations = animeData.relations,
+                                1 -> {
+                                    // CAST & CREW TAB
+                                    ElevatedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                                        shape = RoundedCornerShape(20.dp),
+                                        colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        CharacterListLayout(charactersResult = uiState.animeCharacters)
+                                    }
 
-                        onRelationClick = { id, type ->
-                            if (type.lowercase() == "manga" || type.lowercase() == "novel" || type.lowercase() == "light novel") {
-                                navController.navigate(Screen.MangaDetail.createRoute(id))
-                            } else {
-                                navController.navigate(Screen.Detail.createRoute(id))
+                                    ElevatedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                                        shape = RoundedCornerShape(20.dp),
+                                        colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        StaffInfo(staffResult = uiState.animeStaff)
+                                    }
+                                }
+
+                                2 -> {
+                                    // RELATED MEDIA TAB
+                                    ElevatedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                                        shape = RoundedCornerShape(20.dp),
+                                        colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        OtherAnimeInfo(
+                                            relations = animeData.relations,
+                                            onRelationClick = { id, type ->
+                                                if (type.lowercase() == "manga" || type.lowercase() == "novel" || type.lowercase() == "light novel") {
+                                                    navController.navigate(Screen.MangaDetail.createRoute(id))
+                                                } else {
+                                                    navController.navigate(Screen.Detail.createRoute(id))
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
-                    )
+                    }
 
                     Spacer(modifier = Modifier.height(40.dp))
                 }
@@ -228,12 +313,133 @@ fun DetailAnimeScreen(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-            is ResultWrapper.Idle -> {
+            is ResultWrapper.Idle -> {}
+        }
+    }
+}
 
+@Composable
+fun DetailTabBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    val themeColor = Color(0xFF006A60)
+    val tabs = listOf("Overview", "Cast & Crew", "Related")
+
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFFE0F2F1).copy(alpha = 0.55f),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(4.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            tabs.forEachIndexed { index, title ->
+                val isSelected = selectedTab == index
+                Surface(
+                    onClick = { onTabSelected(index) },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) themeColor else Color.Transparent,
+                    contentColor = if (isSelected) Color.White else Color(0xFF191C1E),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = title,
+                        fontSize = 13.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 2.dp)
+                    )
+                }
             }
         }
     }
-
-
 }
 
+@Composable
+fun DetailShimmerLoading(modifier: Modifier = Modifier) {
+    val shimmerColors = listOf(
+        Color(0xFFE0E0E0),
+        Color(0xFFF5F5F5),
+        Color(0xFFE0E0E0),
+    )
+
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 2000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer"
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset.Zero,
+        end = Offset(x = translateAnim, y = translateAnim)
+    )
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF4F6F6))
+            .padding(bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .background(brush)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ElevatedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .height(22.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(brush)
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    repeat(2) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(45.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

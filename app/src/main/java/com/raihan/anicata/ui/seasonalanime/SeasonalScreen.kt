@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -17,24 +18,44 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SeasonalScreen(
+    initialSeason: String? = null,
     viewModel: SeasonalViewModel = koinViewModel(),
-    onAnimeClick: (Int) -> Unit
+    onAnimeClick: (Int) -> Unit,
+    scrollToTopTrigger: Int = 0,
+    scrollToBottomTrigger: Int = 0
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            scrollState.scrollTo(0)
+        }
+    }
+
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0) {
+            scrollState.scrollTo(scrollState.maxValue)
+        }
+    }
+
+    LaunchedEffect(initialSeason) {
+        if (!initialSeason.isNullOrBlank()) {
+            viewModel.setInitialSeason(initialSeason)
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // --- 2. LAPISAN 1: Konten Scrollable ---
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
             AnimeFilterGroup(
-                // Baris 1
                 selectedYear = uiState.selectedYear,
                 onYearChange = viewModel::onYearChange,
                 yearOptions = uiState.yearOptions,
@@ -42,7 +63,6 @@ fun SeasonalScreen(
                 onSeasonChange = viewModel::onSeasonChange,
                 seasonOptions = uiState.seasonOptions,
 
-                // Baris 2
                 selectedType = uiState.selectedType,
                 onTypeChange = viewModel::onTypeChange,
                 typeOptions = uiState.typeOptions,
@@ -50,14 +70,16 @@ fun SeasonalScreen(
                 onStatusChange = viewModel::onStatusChange,
                 statusOptions = uiState.statusOptions,
 
+                selectedSort = uiState.selectedSort,
+                onSortChange = viewModel::onSortChange,
+                sortOptions = uiState.sortOptions,
+
+                itemCount = uiState.totalShowsCount,
                 onUpdateClick = viewModel::onUpdateFilter
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // --- 3. HAPUS Box pembungkus 'when' ---
-            // 'when' sekarang akan meletakkan Composable-nya
-            // langsung di dalam Column.
             when (val apiResult = uiState.apiResult) {
                 is ResultWrapper.Loading -> {
                     SeasonalShimmerLoading()
@@ -67,7 +89,10 @@ fun SeasonalScreen(
                     if (animeList.isNotEmpty()) {
                         AnimeListLayout(
                             animeList = animeList,
-                            onAnimeClick = onAnimeClick
+                            onAnimeClick = onAnimeClick,
+                            hasNextPage = uiState.hasNextPage,
+                            isNextPageLoading = uiState.isNextPageLoading,
+                            onLoadMoreClick = viewModel::loadNextPage
                         )
                     } else {
                         SeasonalEmptyState()

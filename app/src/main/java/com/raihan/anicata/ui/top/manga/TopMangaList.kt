@@ -3,17 +3,17 @@ package com.raihan.anicata.ui.top.manga
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,31 +23,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.raihan.anicata.data.model.manga.top.TopManga
 import com.raihan.anicata.data.model.manga.top.TopMangaPublished
+import com.raihan.anicata.ui.top.RankMedalBadge
 import java.text.NumberFormat
 import java.util.*
-import kotlin.collections.forEach
 
 private fun formatAiredDate(aired: TopMangaPublished?): String {
     val from = aired?.prop?.from
     val to = aired?.prop?.to
 
-    // Tambahkan pemeriksaan apakah bulan valid (antara 1 dan 12)
     val isFromDateValid = from?.year != null && from.month != null && from.month in 1..12
 
     if (!isFromDateValid) {
         return aired?.prop?.string ?: "N/A"
     }
 
-    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des")
+    val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
-    // Kode ini sekarang aman karena kita sudah memeriksa nilai bulan di atas
     val fromMonth = monthNames[from.month - 1]
     val fromString = "$fromMonth ${from.year}"
 
@@ -62,128 +62,400 @@ private fun formatAiredDate(aired: TopMangaPublished?): String {
     return fromString + toString
 }
 
+/**
+ * Top 3 Podium Leaderboard Component untuk Manga (Adaptif untuk layar kecil, sedang, dan besar)
+ */
+@Composable
+fun MangaTop3PodiumShowcase(
+    top3MangaList: List<TopManga>,
+    onMangaClick: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (top3MangaList.size < 3) return
+
+    val first = top3MangaList[0]
+    val second = top3MangaList[1]
+    val third = top3MangaList[2]
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = Color(0xFFE0F2F1).copy(alpha = 0.55f),
+        border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.15f))
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Header Top 3
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = "Trophy",
+                    tint = Color(0xFFFFD700),
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "TOP 3 HALL OF FAME",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.sp,
+                    color = Color(0xFF191C1E)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 3 Columns Podium Layout dengan weight & gap adaptif
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                // Rank #2 (Silver - Left)
+                PodiumMangaItem(
+                    item = second,
+                    rank = 2,
+                    imageHeight = 135.dp,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onMangaClick(second.id) }
+                )
+
+                // Rank #1 (Gold - Center & Taller)
+                PodiumMangaItem(
+                    item = first,
+                    rank = 1,
+                    imageHeight = 160.dp,
+                    modifier = Modifier.weight(1.1f),
+                    onClick = { onMangaClick(first.id) }
+                )
+
+                // Rank #3 (Bronze - Right)
+                PodiumMangaItem(
+                    item = third,
+                    rank = 3,
+                    imageHeight = 125.dp,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onMangaClick(third.id) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PodiumMangaItem(
+    item: TopManga,
+    rank: Int,
+    imageHeight: Dp,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val (badgeBg, badgeText) = when (rank) {
+        1 -> Brush.linearGradient(listOf(Color(0xFFFFD700), Color(0xFFFFA500))) to Color.Black
+        2 -> Brush.linearGradient(listOf(Color(0xFFE0E0E0), Color(0xFF9E9E9E))) to Color.Black
+        else -> Brush.linearGradient(listOf(Color(0xFFCD7F32), Color(0xFF8B4513))) to Color.White
+    }
+
+    Column(
+        modifier = modifier.clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Badge
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color.Transparent
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(badgeBg)
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    if (rank == 1) {
+                        Text(text = "👑", fontSize = 10.sp)
+                    }
+                    Text(
+                        text = "#$rank",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 11.sp,
+                        color = badgeText
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Image Poster
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(imageHeight),
+            shape = RoundedCornerShape(12.dp),
+            shadowElevation = if (rank == 1) 6.dp else 2.dp
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.images.jpg.largeImageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Rating overlay at bottom of poster
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color.Black.copy(alpha = 0.75f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Score",
+                            tint = Color(0xFFFFC107),
+                            modifier = Modifier.size(11.dp)
+                        )
+                        Text(
+                            text = String.format(Locale.US, "%.2f", item.score),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.5.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Title
+        Text(
+            text = item.title,
+            fontWeight = if (rank == 1) FontWeight.Bold else FontWeight.SemiBold,
+            fontSize = 12.sp,
+            color = Color(0xFF191C1E),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            lineHeight = 15.sp
+        )
+    }
+}
+
 @Composable
 fun MangaCard(
     item: TopManga,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val tvTagColor = Color(0xFFF4842D)
-    val starColor = Color(0xFFFFC107)
+    val themeColor = Color(0xFF006A60)
 
-    Surface(
-        modifier = Modifier
+    ElevatedCard(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, Color.Black.copy(alpha = 0.6f)),
+            .clickable { onClick() }
+            .padding(vertical = 5.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min),
-        ) {
-            // Gambar (sama persis)
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.images.jpg.largeImageUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Watermark Rank Number Typography (#04, #05, etc.) di pojok kanan atas agar tidak tertutup chip score
+            Text(
+                text = String.format(Locale.US, "#%02d", item.rank ?: 0),
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Black,
+                color = themeColor.copy(alpha = 0.12f),
+                lineHeight = 42.sp,
                 modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
+                    .align(Alignment.TopEnd)
+                    .padding(end = 10.dp, top = 2.dp)
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Kolom Info Utama (Layout dari kotak merah + spacing dari Anda)
-            Column(
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                    .padding(10.dp)
+                    .fillMaxWidth()
             ) {
-                // Kotak 1: Judul
-                Text(
-                    text = item.title,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 20.sp,
-                )
-
-                // Kotak 2: Tanggal Tayang
-                Text(
-                    text = formatAiredDate(item.published), // Asumsi fungsi ini ada
-                    fontSize = 12.sp,
-                    color = Color.DarkGray
-                )
-
-                // Kotak 3: Members dan Rank (Layout dari kotak merah)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                // Poster Gambar dengan Rank Badge Overlay
+                Box(
+                    modifier = Modifier
+                        .width(95.dp)
+                        .height(135.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE0E0E0))
                 ) {
-                    // Bagian kiri (Members)
-                    Icon(
-                        imageVector = Icons.Default.People,
-                        contentDescription = "Members",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    val formatter = NumberFormat.getInstance(Locale.US)
-                    Text(
-                        text = formatter.format(item.members),
-                        fontSize = 12.sp,
-                        color = Color.DarkGray
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.images.jpg.largeImageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = item.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
 
-                    // Spacer untuk mendorong Rank ke kanan
-                    Spacer(Modifier.weight(1f))
-
-                    // Bagian kanan (Rank)
-                    Text(
-                        text = "Rank ${item.rank?.toString() ?: "?"}",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.Black
+                    // Overlay Rank Medal Badge
+                    RankMedalBadge(
+                        rank = item.rank,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(4.dp)
                     )
                 }
 
-                // Kotak 4: Tags dan Score (Layout dari kotak merah)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Right Info Column
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(135.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Bagian kiri (Tags)
-                    item.type?.let { Tag(text = it, backgroundColor = tvTagColor) }
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // Judul Manga
+                        Text(
+                            text = item.title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color(0xFF191C1E),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 18.sp,
+                            modifier = Modifier.padding(end = 28.dp)
+                        )
 
-                    // Spacer untuk mendorong Score ke kanan
-                    Spacer(Modifier.weight(1f))
+                        // Type Tag Row
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            item.type?.let { type ->
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color(0xFFE0F2F1),
+                                    contentColor = themeColor
+                                ) {
+                                    Text(
+                                        text = type,
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                                    )
+                                }
+                            }
+                        }
 
-                    // Bagian kanan (Score)
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Score",
-                        tint = starColor,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = String.format(Locale.US, "%.2f", item.score),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black
-                    )
+                        // Published Date
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Rounded.CalendarToday,
+                                contentDescription = "Published",
+                                modifier = Modifier.size(11.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = formatAiredDate(item.published),
+                                fontSize = 11.sp,
+                                color = Color.Gray,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        // Genre Chips
+                        if (item.genres.isNotEmpty()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(top = 2.dp)
+                            ) {
+                                item.genres.take(3).forEach { genre ->
+                                    genre.name?.let { genreName ->
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = Color(0xFFF0F0F0),
+                                            contentColor = Color(0xFF424242)
+                                        ) {
+                                            Text(
+                                                text = genreName,
+                                                fontSize = 9.5.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Footer Row: Members & Score
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.People,
+                                contentDescription = "Members",
+                                modifier = Modifier.size(12.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            val formatter = NumberFormat.getInstance(Locale.US)
+                            Text(
+                                text = "${formatter.format(item.members)} members",
+                                fontSize = 10.5.sp,
+                                color = Color.Gray
+                            )
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .background(
+                                    color = Color(0xFFE0F2F1),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 6.dp, vertical = 3.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Score",
+                                tint = Color(0xFFFFC107),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = String.format(Locale.US, "%.2f", item.score),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = themeColor
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -194,45 +466,15 @@ fun MangaCard(
 fun Tag(text: String, backgroundColor: Color) {
     Box(
         modifier = Modifier
-            .background(backgroundColor, RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .background(backgroundColor, RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp)
     ) {
         Text(
             text = text,
             color = Color.White,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold
         )
-    }
-}
-
-@Composable
-fun MangaListTopLayout(
-    mangaList: List<TopManga>,
-    currentPage: Int = 1,
-    pageSize: Int = 25,
-    modifier: Modifier,
-    onMangaClick: (Int) -> Unit
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp) // Pindahkan padding horizontal ke sini
-    ) {
-
-        val displayRanked = remember(mangaList, currentPage, pageSize) {
-            val offset = ((currentPage - 1).coerceAtLeast(0)) * pageSize
-            mangaList.mapIndexed { index, manga ->
-                manga.copy(rank = offset + index + 1)
-            }
-        }
-
-        displayRanked.forEach { manga ->
-            MangaCard(
-                item = manga,
-                onClick = { onMangaClick(manga.id) }
-            )
-        }
     }
 }
 
@@ -268,7 +510,17 @@ fun TopMangaShimmerLoading(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        repeat(6) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(brush)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        repeat(5) {
             TopMangaShimmerItem(brush = brush)
         }
     }
@@ -280,20 +532,20 @@ fun TopMangaShimmerItem(brush: Brush) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, brush)
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(10.dp)
                 .fillMaxWidth()
-                .height(115.dp)
+                .height(135.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .width(80.dp)
+                    .width(95.dp)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(brush)
             )
 
@@ -301,11 +553,11 @@ fun TopMangaShimmerItem(brush: Brush) {
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.75f)
+                        .fillMaxWidth(0.8f)
                         .height(16.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
@@ -319,27 +571,6 @@ fun TopMangaShimmerItem(brush: Brush) {
                         .background(brush)
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(65.dp)
-                            .height(12.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Box(
-                        modifier = Modifier
-                            .width(45.dp)
-                            .height(14.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
-                }
-
                 Spacer(modifier = Modifier.weight(1f))
 
                 Row(
@@ -348,9 +579,9 @@ fun TopMangaShimmerItem(brush: Brush) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(36.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .width(60.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
                             .background(brush)
                     )
 
@@ -358,9 +589,9 @@ fun TopMangaShimmerItem(brush: Brush) {
 
                     Box(
                         modifier = Modifier
-                            .width(50.dp)
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .width(48.dp)
+                            .height(20.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(brush)
                     )
                 }

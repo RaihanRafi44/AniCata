@@ -8,7 +8,10 @@ interface SeasonYearDataSource {
         year: Int,
         season: String,
         filter: String,
-        continuing: Boolean
+        continuing: Boolean,
+        page: Int = 1,
+        orderBy: String? = null,
+        sort: String? = null
     ): SeasonYearResponse
 }
 
@@ -17,13 +20,19 @@ class SeasonYearApiDataSource(private val service: AniCataApiService): SeasonYea
         year: Int,
         season: String,
         filter: String,
-        continuing: Boolean
+        continuing: Boolean,
+        page: Int,
+        orderBy: String?,
+        sort: String?
     ): SeasonYearResponse {
         return service.getSeasonYear(
             year,
             season,
             filter,
-            continuing)
+            continuing,
+            page,
+            orderBy,
+            sort
+        )
     }
-
 }
