@@ -29,6 +29,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.android.gms.auth.api.identity.Identity
+import com.raihan.anicata.ui.chatbot.ChatbotScreen
 import com.raihan.anicata.ui.detail.anime.DetailAnimeScreen
 import com.raihan.anicata.ui.detail.manga.DetailMangaScreen
 import com.raihan.anicata.ui.login.GoogleAuthUiClient
@@ -166,6 +167,14 @@ class MainActivity : ComponentActivity() {
                         DetailMangaScreen(
                             mangaId = mangaId,
                             navController = navController
+                        )
+                    }
+
+                    composable(Screen.Chatbot.route) {
+                        ChatbotScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
                         )
                     }
                 }

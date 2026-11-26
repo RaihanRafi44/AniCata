@@ -42,7 +42,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -66,6 +65,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.outlined.Inventory2
+
 data class NavItemData(
     val label: String,
     val activeIcon: ImageVector,
@@ -79,7 +81,8 @@ val defaultNavItems = listOf(
     ),
     NavItemData(
         label = "Archive",
-        activeIcon = Icons.Default.Bookmark,
+        activeIcon = Icons.Default.Inventory2,
+        inactiveIcon = Icons.Outlined.Inventory2,
     ),
     NavItemData(
         label = "Profile",
@@ -291,9 +294,9 @@ fun SpecialPageFloatingNavBar(
                             borderColor = borderColor
                         )
 
-                        // Archive (🔖)
+                        // Archive
                         FloatingActionButtonMini(
-                            icon = Icons.Default.Bookmark,
+                            icon = Icons.Default.Inventory2,
                             contentDescription = "Archive",
                             onClick = {
                                 onNavigateTo("archive")

@@ -65,6 +65,7 @@ import com.raihan.anicata.ui.archive.anime.ArchiveAnimeScreenFavorite
 import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreen
 import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreenBookmark
 import com.raihan.anicata.ui.archive.manga.ArchiveMangaScreenFavorite
+import com.raihan.anicata.ui.chatbot.ChatbotScreen
 import com.raihan.anicata.ui.home.HomeScreen
 import com.raihan.anicata.ui.navigation.Screen
 import com.raihan.anicata.ui.profile.ProfileScreen
@@ -180,6 +181,7 @@ fun MainScreen(
                 AppDrawerContent(
                     userData = userData,
                     navController = internalNavController,
+                    rootNavController = navController,
                     scope = scope,
                     closeDrawer = { scope.launch { drawerState.close() } },
                     onSignOut = onSignOut
@@ -379,6 +381,8 @@ fun MainScreen(
                                 scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
+
+
 
                         // --- 1. TAMBAHKAN RUTE BARU DI SINI ---
                         composable(

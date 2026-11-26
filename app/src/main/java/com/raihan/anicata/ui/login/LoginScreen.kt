@@ -445,9 +445,9 @@ fun SignInScreen(
             }
         }
 
-        // --- HANKO STAMP OPENING OVERLAY ON LOGIN SUCCESS ---
+        // --- BOOK OPENING OVERLAY ON LOGIN SUCCESS ---
         if (state.isSignInSuccessful) {
-            LoginSuccessOverlay(
+            BookOpeningOverlay(
                 username = state.username,
                 onAnimationFinished = onSuccessAnimationFinished
             )

@@ -16,8 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Leaderboard
 import androidx.compose.material.icons.rounded.OndemandVideo
@@ -66,11 +64,6 @@ data class DrawerSubMenuItem(
 
 val drawerMenuItems = listOf(
     DrawerMenuItem(
-        title = "Home",
-        icon = Icons.Rounded.Home,
-        route = "home"
-    ),
-    DrawerMenuItem(
         title = "Seasonal Anime",
         icon = Icons.Rounded.Tv,
         route = "seasonal"
@@ -89,10 +82,10 @@ val drawerMenuItems = listOf(
         route = "all_lists"
     ),
     DrawerMenuItem(
-        title = "Archive",
-        icon = Icons.Rounded.Bookmark,
-        route = "archive"
-    )
+        title = "Hoshina",
+        icon = HoshinaIcon,
+        route = "chatbot"
+    ),
 )
 
 /**
@@ -102,6 +95,7 @@ val drawerMenuItems = listOf(
 fun AppDrawerContent(
     userData: UserData?,
     navController: NavController,
+    rootNavController: NavController? = null,
     scope: CoroutineScope,
     closeDrawer: () -> Unit,
     onSignOut: () -> Unit = {}
@@ -132,7 +126,9 @@ fun AppDrawerContent(
             menuItems = drawerMenuItems,
             currentRoute = currentRoute,
             onNavigate = { route ->
-                if (route != currentRoute) {
+                if (route == "chatbot") {
+                    rootNavController?.navigate("chatbot")
+                } else if (route != currentRoute) {
                     navController.navigate(route) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
