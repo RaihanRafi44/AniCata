@@ -50,7 +50,9 @@ fun ResultSearchScreen(
     searchQuery: String,
     onAnimeClick: (Int) -> Unit,
     onMangaClick: (Int) -> Unit,
-    viewModel: ResultSearchViewModel = koinViewModel()
+    viewModel: ResultSearchViewModel = koinViewModel(),
+    scrollToTopTrigger: Int = 0,
+    scrollToBottomTrigger: Int = 0
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val paginationInfo = uiState.paginationInfo
@@ -63,6 +65,21 @@ fun ResultSearchScreen(
 
     val listState = rememberLazyListState()
     var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.scrollToItem(0, 0)
+        }
+    }
+
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0) {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            if (totalItems > 0) {
+                listState.scrollToItem(totalItems - 1)
+            }
+        }
+    }
 
     LaunchedEffect(result) {
         if (result is ResultWrapper.Loading) {

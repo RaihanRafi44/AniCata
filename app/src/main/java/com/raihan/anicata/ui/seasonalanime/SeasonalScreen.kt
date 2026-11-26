@@ -20,9 +20,24 @@ import org.koin.androidx.compose.koinViewModel
 fun SeasonalScreen(
     initialSeason: String? = null,
     viewModel: SeasonalViewModel = koinViewModel(),
-    onAnimeClick: (Int) -> Unit
+    onAnimeClick: (Int) -> Unit,
+    scrollToTopTrigger: Int = 0,
+    scrollToBottomTrigger: Int = 0
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            scrollState.scrollTo(0)
+        }
+    }
+
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0) {
+            scrollState.scrollTo(scrollState.maxValue)
+        }
+    }
 
     LaunchedEffect(initialSeason) {
         if (!initialSeason.isNullOrBlank()) {
@@ -36,7 +51,7 @@ fun SeasonalScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 

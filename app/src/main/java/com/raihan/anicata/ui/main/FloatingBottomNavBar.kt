@@ -1,6 +1,7 @@
 package com.raihan.anicata.ui.main
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -14,6 +15,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,16 +35,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -82,7 +94,7 @@ fun FloatingBottomNavBar(
     modifier: Modifier = Modifier,
     items: List<NavItemData> = defaultNavItems,
     isCollapsed: Boolean = false,
-    accentColor: Color = Color.Blue,
+    accentColor: Color = Color(0xFF006A60),
     inactiveColor: Color = Color.Gray,
     containerColor: Color = Color.White,
     borderColor: Color = Color(0xFFE0E0E0),
@@ -171,12 +183,203 @@ fun FloatingBottomNavBar(
 }
 
 @Composable
+fun SpecialPageFloatingNavBar(
+    onScrollToTop: () -> Unit,
+    onScrollToBottom: () -> Unit,
+    onNavigateTo: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    accentColor: Color = Color(0xFF006A60),
+    containerColor: Color = Color(0xFFFCFCFC),
+    borderColor: Color = Color(0xFFE0E0E0),
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.Bottom,
+            modifier = Modifier.padding(bottom = 36.dp, end = 28.dp)
+        ) {
+            // VERTICAL BRANCH (Arrow Up & Arrow Down) above bottom right anchor
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = fadeIn(animationSpec = tween(200)) +
+                        slideInVertically(
+                            initialOffsetY = { it / 2 },
+                            animationSpec = spring(stiffness = Spring.StiffnessLow)
+                        ) +
+                        scaleIn(initialScale = 0.6f, transformOrigin = TransformOrigin(0.5f, 1f)),
+                exit = fadeOut(animationSpec = tween(150)) +
+                        slideOutVertically(
+                            targetOffsetY = { it / 2 },
+                            animationSpec = tween(150)
+                        ) +
+                        scaleOut(targetScale = 0.6f, transformOrigin = TransformOrigin(0.5f, 1f))
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    // Scroll to Top Button (↑)
+                    FloatingActionButtonMini(
+                        icon = Icons.Default.ArrowUpward,
+                        contentDescription = "Scroll to top",
+                        onClick = {
+                            onScrollToTop()
+                            isExpanded = false
+                        },
+                        accentColor = accentColor,
+                        containerColor = containerColor,
+                        borderColor = borderColor
+                    )
+
+                    // Scroll to Bottom Button (↓)
+                    FloatingActionButtonMini(
+                        icon = Icons.Default.ArrowDownward,
+                        contentDescription = "Scroll to bottom",
+                        onClick = {
+                            onScrollToBottom()
+                            isExpanded = false
+                        },
+                        accentColor = accentColor,
+                        containerColor = containerColor,
+                        borderColor = borderColor
+                    )
+                }
+            }
+
+            // BOTTOM ROW (Horizontal Nav Items + Anchor Button)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                // HORIZONTAL NAV BRANCH (Home, Archive, Profile to the left)
+                AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = fadeIn(animationSpec = tween(200)) +
+                            slideInHorizontally(
+                                initialOffsetX = { it / 2 },
+                                animationSpec = spring(stiffness = Spring.StiffnessLow)
+                            ) +
+                            scaleIn(initialScale = 0.6f, transformOrigin = TransformOrigin(1f, 0.5f)),
+                    exit = fadeOut(animationSpec = tween(150)) +
+                            slideOutHorizontally(
+                                targetOffsetX = { it / 2 },
+                                animationSpec = tween(150)
+                            ) +
+                            scaleOut(targetScale = 0.6f, transformOrigin = TransformOrigin(1f, 0.5f))
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 16.dp)
+                    ) {
+                        // Home (🏠)
+                        FloatingActionButtonMini(
+                            icon = Icons.Default.Home,
+                            contentDescription = "Home",
+                            onClick = {
+                                onNavigateTo("home")
+                                isExpanded = false
+                            },
+                            accentColor = accentColor,
+                            containerColor = containerColor,
+                            borderColor = borderColor
+                        )
+
+                        // Archive (🔖)
+                        FloatingActionButtonMini(
+                            icon = Icons.Default.Bookmark,
+                            contentDescription = "Archive",
+                            onClick = {
+                                onNavigateTo("archive")
+                                isExpanded = false
+                            },
+                            accentColor = accentColor,
+                            containerColor = containerColor,
+                            borderColor = borderColor
+                        )
+
+                        // Profile (👤)
+                        FloatingActionButtonMini(
+                            icon = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            onClick = {
+                                onNavigateTo("profile")
+                                isExpanded = false
+                            },
+                            accentColor = accentColor,
+                            containerColor = containerColor,
+                            borderColor = borderColor
+                        )
+                    }
+                }
+
+                // ANCHOR TOGGLE BUTTON (<- when closed, -> when open)
+                Surface(
+                    onClick = { isExpanded = !isExpanded },
+                    shape = CircleShape,
+                    color = accentColor,
+                    shadowElevation = 0.dp,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .border(width = 0.5.dp, color = borderColor, shape = CircleShape)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = if (isExpanded) "Tutup Navigasi" else "Buka Navigasi",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FloatingActionButtonMini(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    accentColor: Color,
+    containerColor: Color,
+    borderColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = containerColor,
+        shadowElevation = 0.dp,
+        modifier = modifier
+            .size(48.dp)
+            .border(width = 0.5.dp, color = borderColor, shape = CircleShape)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = accentColor,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun NavBarItem(
     item: NavItemData,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    accentColor: Color = Color.Blue,
+    accentColor: Color = Color(0xFF006A60),
     inactiveColor: Color = Color.Gray,
 ) {
     val animatedIconColor by animateColorAsState(
@@ -286,6 +489,22 @@ fun FloatingBottomNavBarCollapsedPreview() {
             onItemSelected = { selected = it },
             isCollapsed = true,
             modifier = Modifier.padding(bottom = 24.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
+@Composable
+fun SpecialPageFloatingNavBarPreview() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF0F0F0))
+    ) {
+        SpecialPageFloatingNavBar(
+            onScrollToTop = {},
+            onScrollToBottom = {},
+            onNavigateTo = {}
         )
     }
 }

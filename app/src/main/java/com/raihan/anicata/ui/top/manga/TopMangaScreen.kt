@@ -39,7 +39,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun TopMangaScreen(
     viewModel: TopMangaViewModel = koinViewModel(),
-    onMangaClick: (Int) -> Unit
+    onMangaClick: (Int) -> Unit,
+    scrollToTopTrigger: Int = 0,
+    scrollToBottomTrigger: Int = 0
 ) {
     val topMangaState by viewModel.topMangaState.collectAsState()
 
@@ -63,6 +65,21 @@ fun TopMangaScreen(
 
     val listState = rememberLazyListState()
     var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.scrollToItem(0, 0)
+        }
+    }
+
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0) {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            if (totalItems > 0) {
+                listState.scrollToItem(totalItems - 1)
+            }
+        }
+    }
 
     LaunchedEffect(topMangaState) {
         if (topMangaState is ResultWrapper.Loading) {

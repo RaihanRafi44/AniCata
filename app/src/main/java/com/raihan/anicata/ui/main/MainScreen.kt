@@ -101,6 +101,18 @@ fun MainScreen(
     var isCollapsed by remember { mutableStateOf(false) }
     var expandJob by remember { mutableStateOf<Job?>(null) }
 
+    var scrollToTopTrigger by remember { mutableIntStateOf(0) }
+    var scrollToBottomTrigger by remember { mutableIntStateOf(0) }
+
+    val specialPageTitle = when {
+        currentRoute?.startsWith("top_anime") == true -> "Top Anime"
+        currentRoute?.startsWith("top_manga") == true -> "Top Manga"
+        currentRoute?.startsWith("all_lists") == true -> "All Lists"
+        currentRoute?.startsWith("seasonal") == true -> "Seasonal Anime"
+        currentRoute?.startsWith("result_search") == true -> "Result Search"
+        else -> null
+    }
+
     val bottomBarNestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -331,37 +343,41 @@ fun MainScreen(
                                 initialSeason = seasonArg,
                                 onAnimeClick = { animeId ->
                                     navController.navigate(Screen.Detail.createRoute(animeId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
 
                         composable("top_anime") {
                             TopAnimeScreen(
-                                // Tambahkan parameter onAnimeClick
                                 onAnimeClick = { animeId ->
-                                    // Saat item diklik, gunakan NavController UTAMA
-                                    // untuk pindah ke rute Detail
                                     navController.navigate(Screen.Detail.createRoute(animeId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
                         composable("top_manga") {
                             TopMangaScreen(
                                 onMangaClick = { mangaId ->
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
 
                         composable("all_lists") {
-                            //AllListsScreen()
                             AllListsScreen(
                                 onAnimeClick = { animeId ->
                                     navController.navigate(Screen.Detail.createRoute(animeId))
                                 },
                                 onMangaClick = { mangaId ->
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
 
@@ -378,40 +394,25 @@ fun MainScreen(
                                 },
                                 onMangaClick = { mangaId ->
                                     navController.navigate(Screen.MangaDetail.createRoute(mangaId))
-                                }
+                                },
+                                scrollToTopTrigger = scrollToTopTrigger,
+                                scrollToBottomTrigger = scrollToBottomTrigger
                             )
                         }
 
                     }
 
-                    FloatingBottomNavBar(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 24.dp),
-                        selectedItem = selectedItem,
-                        isCollapsed = isCollapsed,
-                        containerColor = Color(0xFFFCFCFC),
-                        accentColor = Color(0xFF2F5CEF),
-                        inactiveColor = Color(0xFF8E8E93),
-                        onItemSelected = { index ->
-                            //selectedItem = index
-                            val route = when (index) {
-                                0 -> "home"
-                                1 -> "archive"
-                                2 -> "profile"
-                                else -> "home"
-                            }
-                            /*internalNavController.navigate(route) {
-                            popUpTo(internalNavController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }*/
-                            if (selectedItem == index) {
-                                internalNavController.popBackStack(route, inclusive = false)
-                            } else {
-                                selectedItem = index
+                    if (specialPageTitle != null) {
+                        SpecialPageFloatingNavBar(
+                            onScrollToTop = { scrollToTopTrigger++ },
+                            onScrollToBottom = { scrollToBottomTrigger++ },
+                            onNavigateTo = { route ->
+                                selectedItem = when (route) {
+                                    "home" -> 0
+                                    "archive" -> 1
+                                    "profile" -> 2
+                                    else -> 0
+                                }
                                 internalNavController.navigate(route) {
                                     popUpTo(internalNavController.graph.findStartDestination().id) {
                                         saveState = true
@@ -419,10 +420,42 @@ fun MainScreen(
                                     launchSingleTop = true
                                     restoreState = true
                                 }
+                            },
+                            accentColor = Color(0xFF006A60),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        FloatingBottomNavBar(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 24.dp),
+                            selectedItem = selectedItem,
+                            isCollapsed = isCollapsed,
+                            containerColor = Color(0xFFFCFCFC),
+                            accentColor = Color(0xFF006A60),
+                            inactiveColor = Color(0xFF8E8E93),
+                            onItemSelected = { index ->
+                                val route = when (index) {
+                                    0 -> "home"
+                                    1 -> "archive"
+                                    2 -> "profile"
+                                    else -> "home"
+                                }
+                                if (selectedItem == index) {
+                                    internalNavController.popBackStack(route, inclusive = false)
+                                } else {
+                                    selectedItem = index
+                                    internalNavController.navigate(route) {
+                                        popUpTo(internalNavController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
                             }
-
-                        }
-                    )
+                        )
+                    }
                 }
             }
 

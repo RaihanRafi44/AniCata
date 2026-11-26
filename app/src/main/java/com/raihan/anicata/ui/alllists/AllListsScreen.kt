@@ -53,7 +53,9 @@ import org.koin.androidx.compose.koinViewModel
 fun AllListsScreen(
     viewModel: AllListsViewModel = koinViewModel(),
     onAnimeClick: (Int) -> Unit,
-    onMangaClick: (Int) -> Unit
+    onMangaClick: (Int) -> Unit,
+    scrollToTopTrigger: Int = 0,
+    scrollToBottomTrigger: Int = 0
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -74,6 +76,21 @@ fun AllListsScreen(
 
     val listState = rememberLazyListState()
     var isNewPageLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.scrollToItem(0, 0)
+        }
+    }
+
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0) {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            if (totalItems > 0) {
+                listState.scrollToItem(totalItems - 1)
+            }
+        }
+    }
 
     LaunchedEffect(uiState.mediaState) {
         if (uiState.mediaState is ResultWrapper.Loading) {
